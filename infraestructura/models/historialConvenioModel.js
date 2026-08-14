@@ -12,7 +12,6 @@ const createHistorialConvenioModel = (sequelize) => {
                 autoIncrement: true
             },
 
-
             convenio_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
@@ -22,7 +21,6 @@ const createHistorialConvenioModel = (sequelize) => {
                     key: "id"
                 }
             },
-
 
             archivo_id: {
                 type: DataTypes.INTEGER,
@@ -34,51 +32,47 @@ const createHistorialConvenioModel = (sequelize) => {
                 }
             },
 
-
             accion: {
                 type: DataTypes.ENUM(
                     "CREADO",
+                    "CARGADO",
+                    "ACTUALIZADO",
                     "OBSERVACION",
                     "APROBADO",
                     "RECHAZADO",
-                    "PENDIENTE"
+                    "PENDIENTE",
+                    "VENCIDO"
                 ),
                 allowNull: false
             },
-
 
             fecha: {
                 type: DataTypes.DATE,
                 allowNull: false
             },
 
-
             comentario: {
                 type: DataTypes.TEXT,
                 allowNull: true
             },
 
-
             usuario_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
 
-                references:{
-                    model:"Usuarios",
-                    key:"id"
+                references: {
+                    model: "Usuarios",
+                    key: "id"
                 }
             }
 
         },
         {
-            timestamps:false
+            timestamps: false
         }
     );
 
-
     return HistorialConvenio;
-
 };
-
 
 export default createHistorialConvenioModel;

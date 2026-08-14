@@ -11,7 +11,8 @@ const createPostulacionModel = (sequelize) => {
             type: DataTypes.ENUM(
                 'POSTULADO',
                 'ACEPTADO',
-                'RECHAZADO'
+                'RECHAZADO',
+                'RETIRADO'
             ),
             allowNull: false,
             defaultValue: 'POSTULADO'

@@ -30,7 +30,9 @@ const createConvenioModel = (sequelize) => {
                 'PENDIENTE',
                 'OBSERVACION',
                 'ACTUALIZADO',
-                'RECHAZADO'),
+                'RECHAZADO',
+                'VENCIDO'
+            ),
             allowNull: false,
             defaultValue: 'PENDIENTE'
         },

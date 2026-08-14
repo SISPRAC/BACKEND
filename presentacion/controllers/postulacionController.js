@@ -1,8 +1,11 @@
-import {registrarPostulaciones } from "../../aplicacion/casos_de_uso/postulacion/registrarPostulacion.js";
-import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js"
+import { registrarPostulaciones } from "../../aplicacion/casos_de_uso/postulacion/registrarPostulacion.js";
+import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js";
 import { eliminarPostulacion } from "../../aplicacion/casos_de_uso/postulacion/eliminarPostulacion.js";
 import { candidatoRepository } from "../../infraestructura/repositorios/candidatoRepositoryImpl.js";
 import { aperturaVacanteRepository } from "../../infraestructura/repositorios/aperturaVacanteRepositoryImpl.js";
+import { obtenerCandidatosEmpresa } from "../../aplicacion/casos_de_uso/postulacion/obtenerCandidatosEmpresa.js";
+import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
+
 
 export const registrarPostulacionesController = async (req, res) => {
     try {
@@ -40,6 +43,7 @@ export const registrarPostulacionesController = async (req, res) => {
     }
 };
 
+
 export const eliminarPostulacionController = async (
     req,
     res,
@@ -63,6 +67,31 @@ export const eliminarPostulacionController = async (
             );
 
         res.status(200).json(resultado);
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+export const obtenerCandidatosEmpresaController = async (
+    req,
+    res,
+    next
+) => {
+    try {
+
+        const candidatos = await obtenerCandidatosEmpresa(
+            {
+                empresaRepository,
+                postulacionRepository
+            },
+            req.user.id
+        );
+
+        return res.status(200).json({
+            data: candidatos
+        });
 
     } catch (error) {
         next(error);

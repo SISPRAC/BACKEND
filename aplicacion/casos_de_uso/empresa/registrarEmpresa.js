@@ -1,4 +1,5 @@
 import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
+import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
 import bcrypt from "bcryptjs";
@@ -15,6 +16,8 @@ export const registerEmpresa = async (
 
     const transaction = await sequelize.transaction();
 
+    console.log("Datos recibidos en registrarEmpresa:", data, file);
+
     try {
 
         const {
@@ -27,10 +30,10 @@ export const registerEmpresa = async (
             nit,
             direccion,
             cedula,
-            tipo_documento,
+            tipo_documento
         } = data;
 
-        // 1. Validar que no exista información duplicada
+        // 1. Validar duplicados
         const exist =
             await userRepository.findBycorreo(correo) ||
             await empresaRepository.findByNit(nit) ||
@@ -48,53 +51,70 @@ export const registerEmpresa = async (
 
         if (file) {
 
-            const uploadResult = await uploadArchivo(
-                file.buffer,
-                `empresas/${nit}/fotos`,
-                "logo",
-                "image"
-            );
+            if (!file.mimetype.startsWith("image/")) {
+                throw new BadRequestError(
+                    "El logo debe ser una imagen"
+                );
+            }
+
+            const extension =
+                file.mimetype.split("/")[1];
+
+            const uploadResult =
+                await uploadArchivo(
+                    file.buffer,
+                    `empresas/${nit}/fotos`,
+                    `logo.${extension}`,
+                    file.mimetype
+                );
 
             logoUrl = uploadResult.url;
             logoPublicId = uploadResult.public_id;
         }
 
+        // 3. Encriptar contraseña
+        const hashedPassword =
+            await bcrypt.hash(password, 10);
 
-        // 4. Encriptar contraseña
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 4. Crear usuario
+        const user =
+            await userRepository.create({
+                cedula,
+                nombres,
+                apellidos,
+                correo,
+                telefono,
+                password: hashedPassword,
+                tipo_documento
+            }, transaction);
 
-        // 5. Crear usuario
-        const user = await userRepository.create({
-            cedula,
-            nombres,
-            apellidos,
-            correo,
-            telefono,
-            password: hashedPassword,
-            tipo_documento,
-
-        }, transaction);
-
-        const rol = await rolRepository.findByNombre("Empresa");
+        // 5. Rol
+        const rol =
+            await rolRepository.findByNombre("Empresa");
 
         if (!rol) {
-            throw new Error("No se encontró el rol Empresa");
+            throw new Error(
+                "No se encontró el rol Empresa"
+            );
         }
 
-        await user.addRole(rol, { transaction });
+        await user.addRole(
+            rol,
+            { transaction }
+        );
 
+        // 6. Crear empresa
+        const empresa =
+            await empresaRepository.create({
+                nit,
+                nombre,
+                direccion,
+                logo: logoUrl,
+                logo_public_id: logoPublicId,
+                usuario_id: user.id
+            }, transaction);
 
-        // 8. Crear empresa
-        const empresa = await empresaRepository.create({
-            nit,
-            nombre,
-            direccion,
-            logo: logoUrl,
-            logo_public_id: logoPublicId,
-            usuario_id: user.id
-        }, transaction);
-
-        // 9. Confirmar transacción
+        // 7. Confirmar
         await transaction.commit();
 
         return {

@@ -10,7 +10,9 @@ export const empresaRepository = {
 
     async findByUserId(userId) {
         return await models.Empresa.findOne({
-            where: { user_id: userId }
+            where: {
+                usuario_id: userId
+            }
         });
     },
 
@@ -19,4 +21,5 @@ export const empresaRepository = {
             where: { nit }
         });
     }
-}
+
+};

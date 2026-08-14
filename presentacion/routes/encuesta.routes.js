@@ -1,17 +1,16 @@
 import { Router } from "express";
 
-
 import {
 
     crearEncuestaController,
+
+    asignarEncuestaPracticaController,
 
     getEncuestasController,
 
     getEncuestaController,
 
     actualizarEncuestaController,
-
-    actualizarPeriodoPlantillaController,
 
     eliminarEncuestaController
 
@@ -22,17 +21,26 @@ const router = Router();
 
 
 // =============================
-// CREAR ENCUESTA COMPLETA
+// CREAR ENCUESTA
 // =============================
 // Crea:
 // - PlantillaEncuesta
-// - PeriodoPlantilla
-// - Preguntas
-// - Opciones
 
 router.post(
     "/crear",
     crearEncuestaController
+);
+
+
+// =============================
+// ASIGNAR ENCUESTA A PRÁCTICA
+// =============================
+// Crea:
+// - PracticaEncuesta
+
+router.post(
+    "/asignar-practica",
+    asignarEncuestaPracticaController
 );
 
 
@@ -49,13 +57,6 @@ router.get(
 // =============================
 // CONSULTAR UNA ENCUESTA
 // =============================
-// Incluye:
-// - Rol
-// - Periodos
-// - Preguntas
-// - Opciones
-// - Aplicaciones
-// - Respuestas
 
 router.get(
     "/:id",
@@ -64,30 +65,20 @@ router.get(
 
 
 // =============================
-// ACTUALIZAR PLANTILLA
+// ACTUALIZAR ENCUESTA
 // =============================
 // Actualiza:
-// - Titulo
-// - Descripcion
-// - Rol
+// - Título
+// - Descripción
+// - Preguntas
+// - Opciones
+//
+// No permite modificar una plantilla
+// que ya haya sido utilizada en una práctica.
 
 router.put(
     "/:id",
     actualizarEncuestaController
-);
-
-
-// =============================
-// ACTUALIZAR VERSION / PERIODO
-// =============================
-// Actualiza:
-// - Version
-// - Preguntas
-// - Opciones
-
-router.put(
-    "/periodo/:id",
-    actualizarPeriodoPlantillaController
 );
 
 

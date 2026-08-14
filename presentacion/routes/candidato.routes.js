@@ -1,16 +1,42 @@
-import { Router } from "express";
-import { registrarCandidatoController, getCandidatosController, getCandidatosDisponiblesController, updateCandidatoController, getCandidatoPerfilController } from "../controllers/candidatoController.js";
-import { upload  } from "../middleware/uploadMulter.js";
+import express from "express";
 
-const router = Router();
+import {
+    registerCandidatoController,
+    updateCandidatoController,
+    getCandidatosController,
+    getCandidatosDisponiblesController,
+    getCandidatosPerfilController
+} from "../controllers/candidatoController.js";
 
-router.post("/registrarCandidato",upload.single("cv"), registrarCandidatoController);
-router.put("/:id", updateCandidatoController);
-router.get("/all", getCandidatosController);
-router.get("/disponibles", getCandidatosDisponiblesController);
+import {upload} from "../middleware/uploadMulter.js";
+
+const router = express.Router();
+
+router.post(
+    "/registrarCandidato",
+    upload.single("cv"),
+    registerCandidatoController
+);
+
+router.put(
+    "/:id",
+    upload.single("cv"),
+    updateCandidatoController
+);
+
 router.get(
-    "/perfil/:nombrePerfil",
-    getCandidatoPerfilController
+    "/all",
+    getCandidatosController
+);
+
+router.get(
+    "/disponibles",
+    getCandidatosDisponiblesController
+);
+
+router.get(
+    "/perfil/:perfilNombre",
+    getCandidatosPerfilController
 );
 
 export default router;

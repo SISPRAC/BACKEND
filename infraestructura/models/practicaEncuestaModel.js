@@ -16,9 +16,13 @@ const createPracticaEncuestaModel = (sequelize) => {
                 allowNull: false,
             },
 
-            periodo_plantilla_id: {
+            plantilla_encuesta_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+                references: {
+                    model: "PlantillaEncuesta",
+                    key: "id"
+                }
             },
         },
         {
@@ -28,7 +32,7 @@ const createPracticaEncuestaModel = (sequelize) => {
             indexes: [
                 {
                     unique: true,
-                    fields: ["practica_id", "periodo_plantilla_id"],
+                    fields: ["practica_id", "plantilla_encuesta_id"],
                 },
             ],
         }

@@ -18,7 +18,6 @@ import createPerfilVacanteModel from "../models/perfilVacanteModel.js";
 import createArchivoModel from "../models/archivoModel.js";
 import createHistorialConvenioModel from "../models/historialConvenioModel.js";
 import createPlantillaEncuestaModel from "../models/plantillaEncuestaModel.js";
-import createPeriodoPlantillaModel from "../models/periodoPlantillaModel.js";
 import createPreguntaModel from "../models/preguntaModel.js";
 import createRespuestaEncuestaModel from "../models/respuestaEncuestaModel.js";
 import createRespuestaPreguntaModel from "../models/respuestaPreguntaModel.js";
@@ -37,6 +36,9 @@ import createFechaPropuestaVisitaModel from "../models/fechaPropuestaVisitaModel
 import createVisitaModel from "../models/visitaModel.js";
 import createVisitaArchivoModel from "../models/visitaArchivoModel.js";
 import createPracticaRequisitoDocumentoModel from "../models/practicaRequisitoDocumentoModel.js";
+import createGrupoCandidatoModel from "../models/grupoCandidatoModel.js";
+import createHistorialAperturaVacanteModel
+    from "../models/historialAperturaVacanteModel.js";
 
 
 
@@ -61,8 +63,10 @@ export const initDB = async (database, username, contraseña) => {
         models.Candidato = createCandidatoModel(sequelize);
         models.Periodo = createPeriodoModel(sequelize);
         models.Grupo = createGrupoModel(sequelize);
+        models.GrupoCandidato = createGrupoCandidatoModel(sequelize);
         models.Perfil = createPerfilModel(sequelize);
         models.CandidatoPerfil = createCandidatoPerfilModel(sequelize);
+        models.HistorialAperturaVacante = createHistorialAperturaVacanteModel(sequelize);
         models.Vacante = createVacanteModel(sequelize);
         models.Postulacion = createPostulacionModel(sequelize);
         models.AperturaVacante = createAperturaVacanteModel(sequelize);
@@ -73,7 +77,6 @@ export const initDB = async (database, username, contraseña) => {
         models.HistorialConvenio = createHistorialConvenioModel(sequelize);
 
         models.PlantillaEncuesta = createPlantillaEncuestaModel(sequelize);
-        models.PeriodoPlantilla = createPeriodoPlantillaModel(sequelize);
         models.Pregunta = createPreguntaModel(sequelize);
         models.RespuestaEncuesta = createRespuestaEncuestaModel(sequelize);
         models.RespuestaPregunta = createRespuestaPreguntaModel(sequelize);
@@ -153,16 +156,6 @@ export const initDB = async (database, username, contraseña) => {
             otherKey: "candidato_id"
         });
 
-        models.Periodo.hasMany(models.Practica, {
-            foreignKey: "periodo_id",
-            as: "practicas"
-        });
-
-        models.Practica.belongsTo(models.Periodo, {
-            foreignKey: "periodo_id",
-            as: "periodo"
-        });
-
 
         models.Candidato.belongsTo(models.Archivo, {
             foreignKey: "hoja_vida_archivo_id",
@@ -174,12 +167,14 @@ export const initDB = async (database, username, contraseña) => {
             as: "candidatoHojaVida"
         });
 
-        models.Periodo.hasMany(models.Grupo, {
-            foreignKey: "periodo_id"
+        models.Practica.hasMany(models.Grupo, {
+            foreignKey: "practica_id",
+            as: "grupos"
         });
 
-        models.Grupo.belongsTo(models.Periodo, {
-            foreignKey: "periodo_id"
+        models.Grupo.belongsTo(models.Practica, {
+            foreignKey: "practica_id",
+            as: "practica"
         });
 
         models.TutorDocente.hasMany(models.Grupo, {
@@ -211,10 +206,11 @@ export const initDB = async (database, username, contraseña) => {
             foreignKey: "convenio_id"
         });
 
-        models.TutorEmpresa.hasMany(models.Vacante, {
+        models.TutorEmpresa.hasMany(models.AperturaVacante, {
             foreignKey: "tutorEmpresa_id"
         });
-        models.Vacante.belongsTo(models.TutorEmpresa, {
+
+        models.AperturaVacante.belongsTo(models.TutorEmpresa, {
             foreignKey: "tutorEmpresa_id"
         });
 
@@ -225,18 +221,62 @@ export const initDB = async (database, username, contraseña) => {
             foreignKey: "vacante_id"
         });
 
-        models.Periodo.hasMany(models.AperturaVacante, {
-            foreignKey: "periodo_id"
-        });
-        models.AperturaVacante.belongsTo(models.Periodo, {
-            foreignKey: "periodo_id"
+        models.Practica.hasMany(models.AperturaVacante, {
+            foreignKey: "practica_id",
+            as: "aperturasVacante"
         });
 
-        models.Grupo.hasMany(models.Candidato, {
-            foreignKey: "grupo_id"
+        models.AperturaVacante.belongsTo(models.Practica, {
+            foreignKey: "practica_id",
+            as: "practica"
         });
-        models.Candidato.belongsTo(models.Grupo, {
-            foreignKey: "grupo_id"
+
+        models.AperturaVacante.hasMany(models.HistorialAperturaVacante, {
+            foreignKey: "apertura_vacante_id",
+            as: "historialCupos"
+        });
+
+        models.HistorialAperturaVacante.belongsTo(models.AperturaVacante, {
+            foreignKey: "apertura_vacante_id",
+            as: "aperturaVacante"
+        });
+
+
+
+        models.Grupo.hasMany(models.GrupoCandidato, {
+            foreignKey: "grupo_id",
+            as: "candidatosAsignados"
+        });
+
+        models.GrupoCandidato.belongsTo(models.Grupo, {
+            foreignKey: "grupo_id",
+            as: "grupo"
+        });
+
+        models.Candidato.hasMany(models.GrupoCandidato, {
+            foreignKey: "candidato_id",
+            as: "gruposAsignados"
+        });
+
+        models.GrupoCandidato.belongsTo(models.Candidato, {
+            foreignKey: "candidato_id",
+            as: "candidato"
+        });
+
+        // Grupo <-> Candidato mediante GrupoCandidato
+
+        models.Grupo.belongsToMany(models.Candidato, {
+            through: models.GrupoCandidato,
+            foreignKey: "grupo_id",
+            otherKey: "candidato_id",
+            as: "Candidatos"
+        });
+
+        models.Candidato.belongsToMany(models.Grupo, {
+            through: models.GrupoCandidato,
+            foreignKey: "candidato_id",
+            otherKey: "grupo_id",
+            as: "Grupos"
         });
 
         models.Candidato.hasMany(models.Postulacion, {
@@ -317,7 +357,6 @@ export const initDB = async (database, username, contraseña) => {
         // ENCUESTAS / ENTREVISTAS
         // =============================
 
-
         // Rol -> Plantillas
         models.Rol.hasMany(models.PlantillaEncuesta, {
             foreignKey: "rol_id"
@@ -328,38 +367,16 @@ export const initDB = async (database, username, contraseña) => {
         });
 
 
-        // Periodo -> PeriodoPlantilla
-        models.Periodo.hasMany(models.PeriodoPlantilla, {
-            foreignKey: "periodo_id"
-        });
-
-        models.PeriodoPlantilla.belongsTo(models.Periodo, {
-            foreignKey: "periodo_id"
-        });
-
-
-        // PlantillaEncuesta -> PeriodoPlantilla
-        models.PlantillaEncuesta.hasMany(models.PeriodoPlantilla, {
+        // Plantilla -> Preguntas
+        models.PlantillaEncuesta.hasMany(models.Pregunta, {
             foreignKey: "plantilla_encuesta_id",
-            as: "periodosPlantilla"
-        });
-
-        models.PeriodoPlantilla.belongsTo(models.PlantillaEncuesta, {
-            foreignKey: "plantilla_encuesta_id",
-            as: "plantilla"
-        });
-
-
-        // PeriodoPlantilla -> Preguntas
-        models.PeriodoPlantilla.hasMany(models.Pregunta, {
-            foreignKey: "periodo_plantilla_id",
             as: "preguntas",
             onDelete: "CASCADE"
         });
 
-        models.Pregunta.belongsTo(models.PeriodoPlantilla, {
-            foreignKey: "periodo_plantilla_id",
-            as: "periodoPlantilla"
+        models.Pregunta.belongsTo(models.PlantillaEncuesta, {
+            foreignKey: "plantilla_encuesta_id",
+            as: "plantilla"
         });
 
 
@@ -375,15 +392,15 @@ export const initDB = async (database, username, contraseña) => {
         });
 
 
-        // PeriodoPlantilla -> PracticaEncuesta
-        models.PeriodoPlantilla.hasMany(models.PracticaEncuesta, {
-            foreignKey: "periodo_plantilla_id",
+        // Plantilla -> PracticaEncuesta
+        models.PlantillaEncuesta.hasMany(models.PracticaEncuesta, {
+            foreignKey: "plantilla_encuesta_id",
             as: "practicas"
         });
 
-        models.PracticaEncuesta.belongsTo(models.PeriodoPlantilla, {
-            foreignKey: "periodo_plantilla_id",
-            as: "periodoPlantilla"
+        models.PracticaEncuesta.belongsTo(models.PlantillaEncuesta, {
+            foreignKey: "plantilla_encuesta_id",
+            as: "plantilla"
         });
 
 
@@ -441,7 +458,6 @@ export const initDB = async (database, username, contraseña) => {
         models.OpcionPregunta.belongsTo(models.Pregunta, {
             foreignKey: "pregunta_id"
         });
-
 
 
         models.RetiroPracticante.belongsTo(models.User, {

@@ -40,19 +40,6 @@ const createCandidatoModel = (sequelize) => {
             onUpdate: "CASCADE"
         },
 
-        grupo_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-
-            references: {
-                model: "Grupos",
-                key: "id"
-            },
-
-            onDelete: "SET NULL",
-            onUpdate: "CASCADE"
-        }
-
     }, {
 
         timestamps: false

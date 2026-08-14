@@ -5,29 +5,28 @@ export const cambiarEstadoConvenio = async (
     historialConvenioRepository,
     id,
     data
-
-)=>{
+) => {
 
     const convenio =
         await convenioRepository.findById(id);
 
-    if(!convenio){
+    if (!convenio) {
         throw new BadRequestError(
             "Convenio no encontrado"
         );
     }
 
-    await convenioRepository.update(id,{
-        estado:data.estado
+    await convenioRepository.update(id, {
+        estado: data.estado
     });
 
     await historialConvenioRepository.create({
-        convenio_id:id,
-        archivo_id:convenio.archivo_id,
-        accion:data.estado,
-        fecha:new Date().toLocaleString("sv-SE", {timeZone: "America/Bogota"}).replace("T", " "),
-        comentario:data.comentario,
-        usuario_id:data.usuario_id
+        convenio_id: id,
+        archivo_id: convenio.archivo_id,
+        accion: data.estado,
+        fecha: new Date(),
+        comentario: data.comentario,
+        usuario_id: data.usuario_id
     });
 
     return await convenioRepository.findById(id);

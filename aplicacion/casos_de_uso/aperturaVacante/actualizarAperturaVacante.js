@@ -1,70 +1,109 @@
+import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
-import { ConflictError } from "../../../shared/errors/ConflictError.js";
-import { actualizarEstadoAperturaVacante } from "./actualizarEstadoAperturaVacante.js";
 
 export const actualizarAperturaVacante = async (
-    {
-        aperturaVacanteRepository,
-        postulacionRepository
-    },
-    id,
-    datos
+    aperturaVacanteRepository,
+    data,
+    id
 ) => {
 
-    const aperturaVacante =
+    const apertura =
         await aperturaVacanteRepository.findById(id);
 
-    if (!aperturaVacante) {
-        throw new ConflictError(
-            "La apertura de vacante no existe"
+
+    if (!apertura) {
+
+        throw new NotFoundError(
+            "La apertura de vacante no existe."
         );
+
     }
+
+
+    const postulaciones =
+        await aperturaVacanteRepository
+            .countByAperturaVacante(id);
+
+
+    // ============================================================
+    // NO CAMBIAR VACANTE / PRÁCTICA SI YA TIENE POSTULACIONES
+    // ============================================================
 
     if (
-        datos.cupos !== undefined &&
-        (!Number.isInteger(datos.cupos) || datos.cupos < 0)
+        postulaciones > 0 &&
+        (
+            data.vacante_id !== undefined ||
+            data.practica_id !== undefined
+        )
     ) {
+
         throw new BadRequestError(
-            "Los cupos deben ser un número entero mayor o igual a cero"
+            "No se puede cambiar la vacante o la práctica porque la apertura ya tiene postulaciones."
         );
+
     }
 
-    const cuposOcupados =
-        await postulacionRepository.countByAperturaVacante(id);
+
+    // ============================================================
+    // VALIDAR CUPOS
+    // ============================================================
 
     if (
-        datos.cupos !== undefined &&
-        datos.cupos < cuposOcupados
+        data.cupos !== undefined &&
+        Number(data.cupos) < 1
     ) {
+
         throw new BadRequestError(
-            `No es posible asignar ${datos.cupos} cupos porque ya existen ${cuposOcupados} postulaciones`
+            "La apertura debe tener al menos un cupo."
         );
+
     }
 
-    const dataActualizar = {};
 
-    if (datos.cupos !== undefined) {
-        dataActualizar.cupos = datos.cupos;
+    // ============================================================
+    // VALIDAR QUE LOS CUPOS NO SEAN MENORES
+    // QUE LAS POSTULACIONES EXISTENTES
+    // ============================================================
+
+    if (
+        data.cupos !== undefined &&
+        Number(data.cupos) < postulaciones
+    ) {
+
+        throw new BadRequestError(
+            `Los cupos no pueden ser menores que las postulaciones existentes (${postulaciones}).`
+        );
+
     }
 
-    if (datos.periodo_id !== undefined) {
-        dataActualizar.periodo_id = datos.periodo_id;
+
+    const datosActualizar = {};
+
+
+    if (data.cupos !== undefined) {
+
+        datosActualizar.cupos =
+            Number(data.cupos);
+
     }
+
+
+    if (data.estado !== undefined) {
+
+        datosActualizar.estado =
+            data.estado;
+
+    }
+
 
     await aperturaVacanteRepository.update(
         id,
-        dataActualizar
+        datosActualizar
     );
 
-    await actualizarEstadoAperturaVacante(
-        {
-            aperturaVacanteRepository,
-            postulacionRepository
-        },
+
+    return await aperturaVacanteRepository.findById(
         id
     );
 
-    return {
-        message: "Apertura de vacante actualizada correctamente"
-    };
 };

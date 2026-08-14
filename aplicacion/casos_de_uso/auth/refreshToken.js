@@ -13,7 +13,7 @@ export const refreshTokenUseCase = async (userRepository, token) => {
     const user = await userRepository.findById(decoded.id);
 
     if (!user) {
-        throw new BadRequestError("USER_NOT_FOUND");
+        throw new BadRequestError("Usuario no encontrado");
     }
 
     const newAccessToken = jwt.sign(

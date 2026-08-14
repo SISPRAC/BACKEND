@@ -32,7 +32,7 @@ export const registerCandidato = async (
             perfiles
         } = data;
 
-        console.log("Datos recibidos:", data);
+        console.log("Datos recibidos:", data, file);
 
         let perfilesParseados = perfiles;
 
@@ -63,13 +63,19 @@ export const registerCandidato = async (
         // PDF obligatorio
         let archivoHojaVida = null;
 
+        if (file.mimetype !== "application/pdf") {
+            throw new BadRequestError(
+                "La hoja de vida debe ser un archivo PDF"
+            );
+        }
+
         if (file) {
 
             const uploadResult = await uploadArchivo(
                 file.buffer,
                 `candidatos/${codigo}/documentos`,
-                `hoja_vida_${codigo}`,
-                "raw"
+                `hoja_vida_${codigo}.pdf`,
+                file.mimetype
             );
 
             archivoHojaVida = await archivoRepository.create({
@@ -84,10 +90,7 @@ export const registerCandidato = async (
             );
 
         }
-        // Validar perfiles
-        if (!perfiles || perfiles.length === 0) {
-            throw new BadRequestError("El perfil es requerido");
-        }
+        
 
         // 2. Hash contraseña
         const hashedpassword = await bcrypt.hash(password, 10);

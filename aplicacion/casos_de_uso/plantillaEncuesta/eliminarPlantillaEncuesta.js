@@ -1,57 +1,39 @@
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
-
 export const eliminarPlantillaEncuesta = async (
-
     plantillaEncuestaRepository,
-    respuestaEncuestaRepository,
+    practicaEncuestaRepository,
     id
+) => {
 
-)=>{
+    const plantilla =
+        await plantillaEncuestaRepository.findById(id);
 
-
-    const encuesta = 
-    await plantillaEncuestaRepository.findById(id);
-
-
-
-    if(!encuesta){
+    if (!plantilla) {
 
         throw new NotFoundError(
-            "La encuesta no existe"
+            "La plantilla de encuesta no existe"
         );
 
     }
 
+    const usos =
+        await practicaEncuestaRepository.countByPlantilla(
+            id
+        );
 
-
-    const respuestas =
-    await respuestaEncuestaRepository.countByPlantilla(
-        id
-    );
-
-
-
-    if(respuestas > 0){
+    if (usos > 0) {
 
         throw new ConflictError(
-            "No se puede eliminar la encuesta porque tiene respuestas registradas"
+            "No se puede eliminar la plantilla porque ya fue utilizada en una práctica"
         );
 
     }
-
-
 
     await plantillaEncuestaRepository.delete(id);
 
-
-
     return {
-
-        message:"Encuesta eliminada correctamente"
-
+        message: "Plantilla de encuesta eliminada correctamente"
     };
-
-
 };

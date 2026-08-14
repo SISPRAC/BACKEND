@@ -3,9 +3,8 @@ import { models } from "../database/dbConnection.js";
 export const practicaPracticanteRepository = {
 
     async create(data) {
-        return await models.Practicante.create(data);
+        return await models.PracticaPracticante.create(data);
     },
-
 
     async findAll() {
         return await models.Practicante.findAll({
@@ -23,7 +22,6 @@ export const practicaPracticanteRepository = {
             ]
         });
     },
-
 
     async findById(id) {
         return await models.Practicante.findByPk(id, {
@@ -47,6 +45,15 @@ export const practicaPracticanteRepository = {
             where: {
                 practicante_id: practicanteId,
                 estado: "En curso"
+            }
+        });
+    },
+
+    async findFinalizadaByPracticanteId(practicanteId) {
+        return await models.PracticaPracticante.findOne({
+            where: {
+                practicante_id: practicanteId,
+                estado: "Finalizada"
             }
         });
     },

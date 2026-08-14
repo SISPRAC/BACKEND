@@ -37,9 +37,85 @@ export const postulacionRepository = {
             where: { id }
         });
     },
+
     async findById(id) {
         return await models.Postulacion.findByPk(id);
     },
 
+    async findByEmpresa(empresaId) {
+
+    return await models.Postulacion.findAll({
+
+        include: [
+
+            {
+                model: models.Candidato,
+
+                attributes: [
+                    "id",
+                    "codigo",
+                    "hoja_vida_archivo_id"
+                ],
+
+                include: [
+
+                    {
+                        model: models.User,
+
+                        attributes: [
+                            "id",
+                            "nombres",
+                            "apellidos"
+                        ]
+                    },
+
+                    {
+                        model: models.Archivo,
+                        as: "hojaVida",
+
+                        attributes: [
+                            "id",
+                            "nombre",
+                            "url",
+                            "public_id",
+                            "resource_type",
+                            "fecha_subida"
+                        ]
+                    }
+
+                ]
+            },
+
+            {
+                model: models.AperturaVacante,
+                required: true,
+
+                include: [
+
+                    {
+                        model: models.Vacante,
+                        required: true,
+
+                        include: [
+
+                            {
+                                model: models.Convenio,
+                                required: true,
+
+                                where: {
+                                    empresa_id: empresaId
+                                }
+                            }
+
+                        ]
+                    }
+
+                ]
+            }
+
+        ]
+
+    });
+}
 
 };

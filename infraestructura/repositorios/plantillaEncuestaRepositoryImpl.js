@@ -8,19 +8,15 @@ export const plantillaEncuestaRepository = {
 
     },
 
-
     async update(id, data) {
 
         return await models.PlantillaEncuesta.update(data, {
-
             where: {
                 id
             }
-
         });
 
     },
-
 
     async findAll() {
 
@@ -28,55 +24,37 @@ export const plantillaEncuestaRepository = {
 
             include: [
 
-                // Rol de la encuesta
                 {
                     model: models.Rol
                 },
 
-
-                // Versiones de la encuesta por periodo
                 {
-                    model: models.PeriodoPlantilla,
-                    as: "periodosPlantilla",
+                    model: models.Pregunta,
+                    as: "preguntas",
+                    attributes: ["id"]
+                },
+
+                {
+                    model: models.PracticaEncuesta,
+                    as: "practicas",
 
                     include: [
 
-                        // Periodo
                         {
-                            model: models.Periodo
-                        },
-
-
-                        // Preguntas de esa versión
-                        {
-                            model: models.Pregunta,
-                            as: "preguntas",
+                            model: models.Practica,
+                            as: "practica",
 
                             include: [
-
                                 {
-                                    model: models.OpcionPregunta
+                                    model: models.Periodo
                                 }
-
                             ]
 
                         },
 
-
-                        // Aplicaciones de la encuesta
                         {
-                            model: models.PracticaEncuesta,
-                            as: "practicas",
-
-                            include: [
-
-                                {
-                                    model: models.RespuestaEncuesta,
-                                    as: "respuestas"
-                                }
-
-                            ]
-
+                            model: models.RespuestaEncuesta,
+                            as: "respuestas"
                         }
 
                     ]
@@ -88,7 +66,6 @@ export const plantillaEncuestaRepository = {
         });
 
     },
-
 
     async findById(id) {
 
@@ -96,55 +73,68 @@ export const plantillaEncuestaRepository = {
 
             include: [
 
-                // Rol
+                // =============================
+                // ROL
+                // =============================
+
                 {
                     model: models.Rol
                 },
 
+                // =============================
+                // PREGUNTAS
+                // =============================
 
-                // Versiones
                 {
-                    model: models.PeriodoPlantilla,
-                    as: "periodosPlantilla",
+                    model: models.Pregunta,
+                    as: "preguntas",
 
                     include: [
 
-                        // Periodo
-                        {
-                            model: models.Periodo
-                        },
+                        // =============================
+                        // OPCIONES DE LA PREGUNTA
+                        // =============================
 
-
-                        // Preguntas
                         {
-                            model: models.Pregunta,
-                            as: "preguntas",
+                            model: models.OpcionPregunta
+                        }
+
+                    ]
+
+                },
+
+                // =============================
+                // PRÁCTICAS DONDE SE UTILIZA
+                // =============================
+
+                {
+                    model: models.PracticaEncuesta,
+                    as: "practicas",
+
+                    include: [
+
+                        // =============================
+                        // PRÁCTICA
+                        // =============================
+
+                        {
+                            model: models.Practica,
+                            as: "practica",
 
                             include: [
-
                                 {
-                                    model: models.OpcionPregunta
+                                    model: models.Periodo
                                 }
-
                             ]
-
                         },
 
+                        // =============================
+                        // RESPUESTAS
+                        // =============================
 
-                        // Aplicaciones
                         {
-                            model: models.PracticaEncuesta,
-                            as: "practicas",
-
-                            include: [
-
-                                {
-                                    model: models.RespuestaEncuesta,
-                                    as: "respuestas"
-                                }
-
-                            ]
-
+                            model: models.RespuestaEncuesta,
+                            as: "respuestas"
                         }
 
                     ]
@@ -156,7 +146,6 @@ export const plantillaEncuestaRepository = {
         });
 
     },
-
 
     async delete(id) {
 
@@ -169,7 +158,6 @@ export const plantillaEncuestaRepository = {
         });
 
     },
-
 
     async findByRol(rol_id) {
 

@@ -37,7 +37,6 @@ export const updateCandidato = async (
             tipo_documento,
             password,
             codigo,
-            grupo_id,
             perfiles
         } = data;
 
@@ -47,7 +46,7 @@ export const updateCandidato = async (
 
         if (!user) {
             throw new BadRequestError(
-                "USER_NOT_FOUND"
+                "Usuario No encontrado"
             );
         }
 
@@ -156,10 +155,6 @@ export const updateCandidato = async (
             candidatoData.codigo = codigo;
         }
 
-        if (grupo_id !== undefined) {
-            candidatoData.grupo_id = grupo_id;
-        }
-
         if (file) {
 
             // 1. Obtener el archivo anterior
@@ -181,8 +176,8 @@ export const updateCandidato = async (
             const uploadResult = await uploadArchivo(
                 file.buffer,
                 `candidatos/${codigoCandidato}/documentos`,
-                `hoja_vida_${codigoCandidato}`,
-                "raw"
+                `hoja_vida_${codigoCandidato}.pdf`,
+                file.mimetype
             );
 
             // 4. Crear nuevo registro en Archivos
@@ -268,5 +263,4 @@ export const updateCandidato = async (
         throw error;
 
     }
-
 };

@@ -7,7 +7,7 @@ export const loginUser = async (userRepository, { correo, password }) => {
     const user = await userRepository.findBycorreo(correo);
 
     if (!user) {
-        throw new BadRequestError("USER_NOT_FOUND");
+        throw new BadRequestError("Usuario no encontrado");
     }
 
     if (!correo || !password) {
@@ -17,7 +17,7 @@ export const loginUser = async (userRepository, { correo, password }) => {
     const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
-        throw new BadRequestError("INVALID_CREDENTIALS");
+        throw new BadRequestError("Credenciales inválidas");
     }
 
     const roles = user.Roles.map(r => r.nombre);

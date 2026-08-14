@@ -20,6 +20,8 @@ export const registerEmpresaController = async (req, res) => {
 
     } catch (error) {
 
+        console.log("Error en registerEmpresaController:", error);
+
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message

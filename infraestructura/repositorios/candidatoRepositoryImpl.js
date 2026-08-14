@@ -35,15 +35,21 @@ export const candidatoRepository = {
 
     async getDisponibles() {
         return await models.Candidato.findAll({
-            where: {
-                grupo_id: null
-            },
             include: [
                 {
                     model: models.User,
                     attributes: ["nombres", "apellidos"]
+                },
+                {
+                    model: models.GrupoCandidato,
+                    as: "gruposAsignados",
+                    required: false,
+                    attributes: []
                 }
-            ]
+            ],
+            where: {
+                "$gruposAsignados.id$": null
+            }
         });
     },
 
@@ -63,47 +69,24 @@ export const candidatoRepository = {
             { transaction }
         );
     },
-    async asignarGrupo(candidatos, grupoId) {
-        return await models.Candidato.update(
-            { grupo_id: grupoId },
-            {
-                where: {
-                    id: candidatos
-                }
-            }
-        );
-    },
-    async removerGrupo(grupoId) {
-        return await models.Candidato.update(
-            {
-                grupo_id: null
-            },
-            {
-                where: {
-                    grupo_id: grupoId
-                }
-            }
-        );
-    },
+
     async findByPerfil(nombrePerfil) {
-    return await models.Candidato.findAll({
-        include: [
-            {
-                model: models.User,
-                attributes: ["nombres", "apellidos"]
-            },
-            {
-                model: models.Perfil,
-                where: {
-                    nombre: nombrePerfil
+        return await models.Candidato.findAll({
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["nombres", "apellidos"]
                 },
-                through: {
-                    attributes: ["calificacion"]
+                {
+                    model: models.Perfil,
+                    where: {
+                        nombre: nombrePerfil
+                    },
+                    through: {
+                        attributes: ["calificacion"]
+                    }
                 }
-            }
-        ]
-    });
-},
-
-
+            ]
+        });
+    }
 };

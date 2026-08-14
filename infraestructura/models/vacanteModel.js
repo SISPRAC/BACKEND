@@ -1,4 +1,4 @@
-import { DataTypes } from "sequelize";
+import { DataTypes } from 'sequelize';
 
 const createVacanteModel = (sequelize) => {
 
@@ -10,16 +10,7 @@ const createVacanteModel = (sequelize) => {
             autoIncrement: true
         },
 
-        tutorEmpresa_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-
-            references: {
-                model: "TutorEmpresas",
-                key: "id"
-            }
-        },
-         convenio_id: {
+        convenio_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
 
@@ -39,24 +30,24 @@ const createVacanteModel = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false
         },
+
         cantidad: {
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: 1
         },
+
         estado: {
             type: DataTypes.ENUM(
                 'DISPONIBLE',
-                'CERRADA'),
+                'CERRADA'
+            ),
             allowNull: false,
             defaultValue: 'DISPONIBLE'
-            },
-        
+        }
 
     }, {
-
         timestamps: false
-
     });
 
     return Vacante;
