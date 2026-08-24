@@ -1,3 +1,4 @@
+import { Sequelize } from "sequelize";
 import { models } from "../database/dbConnection.js";
 
 export const candidatoRepository = {
@@ -71,22 +72,47 @@ export const candidatoRepository = {
     },
 
     async findByPerfil(nombrePerfil) {
+
         return await models.Candidato.findAll({
+
+            where: {
+                id: {
+                    [Sequelize.Op.notIn]: Sequelize.literal(`(
+                        SELECT DISTINCT candidato_id
+                        FROM "Postulacions"
+                        WHERE estado IN ('POSTULADO', 'ACEPTADO')
+                    )`)
+                }
+            },
+
             include: [
+
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
+
+                    attributes: [
+                        "nombres",
+                        "apellidos"
+                    ]
                 },
+
                 {
                     model: models.Perfil,
+
                     where: {
                         nombre: nombrePerfil
                     },
+
                     through: {
-                        attributes: ["calificacion"]
+                        attributes: [
+                            "calificacion"
+                        ]
                     }
                 }
+
             ]
+
         });
+
     }
 };

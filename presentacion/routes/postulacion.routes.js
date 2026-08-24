@@ -1,9 +1,13 @@
 import { Router } from "express";
+
 import {
     registrarPostulacionesController,
     eliminarPostulacionController,
-    obtenerCandidatosEmpresaController
+    obtenerCandidatosEmpresaController,
+    aceptarPostulacionController,
+    rechazarPostulacionController
 } from "../controllers/postulacionController.js";
+
 import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
@@ -22,6 +26,18 @@ router.get(
     "/empresa/candidatos",
     verifyToken,
     obtenerCandidatosEmpresaController
+);
+
+router.patch(
+    "/:postulacionId/aceptar",
+    verifyToken,
+    aceptarPostulacionController
+);
+
+router.patch(
+    "/:postulacionId/rechazar",
+    verifyToken,
+    rechazarPostulacionController
 );
 
 export default router;

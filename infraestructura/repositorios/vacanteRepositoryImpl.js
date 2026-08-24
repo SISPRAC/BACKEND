@@ -227,4 +227,10 @@ export const vacanteRepository = {
             ]
         });
     },
+
+    async delete(id) {
+    return await models.Vacante.destroy({
+        where: { id }
+    });
+},
 };

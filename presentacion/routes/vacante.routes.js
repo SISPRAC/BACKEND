@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAperturasVacantesController, crearVacanteController, actualizarVacanteController, getVacanteByIdController, getVacantesByEmpresaController } from "../controllers/vacanteController.js";
+import { getAperturasVacantesController, crearVacanteController, actualizarVacanteController, getVacanteByIdController, getVacantesByEmpresaController, eliminarVacanteController } from "../controllers/vacanteController.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
@@ -15,6 +15,8 @@ router.put(
     verifyToken,
     actualizarVacanteController
 );
+
+router.delete("/:id", verifyToken, eliminarVacanteController);
 
 router.get(
     "/all",

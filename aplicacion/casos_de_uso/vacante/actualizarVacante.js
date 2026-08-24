@@ -38,15 +38,6 @@ export const actualizarVacante = async (
         );
     }
 
-    if (
-        data.cantidad !== undefined &&
-        (!Number.isInteger(data.cantidad) || data.cantidad <= 0)
-    ) {
-        throw new BadRequestError(
-            "La cantidad de cupos debe ser un número entero mayor que cero"
-        );
-    }
-
     const datosActualizar = {};
 
     if (data.nombre !== undefined) {
@@ -57,18 +48,7 @@ export const actualizarVacante = async (
         datosActualizar.descripcion = data.descripcion;
     }
 
-    if (data.cantidad !== undefined) {
-        datosActualizar.cantidad = data.cantidad;
-    }
-
     if (data.estado !== undefined) {
-
-        if (!["DISPONIBLE", "CERRADA"].includes(data.estado)) {
-            throw new BadRequestError(
-                "El estado de la vacante no es válido"
-            );
-        }
-
         datosActualizar.estado = data.estado;
     }
 

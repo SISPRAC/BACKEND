@@ -54,7 +54,9 @@ export const registrarPostulaciones = async (
     for (const candidatoId of candidatosIds) {
 
         const candidato =
-            await candidatoRepository.findById(candidatoId);
+            await candidatoRepository.findById(
+                candidatoId
+            );
 
         if (!candidato) {
             throw new ConflictError(
@@ -62,17 +64,25 @@ export const registrarPostulaciones = async (
             );
         }
 
-        const existe =
-            await postulacionRepository.findByCandidatoAndApertura(
-                candidatoId,
-                aperturaVacanteId
-            );
+        // ============================================================
+        // VALIDAR POSTULACIÓN ACTIVA GLOBAL
+        // ============================================================
 
-        if (existe) {
+        const postulacionActiva =
+            await postulacionRepository
+                .findPostulacionActivaByCandidato(
+                    candidatoId
+                );
+
+        if (postulacionActiva) {
             throw new ConflictError(
-                `El candidato ${candidato.nombre} ya se encuentra postulado`
+                `El candidato ${candidatoId} ya tiene una postulación activa`
             );
         }
+
+        // ============================================================
+        // CREAR POSTULACIÓN
+        // ============================================================
 
         const postulacion =
             await postulacionRepository.create({

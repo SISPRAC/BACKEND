@@ -37,9 +37,17 @@ export const obtenerCandidatosEmpresa = async (
                 ? `${usuario.nombres} ${usuario.apellidos}`
                 : "",
 
-            vacante: vacante?.nombre,
+            correo: usuario?.correo || "",
+
+            telefono: usuario?.telefono || "",
+
+            vacante: vacante?.nombre || "",
 
             estado: postulacion.estado,
+
+            fechaPostulacion: postulacion.fecha_postulacion || null,
+
+            fechaEleccion: postulacion.fecha_eleccion || null,
 
             hojaVida: hojaVida || null
         };

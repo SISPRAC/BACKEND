@@ -30,13 +30,7 @@ const createVacanteModel = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-
-        cantidad: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 1
-        },
-
+        
         estado: {
             type: DataTypes.ENUM(
                 'DISPONIBLE',

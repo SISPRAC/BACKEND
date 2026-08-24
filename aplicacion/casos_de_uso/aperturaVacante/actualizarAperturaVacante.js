@@ -10,7 +10,6 @@ export const actualizarAperturaVacante = async (
     const apertura =
         await aperturaVacanteRepository.findById(id);
 
-
     if (!apertura) {
 
         throw new NotFoundError(
@@ -18,7 +17,6 @@ export const actualizarAperturaVacante = async (
         );
 
     }
-
 
     const postulaciones =
         await aperturaVacanteRepository
@@ -62,7 +60,7 @@ export const actualizarAperturaVacante = async (
 
     // ============================================================
     // VALIDAR QUE LOS CUPOS NO SEAN MENORES
-    // QUE LAS POSTULACIONES EXISTENTES
+    // QUE LOS CUPOS OCUPADOS
     // ============================================================
 
     if (
@@ -71,7 +69,7 @@ export const actualizarAperturaVacante = async (
     ) {
 
         throw new BadRequestError(
-            `Los cupos no pueden ser menores que las postulaciones existentes (${postulaciones}).`
+            `Los cupos no pueden ser menores que los cupos ocupados (${postulaciones}).`
         );
 
     }

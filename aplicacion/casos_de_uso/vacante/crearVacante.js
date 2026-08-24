@@ -37,21 +37,11 @@ export const crearVacante = async (
         );
     }
 
-    if (
-        data.cantidad !== undefined &&
-        (!Number.isInteger(data.cantidad) || data.cantidad <= 0)
-    ) {
-        throw new BadRequestError(
-            "La cantidad de cupos debe ser un número entero mayor que cero"
-        );
-    }
-
     const vacante =
         await vacanteRepository.create({
             convenio_id: convenio.id,
             nombre: data.nombre,
-            descripcion: data.descripcion,
-            cantidad: data.cantidad ?? 1
+            descripcion: data.descripcion
         });
 
     return vacante;

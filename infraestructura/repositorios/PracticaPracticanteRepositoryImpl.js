@@ -2,8 +2,10 @@ import { models } from "../database/dbConnection.js";
 
 export const practicaPracticanteRepository = {
 
-    async create(data) {
-        return await models.PracticaPracticante.create(data);
+    async create(data, transaction) {
+        return await models.PracticaPracticante.create(data, {
+            transaction
+        });
     },
 
     async findAll() {
@@ -40,12 +42,13 @@ export const practicaPracticanteRepository = {
         });
     },
 
-    async findActivaByPracticanteId(practicanteId) {
+    async findActivaByPracticanteId(practicanteId, transaction) {
         return await models.PracticaPracticante.findOne({
             where: {
                 practicante_id: practicanteId,
                 estado: "En curso"
-            }
+            },
+            transaction
         });
     },
 

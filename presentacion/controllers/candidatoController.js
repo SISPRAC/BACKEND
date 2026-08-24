@@ -138,6 +138,8 @@ export const getCandidatosPerfilController = async (req, res) => {
 
     } catch (error) {
 
+        console.log("Error al obtener", error);
+
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
