@@ -103,6 +103,7 @@ export const obtenerCandidatosEmpresaController = async (
     }
 };
 
+
 export const aceptarPostulacionController = async (
     req,
     res,
@@ -116,7 +117,8 @@ export const aceptarPostulacionController = async (
             {
                 postulacionRepository,
                 PracticanteRepository,
-                practicaPracticanteRepository
+                practicaPracticanteRepository,
+                aperturaVacanteRepository
             },
             postulacionId
         );
@@ -130,6 +132,7 @@ export const aceptarPostulacionController = async (
         next(error);
     }
 };
+
 
 export const rechazarPostulacionController = async (
     req,

@@ -6,7 +6,8 @@ export const aceptarPostulacion = async (
     {
         postulacionRepository,
         PracticanteRepository,
-        practicaPracticanteRepository
+        practicaPracticanteRepository,
+        aperturaVacanteRepository
     },
     postulacionId,
     datosPracticante
@@ -15,6 +16,10 @@ export const aceptarPostulacion = async (
     const transaction = await sequelize.transaction();
 
     try {
+
+        // ==========================================
+        // BUSCAR POSTULACIÓN
+        // ==========================================
 
         const postulacion =
             await postulacionRepository.findByIdParaAceptar(
@@ -34,10 +39,23 @@ export const aceptarPostulacion = async (
             );
         }
 
-        const candidatoId = postulacion.candidato_id;
+
+        // ==========================================
+        // DATOS NECESARIOS
+        // ==========================================
+
+        const candidatoId =
+            postulacion.candidato_id;
+
+        const aperturaVacanteId =
+            postulacion.aperturaVacante_id;
 
         const practicaId =
             postulacion.AperturaVacante.practica.id;
+
+        const cupos =
+            postulacion.AperturaVacante.cupos;
+
 
         // ==========================================
         // BUSCAR SI EL CANDIDATO YA ES PRACTICANTE
@@ -49,8 +67,9 @@ export const aceptarPostulacion = async (
                 transaction
             );
 
+
         // ==========================================
-        // SI YA ES PRACTICANTE, VERIFICAR PRÁCTICA ACTIVA
+        // SI YA ES PRACTICANTE
         // ==========================================
 
         if (practicante) {
@@ -75,54 +94,107 @@ export const aceptarPostulacion = async (
             // CREAR PRACTICANTE
             // ==========================================
 
-
-            practicante = await PracticanteRepository.create(
-                {
-                    candidato_id: candidatoId
-                },
-                transaction
-            );
-        }
-
-            // ==========================================
-            // CREAR RELACIÓN PRACTICA-PRACTICANTE
-            // ==========================================
-
-            const practicaPracticante =
-                await practicaPracticanteRepository.create(
+            practicante =
+                await PracticanteRepository.create(
                     {
-                        practica_id: practicaId,
-                        practicante_id: practicante.id,
-                        estado: "En curso"
+                        candidato_id: candidatoId
                     },
                     transaction
                 );
+        }
 
-            // ==========================================
-            // ACTUALIZAR POSTULACIÓN
-            // ==========================================
 
-            await postulacionRepository.update(
-                postulacionId,
+        // ==========================================
+        // CREAR RELACIÓN PRACTICA-PRACTICANTE
+        // ==========================================
+
+        const practicaPracticante =
+            await practicaPracticanteRepository.create(
                 {
-                    estado: "ACEPTADO",
-                    fecha_eleccion: new Date()
+                    practica_id: practicaId,
+                    practicante_id: practicante.id,
+                    estado: "En curso"
                 },
                 transaction
             );
 
-            await transaction.commit();
 
-            return {
-                postulacion,
-                practicante,
-                practicaPracticante
-            };
+        // ==========================================
+        // ACTUALIZAR POSTULACIÓN
+        // ==========================================
 
-        } catch (error) {
+        await postulacionRepository.update(
+            postulacionId,
+            {
+                estado: "ACEPTADO",
+                fecha_eleccion: new Date()
+            },
+            transaction
+        );
 
-            await transaction.rollback();
 
-            throw error;
+        // ==========================================
+        // CONTAR CUPOS OCUPADOS
+        // ==========================================
+
+        const cuposOcupados =
+            await postulacionRepository.countByAperturaVacante(
+                aperturaVacanteId
+            );
+
+
+        console.log(
+            "Apertura:",
+            aperturaVacanteId
+        );
+
+        console.log(
+            "Cupos totales:",
+            cupos
+        );
+
+        console.log(
+            "Cupos ocupados:",
+            cuposOcupados
+        );
+
+
+        // ==========================================
+        // SI SE LLENARON LOS CUPOS
+        // ==========================================
+
+        if (cuposOcupados >= cupos) {
+
+            await aperturaVacanteRepository.update(
+                aperturaVacanteId,
+                {
+                    estado: "OCUPADA"
+                },
+                transaction
+            );
+
         }
-    };
+
+
+        // ==========================================
+        // CONFIRMAR TRANSACCIÓN
+        // ==========================================
+
+        await transaction.commit();
+
+
+        return {
+            postulacion,
+            practicante,
+            practicaPracticante
+        };
+
+
+    } catch (error) {
+
+        await transaction.rollback();
+
+        throw error;
+    }
+};
+

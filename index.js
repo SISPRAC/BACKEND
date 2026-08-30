@@ -23,6 +23,7 @@ import retiroPracticanteRouter from "./presentacion/routes/retiroPracticanteRout
 import practicanteRouter from "./presentacion/routes/practicante.routes.js";
 import practicaRouter from "./presentacion/routes/practica.routes.js";
 import practicaRequisitoDocumentoRouter from "./presentacion/routes/practicaRequisitoDocumento.routes.js";
+import tutorEmpresarialRouter from "./presentacion/routes/tutorEmpresarial.routes.js"
 import aperturaVacanteRouter from "./presentacion/routes/aperturaVacantes.routes.js";
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
@@ -56,6 +57,7 @@ app.use("/api/perfil", perfilRouter);
 app.use("/api/rol", rolRouter);
 app.use("/api/grupo", gruposRouter);
 app.use("/api/tutorDocente", tutorDocenteRouter);
+app.use("/api/tutorEmpresarial", tutorEmpresarialRouter);
 app.use("/api/vacante", vacanteRouter);
 app.use("/api/postulacion", postulacionRouter);
 app.use("/api/convenio", convenioRouter);

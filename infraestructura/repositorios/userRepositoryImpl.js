@@ -105,4 +105,10 @@ export const userRepository = {
         });
     },
 
+    findByCorreoEmpresa: async (correo) => {
+    return await models.User.findOne({
+        where: { correo }
+    });
+},
+
 };

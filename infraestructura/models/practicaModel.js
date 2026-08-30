@@ -19,6 +19,13 @@ const createPracticaModel = (sequelize) => {
                 type: DataTypes.DATEONLY,
                 allowNull: false,
             },
+
+            estado: {
+                type: DataTypes.ENUM("EN_CURSO", "FINALIZADA"),
+                allowNull: false,
+                defaultValue: "EN_CURSO",
+            },
+
             periodo_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,

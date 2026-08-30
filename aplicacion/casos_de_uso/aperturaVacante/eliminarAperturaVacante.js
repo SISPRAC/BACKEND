@@ -6,6 +6,10 @@ export const eliminarAperturaVacante = async (
     id
 ) => {
 
+    // ==========================================
+    // BUSCAR APERTURA
+    // ==========================================
+
     const apertura =
         await aperturaVacanteRepository.findById(id);
 
@@ -18,6 +22,43 @@ export const eliminarAperturaVacante = async (
 
     }
 
+
+    // ==========================================
+    // VALIDAR PRÁCTICA
+    // ==========================================
+
+    const practica = apertura.practica;
+
+    if (!practica) {
+
+        throw new NotFoundError(
+            "La práctica asociada a la apertura no existe."
+        );
+
+    }
+
+
+    if (practica.estado === "FINALIZADA") {
+
+        throw new BadRequestError(
+            "No se puede eliminar la apertura de vacante porque la práctica ya está finalizada."
+        );
+
+    }
+
+
+    if (practica.estado !== "EN_CURSO") {
+
+        throw new BadRequestError(
+            "No se puede eliminar la apertura porque la práctica no está en curso."
+        );
+
+    }
+
+
+    // ==========================================
+    // VALIDAR POSTULACIONES
+    // ==========================================
 
     const postulaciones =
         await aperturaVacanteRepository
@@ -32,6 +73,10 @@ export const eliminarAperturaVacante = async (
 
     }
 
+
+    // ==========================================
+    // ELIMINAR
+    // ==========================================
 
     await aperturaVacanteRepository.delete(id);
 

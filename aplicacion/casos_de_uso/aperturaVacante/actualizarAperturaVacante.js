@@ -7,8 +7,13 @@ export const actualizarAperturaVacante = async (
     id
 ) => {
 
+    // ============================================================
+    // BUSCAR APERTURA
+    // ============================================================
+
     const apertura =
         await aperturaVacanteRepository.findById(id);
+
 
     if (!apertura) {
 
@@ -18,28 +23,48 @@ export const actualizarAperturaVacante = async (
 
     }
 
-    const postulaciones =
-        await aperturaVacanteRepository
-            .countByAperturaVacante(id);
-
 
     // ============================================================
-    // NO CAMBIAR VACANTE / PRÁCTICA SI YA TIENE POSTULACIONES
+    // VALIDAR PRÁCTICA
     // ============================================================
 
-    if (
-        postulaciones > 0 &&
-        (
-            data.vacante_id !== undefined ||
-            data.practica_id !== undefined
-        )
-    ) {
+    const practica = apertura.practica;
 
-        throw new BadRequestError(
-            "No se puede cambiar la vacante o la práctica porque la apertura ya tiene postulaciones."
+
+    if (!practica) {
+
+        throw new NotFoundError(
+            "La práctica asociada a la apertura no existe."
         );
 
     }
+
+
+    if (practica.estado === "FINALIZADA") {
+
+        throw new BadRequestError(
+            "No se puede actualizar la apertura de vacante porque la práctica ya está finalizada."
+        );
+
+    }
+
+
+    if (practica.estado !== "EN_CURSO") {
+
+        throw new BadRequestError(
+            "No se puede actualizar la apertura porque la práctica no está en curso."
+        );
+
+    }
+
+
+    // ============================================================
+    // CONTAR POSTULACIONES
+    // ============================================================
+
+    const postulaciones =
+        await aperturaVacanteRepository
+            .countByAperturaVacante(id);
 
 
     // ============================================================
@@ -75,6 +100,10 @@ export const actualizarAperturaVacante = async (
     }
 
 
+    // ============================================================
+    // PREPARAR DATOS
+    // ============================================================
+
     const datosActualizar = {};
 
 
@@ -94,11 +123,19 @@ export const actualizarAperturaVacante = async (
     }
 
 
+    // ============================================================
+    // ACTUALIZAR
+    // ============================================================
+
     await aperturaVacanteRepository.update(
         id,
         datosActualizar
     );
 
+
+    // ============================================================
+    // DEVOLVER APERTURA ACTUALIZADA
+    // ============================================================
 
     return await aperturaVacanteRepository.findById(
         id
