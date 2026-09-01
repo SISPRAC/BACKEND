@@ -3,6 +3,7 @@ import { updateCandidato } from "../../aplicacion/casos_de_uso/candidato/actuali
 import { getCandidatos } from "../../aplicacion/casos_de_uso/candidato/getCandidatos.js";
 import { getCandidatosDisponibles } from "../../aplicacion/casos_de_uso/candidato/getCandidatosDisponibles.js";
 import { getCandidatosPerfil } from "../../aplicacion/casos_de_uso/candidato/getCandidatosPerfil.js";
+import { invitarCandidato } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarCandidato.js";
 
 import { candidatoRepository } from "../../infraestructura/repositorios/candidatoRepositoryImpl.js";
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
@@ -17,6 +18,8 @@ export const registerCandidatoController = async (req, res) => {
 
     try {
 
+        const invitacion = req.invitacion;
+
         const result = await registerCandidato(
             sequelize,
             userRepository,
@@ -25,7 +28,11 @@ export const registerCandidatoController = async (req, res) => {
             perfilRepository,
             candidatoPerfilRepository,
             archivoRepository,
-            req.body,
+            {
+                ...req.body,
+                correo: invitacion.correo,
+                codigo: invitacion.codigo
+            },
             req.file
         );
 
@@ -149,5 +156,21 @@ export const getCandidatosPerfilController = async (req, res) => {
         return res.status(500).json({
             message: "Error interno del servidor"
         });
+    }
+};
+
+export const invitarCandidatoController = async (req, res) => {
+    try {
+        const result = await invitarCandidato({
+            correo: req.body.correo,
+            codigo: req.body.codigo,
+            nombre: req.body.nombre
+        });
+        return res.status(200).json(result);
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({ message: error.message });
+        } console.log("Error al enviar invitación al candidato:", error);
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
 };

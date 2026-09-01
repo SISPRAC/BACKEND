@@ -9,7 +9,6 @@ export const registerEmpresa = async (
     userRepository,
     empresaRepository,
     rolRepository,
-    archivoRepository,
     data,
     file
 ) => {

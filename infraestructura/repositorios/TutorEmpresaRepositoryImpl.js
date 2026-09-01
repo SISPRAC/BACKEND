@@ -14,12 +14,8 @@ export const tutorEmpresaRepository = {
     },
 
 
-    async findByUserId(userId) {
-        return await models.TutorEmpresa.findOne({
-            where: {
-                user_id: userId
-            }
-        });
+    async findByUserId(userId) { 
+        return await models.TutorEmpresa.findOne({ where: { usuario_id: userId } }); 
     },
 
 
@@ -37,10 +33,6 @@ export const tutorEmpresaRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: [
-                        "nombres",
-                        "apellidos"
-                    ]
                 }
             ]
         });

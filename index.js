@@ -25,6 +25,7 @@ import practicaRouter from "./presentacion/routes/practica.routes.js";
 import practicaRequisitoDocumentoRouter from "./presentacion/routes/practicaRequisitoDocumento.routes.js";
 import tutorEmpresarialRouter from "./presentacion/routes/tutorEmpresarial.routes.js"
 import aperturaVacanteRouter from "./presentacion/routes/aperturaVacantes.routes.js";
+import invitarRouter from "./presentacion/routes/invitacion.routes.js"
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 
@@ -48,6 +49,7 @@ app.use(
 );
 
 app.use("/api/auth", authRouter);
+app.use("/api/invitacion/", invitarRouter);
 app.use("/api/empresa", empresaRouter);
 app.use("/api/candidato", candidatoRouter);
 app.use("/api/staff", staffRouter);

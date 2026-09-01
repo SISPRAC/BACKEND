@@ -47,7 +47,9 @@ export const registerCandidato = async (
         }
 
         if (!perfilesParseados || perfilesParseados.length === 0) {
-            throw new BadRequestError("El perfil es requerido");
+            throw new BadRequestError(
+                "El perfil es requerido"
+            );
         }
 
         // 1. Validaciones
@@ -57,11 +59,17 @@ export const registerCandidato = async (
             await candidatoRepository.findByCodigo(codigo);
 
         if (exist) {
-            throw new ConflictError("Ya existe un usuario con esos datos");
+            throw new ConflictError(
+                "Ya existe un usuario con esos datos"
+            );
         }
 
-        // PDF obligatorio
-        let archivoHojaVida = null;
+        // 2. Validar y subir hoja de vida
+        if (!file) {
+            throw new BadRequestError(
+                "La hoja de vida es requerida"
+            );
+        }
 
         if (file.mimetype !== "application/pdf") {
             throw new BadRequestError(
@@ -69,66 +77,75 @@ export const registerCandidato = async (
             );
         }
 
-        if (file) {
+        const uploadResult = await uploadArchivo(
+            file.buffer,
+            `candidatos/${codigo}/documentos`,
+            `hoja_vida_${codigo}.pdf`,
+            file.mimetype
+        );
 
-            const uploadResult = await uploadArchivo(
-                file.buffer,
-                `candidatos/${codigo}/documentos`,
-                `hoja_vida_${codigo}.pdf`,
-                file.mimetype
-            );
-
-            archivoHojaVida = await archivoRepository.create({
+        const archivoHojaVida =
+            await archivoRepository.create({
                 nombre: file.originalname,
                 url: uploadResult.url
             }, transaction);
 
-        } else {
+        // 3. Hash contraseña
+        const hashedpassword =
+            await bcrypt.hash(password, 10);
 
+        // 4. Crear usuario
+        const user =
+            await userRepository.create({
+                nombres,
+                apellidos,
+                cedula,
+                correo,
+                telefono,
+                password: hashedpassword,
+                tipo_documento
+            }, transaction);
+
+        // 5. Rol
+        const rol =
+            await rolRepository.findByNombre("Candidato");
+
+        if (!rol) {
             throw new BadRequestError(
-                "La hoja de vida es requerida"
+                "No se encontró el rol Candidato"
             );
-
         }
-        
 
-        // 2. Hash contraseña
-        const hashedpassword = await bcrypt.hash(password, 10);
+        await user.addRole(
+            rol,
+            { transaction }
+        );
 
-        // 3. Crear usuario
-        const user = await userRepository.create({
-            nombres,
-            apellidos,
-            cedula,
-            correo,
-            telefono,
-            password: hashedpassword,
-            tipo_documento
-        }, transaction);
+        console.log(
+            "Usuario creado con ID:",
+            user.id
+        );
 
-        // 4. Rol
-        const rol = await rolRepository.findByNombre("Candidato");
+        // 6. Crear candidato
+        const newCandidato =
+            await candidatoRepository.create({
+                codigo,
+                hoja_vida_archivo_id: archivoHojaVida.id,
+                usuario_id: user.id
+            }, transaction);
 
-        await user.addRole(rol, { transaction });
+        console.log(
+            "Candidato creado con ID:",
+            newCandidato.id
+        );
 
-        console.log("Usuario creado con ID:", user.id);
-
-        // 5. Crear candidato
-        const newCandidato = await candidatoRepository.create({
-            codigo,
-            hoja_vida_archivo_id: archivoHojaVida.id,
-            usuario_id: user.id
-        }, transaction);
-
-        console.log("Candidato creado con ID:", newCandidato.id);
-
-        // 6. Registrar perfiles
-
+        // 7. Registrar perfiles
         for (const perfil of perfilesParseados) {
 
-            const perfilExist = await perfilRepository.findById(
-                perfil.perfil_id
-            );
+            const perfilExist =
+                await perfilRepository.findById(
+                    perfil.perfil_id
+                );
 
             if (!perfilExist) {
                 throw new BadRequestError(
@@ -156,3 +173,4 @@ export const registerCandidato = async (
         throw error;
     }
 };
+

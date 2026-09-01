@@ -8,23 +8,41 @@ import { actualizarEmpresa } from "../../aplicacion/casos_de_uso/empresa/actuali
 import { obtenerEmpresa } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresa.js";
 import { obtenerGruposEmpresa } from "../../aplicacion/casos_de_uso/empresa/getMisGruposPractica.js";
 import { obtenerDetalleGrupoEmpresa } from "../../aplicacion/casos_de_uso/empresa/getDetalleGrupoPractica.js";
+import { invitarEmpresa } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarEmpresa.js";
 
 export const registerEmpresaController = async (req, res) => {
+
     try {
+
+        const invitacion = req.invitacion;
+
+        if (invitacion.rol !== "Empresa") {
+            return res.status(403).json({
+                message:
+                    "Esta invitación no corresponde al registro de una empresa"
+            });
+        }
+
         const resultado = await registerEmpresa(
             sequelize,
             userRepository,
             empresaRepository,
             rolRepository,
-            archivoRepository,
-            req.body,
+            {
+                ...req.body,
+                correo: invitacion.correo
+            },
             req.file
         );
-        res.status(201).json(resultado);
+
+        return res.status(201).json(resultado);
 
     } catch (error) {
 
-        console.log("Error en registerEmpresaController:", error);
+        console.log(
+            "Error en registerEmpresaController:",
+            error
+        );
 
         if (error.statusCode) {
             return res.status(error.statusCode).json({
@@ -152,4 +170,34 @@ export const obtenerDetalleGrupoEmpresaController = async (
 
     }
 
+};
+
+export const invitarEmpresaController = async (req, res) => {
+
+    try {
+
+        const resultado = await invitarEmpresa({
+            correo: req.body.correo,
+            nombreEmpresa: req.body.nombreEmpresa
+        });
+
+        return res.status(200).json(resultado);
+
+    } catch (error) {
+
+        console.log(
+            "Error en invitarEmpresaController:",
+            error
+        );
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
 };
