@@ -30,6 +30,7 @@ const createUserModel = (sequelize) => {
             type: DataTypes.STRING(255),
             allowNull: false
         },
+
         tipo_documento: {
             type: DataTypes.ENUM('CC', 'CE', 'PEP', 'PA'),
             allowNull: false
@@ -44,6 +45,12 @@ const createUserModel = (sequelize) => {
         telefono: {
             type: DataTypes.STRING(15),
             allowNull: false
+        },
+
+        estado: {
+            type: DataTypes.ENUM('ACTIVO', 'INACTIVO'),
+            allowNull: false,
+            defaultValue: 'ACTIVO'
         }
 
     }, {

@@ -22,32 +22,36 @@ const createPracticanteModel = (sequelize) => {
 
             eps: {
                 type: DataTypes.STRING(100),
-                allowNull: false,
+                allowNull: true,
             },
 
             codigoDepResidencia: {
                 type: DataTypes.CHAR(2),
-                allowNull: false,
+                allowNull: true,
             },
 
             codigoMunResidencia: {
                 type: DataTypes.CHAR(5),
-                allowNull: false,
+                allowNull: true,
             },
 
             fecha_nacimiento: {
                 type: DataTypes.DATEONLY,
-                allowNull: false,
+                allowNull: true,
             },
 
             genero: {
-                type: DataTypes.ENUM("Masculino", "Femenino", "Otro"),
-                allowNull: false,
+                type: DataTypes.ENUM(
+                    "Masculino",
+                    "Femenino",
+                    "Otro"
+                ),
+                allowNull: true,
             },
 
             direccion: {
                 type: DataTypes.STRING(255),
-                allowNull: false,
+                allowNull: true,
             },
         },
         {

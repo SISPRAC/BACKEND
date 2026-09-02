@@ -1,45 +1,75 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
-export const getCandidatosByGrupo = async (grupoRepository, id) => {
+export const getCandidatosGrupo = async (
+    grupoRepository,
+    id
+) => {
 
-    const grupo = await grupoRepository.findCandidatosByGrupoId(id);
+    const grupo =
+        await grupoRepository.findCandidatosByGrupoId(id);
 
     if (!grupo) {
-        throw new BadRequestError("Grupo no encontrado");
+        throw new BadRequestError(
+            "Grupo no encontrado"
+        );
     }
 
-    const candidatos = grupo.Candidatos?.map(candidato => {
-
-        const ultimaPostulacion =
-            candidato.Postulacions?.[0] || null;
-
-        return {
-            id: candidato.id,
-            codigo: candidato.codigo,
-            nombre: `${candidato.Usuario?.nombres ?? ""} ${candidato.Usuario?.apellidos ?? ""}`,
-            estado:
-                ultimaPostulacion?.estado ??
-                candidato.estado,
-            empresa:
-                ultimaPostulacion
-                    ?.AperturaVacante
-                    ?.Vacante
-                    ?.Convenio
-                    ?.Empresa
-                    ?.nombre ?? null
-        };
-    }) || [];
+    const tutor = grupo.TutorDocente;
+    const usuarioTutor = tutor?.Usuario;
 
     return {
-    id: grupo.id,
-    nombre: grupo.nombre,
-    periodo: grupo.Periodo?.nombre,
+        id: grupo.id,
+        nombre: grupo.nombre,
 
-    tutorDocente:
-        `${grupo.TutorDocente?.Usuario?.nombres ?? ""} ${
-            grupo.TutorDocente?.Usuario?.apellidos ?? ""
-        }`.trim(),
+        practica_id: grupo.practica_id,
+        practica: grupo.practica,
 
-    candidatos
-};
+        tutorDocente_id: grupo.tutorDocente_id,
+
+        tutorDocente: tutor
+            ? {
+                id: tutor.id,
+                codigo: tutor.codigo,
+                nombre: `${usuarioTutor?.nombres || ""} ${usuarioTutor?.apellidos || ""}`.trim()
+            }
+            : null,
+
+        candidatos:
+            grupo.candidatosAsignados?.map(
+                grupoCandidato => {
+
+                    const candidato =
+                        grupoCandidato.candidato;
+
+                    const usuario =
+                        candidato?.Usuario;
+
+                    const postulacion =
+                        candidato?.Postulacions?.[0];
+
+                    const apertura =
+                        postulacion?.AperturaVacante;
+
+                    const vacante =
+                        apertura?.Vacante;
+
+                    const convenio =
+                        vacante?.Convenio;
+
+                    const empresa =
+                        convenio?.Empresa;
+
+                    return {
+                        id: candidato?.id,
+                        codigo: candidato?.codigo,
+
+                        nombre:
+                            `${usuario?.nombres || ""} ${usuario?.apellidos || ""}`.trim(),
+
+                        empresa:
+                            empresa?.nombre || null
+                    };
+                }
+            ) || []
+    };
 };

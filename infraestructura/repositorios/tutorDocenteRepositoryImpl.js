@@ -6,11 +6,7 @@ export const TutorDocenteRepository = {
         return await models.TutorDocente.create(data, { transaction });
     },
 
-    async findByUserId(userId) {
-        return await models.TutorDocente.findOne({
-            where: { user_id: userId }
-        });
-    },
+    async findByUserId(userId) { return await models.TutorDocente.findOne({ where: { usuario_id: userId } }); },
 
     async findByCodigo(codigo) {
         return await models.TutorDocente.findOne({
@@ -22,7 +18,6 @@ export const TutorDocenteRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
                 }]
         });
     },

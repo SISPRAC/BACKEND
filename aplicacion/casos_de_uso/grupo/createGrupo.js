@@ -3,36 +3,56 @@ import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
 export const crearGrupo = async (
     grupoRepository,
-    candidatoRepository,
+    grupoCandidatoRepository,
     data
 ) => {
-    const { nombre, periodo_id, tutorDocente_id, candidatos } = data;
 
-    // validar datos
-    if (!nombre || !periodo_id || !tutorDocente_id) {
-        throw new BadRequestError("Los datos son obligatorios");
+    const {
+        nombre,
+        practica_id,
+        tutorDocente_id,
+        candidatos
+    } = data;
+
+    // Validar datos
+    if (!nombre || !practica_id || !tutorDocente_id) {
+        throw new BadRequestError(
+            "Los datos son obligatorios"
+        );
     }
 
-    const exist = await grupoRepository.findByName(nombre);
+    // El nombre solo debe ser único dentro de la práctica
+    const exist =
+        await grupoRepository.findByNameAndPractica(
+            nombre,
+            practica_id
+        );
 
     if (exist) {
-        throw new ConflictError("Ya existe un grupo con ese nombre");
+        throw new ConflictError(
+            "Ya existe un grupo con ese nombre en esta práctica"
+        );
     }
 
-    // crear grupo
+    // Crear grupo
     const newGrupo = await grupoRepository.create({
         nombre,
-        periodo_id,
+        practica_id,
         tutorDocente_id
     });
 
-    // asignar grupo a candidatos
+    // Asignar candidatos al grupo mediante GrupoCandidato
     if (candidatos?.length > 0) {
-        await candidatoRepository.asignarGrupo(
-            candidatos,
-            newGrupo.id
-        );
-    };
+
+        for (const candidato_id of candidatos) {
+
+            await grupoCandidatoRepository.create({
+                grupo_id: newGrupo.id,
+                candidato_id
+            });
+
+        }
+    }
 
     return newGrupo;
 };

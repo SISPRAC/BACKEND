@@ -1,102 +1,68 @@
 import { crearPlantillaEncuesta }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/crearPlantillaEncuesta.js";
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/crearPlantillaEncuesta.js";
 
-import { asignarPlantillaPeriodo }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/asignarPlantillaPeriodo.js";
+import { asignarPlantillaPractica }
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/asignarPlantillaPractica.js";
 
 import { getPlantillasEncuesta }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/getPlantillaEncuestas.js";
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/getPlantillaEncuestas.js";
 
 import { getPlantillaEncuesta }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/getPlantillaEncuesta.js";
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/getPlantillaEncuesta.js";
 
 import { actualizarPlantillaEncuesta }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/actualizarPlantillaEncuesta.js";
-
-import { actualizarPeriodoPlantilla }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/actualizarPeriodoPlantilla.js";
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/actualizarPlantillaEncuesta.js";
 
 import { eliminarPlantillaEncuesta }
-from "../../aplicacion/casos_de_uso/plantillaEncuesta/eliminarPlantillaEncuesta.js";
-
+    from "../../aplicacion/casos_de_uso/plantillaEncuesta/eliminarPlantillaEncuesta.js";
 
 import { plantillaEncuestaRepository }
-from "../../infraestructura/repositorios/plantillaEncuestaRepositoryImpl.js";
+    from "../../infraestructura/repositorios/plantillaEncuestaRepositoryImpl.js";
 
-import { periodoPlantillaRepository }
-from "../../infraestructura/repositorios/periodoPlantillaRepositoryImpl.js";
+import { practicaRepository }
+    from "../../infraestructura/repositorios/practicaRepositoryImpl.js";
+
+import { practicaEncuestaRepository }
+    from "../../infraestructura/repositorios/practicaEncuestaRepositoryImpl.js";
 
 import { preguntaRepository }
-from "../../infraestructura/repositorios/preguntaRepositoryImpl.js";
+    from "../../infraestructura/repositorios/preguntaRepositoryImpl.js";
 
 import { opcionPreguntaRepository }
-from "../../infraestructura/repositorios/opcionPreguntaRepositoryImpl.js";
+    from "../../infraestructura/repositorios/opcionPreguntaRepositoryImpl.js";
 
 import { rolRepository }
-from "../../infraestructura/repositorios/rolRepositoryImpl.js";
-
-import { periodoRepository }
-from "../../infraestructura/repositorios/periodoRepositoryImpl.js";
+    from "../../infraestructura/repositorios/rolRepositoryImpl.js";
 
 import { respuestaEncuestaRepository }
-from "../../infraestructura/repositorios/respuestaEncuestaRepositoryImpl.js";
+    from "../../infraestructura/repositorios/respuestaEncuestaRepositoryImpl.js";
 
-import { respuestaPreguntaRepository }
-from "../../infraestructura/repositorios/respuestasPreguntaRepositoryImpl.js";
 
+
+import { sequelize } from "../../infraestructura/database/dbConnection.js";
+
+// ========================================
 // CREAR ENCUESTA
+// ========================================
+
 export const crearEncuestaController = async (req, res) => {
 
     try {
 
-        // =========================
-        // Crear plantilla base
-        // =========================
-
         const encuesta =
             await crearPlantillaEncuesta(
 
-                plantillaEncuestaRepository,
-
-                rolRepository,
-
-                req.body
-
-            );
-
-
-        // =========================
-        // Asignar plantilla al periodo
-        // =========================
-
-        const periodoPlantilla =
-            await asignarPlantillaPeriodo(
+                sequelize,
 
                 plantillaEncuestaRepository,
-
-                periodoRepository,
-
-                periodoPlantillaRepository,
 
                 preguntaRepository,
 
                 opcionPreguntaRepository,
 
-                {
+                rolRepository,
 
-                    plantilla_encuesta_id:
-                        encuesta.id,
-
-                    periodo_id:
-                        req.body.periodo_id,
-
-                    version:
-                        req.body.version,
-
-                    preguntas:
-                        req.body.preguntas
-
-                }
+                req.body
 
             );
 
@@ -106,21 +72,13 @@ export const crearEncuestaController = async (req, res) => {
             message:
                 "Encuesta creada correctamente",
 
-            data: {
-
-                plantilla: encuesta,
-
-                periodoPlantilla
-
-            }
+            data:
+                encuesta
 
         });
 
 
     } catch (error) {
-
-        console.error(error);
-
 
         if (error.statusCode) {
 
@@ -134,6 +92,12 @@ export const crearEncuestaController = async (req, res) => {
         }
 
 
+        console.error(
+            "Error crear encuesta:",
+            error
+        );
+
+
         return res.status(500).json({
 
             message:
@@ -145,7 +109,76 @@ export const crearEncuestaController = async (req, res) => {
 
 };
 
+
+// ========================================
+// ASIGNAR ENCUESTA A UNA PRÁCTICA
+// ========================================
+
+export const asignarEncuestaPracticaController = async (req, res) => {
+
+    try {
+
+        const practicaEncuesta =
+            await asignarPlantillaPractica(
+
+                plantillaEncuestaRepository,
+
+                practicaRepository,
+
+                practicaEncuestaRepository,
+
+                req.body
+
+            );
+
+
+        return res.status(201).json({
+
+            message:
+                "Encuesta asignada correctamente a la práctica",
+
+            data:
+                practicaEncuesta
+
+        });
+
+
+    } catch (error) {
+
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+
+                message:
+                    error.message
+
+            });
+
+        }
+
+
+        console.error(
+            "Error asignar encuesta a práctica:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            message:
+                "Error interno del servidor"
+
+        });
+
+    }
+
+};
+
+
+// ========================================
 // GET TODAS LAS ENCUESTAS
+// ========================================
+
 export const getEncuestasController = async (req, res) => {
 
     try {
@@ -158,7 +191,11 @@ export const getEncuestasController = async (req, res) => {
             );
 
 
-        return res.status(200).json(encuestas);
+        return res.status(200).json(
+
+            encuestas
+
+        );
 
 
     } catch (error) {
@@ -175,7 +212,10 @@ export const getEncuestasController = async (req, res) => {
         }
 
 
-        console.error(error);
+        console.error(
+            "Error obtener encuestas:",
+            error
+        );
 
 
         return res.status(500).json({
@@ -189,7 +229,11 @@ export const getEncuestasController = async (req, res) => {
 
 };
 
+
+// ========================================
 // GET UNA ENCUESTA
+// ========================================
+
 export const getEncuestaController = async (req, res) => {
 
     try {
@@ -204,7 +248,11 @@ export const getEncuestaController = async (req, res) => {
             );
 
 
-        return res.status(200).json(encuesta);
+        return res.status(200).json(
+
+            encuesta
+
+        );
 
 
     } catch (error) {
@@ -221,7 +269,10 @@ export const getEncuestaController = async (req, res) => {
         }
 
 
-        console.error(error);
+        console.error(
+            "Error obtener encuesta:",
+            error
+        );
 
 
         return res.status(500).json({
@@ -236,7 +287,10 @@ export const getEncuestaController = async (req, res) => {
 };
 
 
-// ACTUALIZAR DATOS DE LA PLANTILLA
+// ========================================
+// ACTUALIZAR ENCUESTA
+// ========================================
+
 export const actualizarEncuestaController = async (req, res) => {
 
     try {
@@ -245,6 +299,14 @@ export const actualizarEncuestaController = async (req, res) => {
             await actualizarPlantillaEncuesta(
 
                 plantillaEncuestaRepository,
+
+                practicaEncuestaRepository,
+
+                preguntaRepository,
+
+                opcionPreguntaRepository,
+
+                respuestaEncuestaRepository,
 
                 rolRepository,
 
@@ -297,72 +359,11 @@ export const actualizarEncuestaController = async (req, res) => {
 
 };
 
-// ACTUALIZAR VERSION DE ENCUESTA
-export const actualizarPeriodoPlantillaController = async (req, res) => {
 
-    try {
-
-        const periodoPlantilla =
-            await actualizarPeriodoPlantilla(
-
-                periodoPlantillaRepository,
-
-                preguntaRepository,
-
-                opcionPreguntaRepository,
-
-                respuestaPreguntaRepository,
-
-                req.params.id,
-
-                req.body
-
-            );
-
-
-        return res.status(200).json({
-
-            message:
-                "Versión de encuesta actualizada correctamente",
-
-            data:
-                periodoPlantilla
-
-        });
-
-
-    } catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-
-        console.error(
-            "Error actualizar versión de encuesta:",
-            error
-        );
-
-
-        return res.status(500).json({
-
-            message:
-                "Error interno del servidor"
-
-        });
-
-    }
-
-};
-
+// ========================================
 // ELIMINAR ENCUESTA
+// ========================================
+
 export const eliminarEncuestaController = async (req, res) => {
 
     try {
@@ -372,14 +373,18 @@ export const eliminarEncuestaController = async (req, res) => {
 
                 plantillaEncuestaRepository,
 
-                respuestaEncuestaRepository,
+                practicaEncuestaRepository,
 
                 req.params.id
 
             );
 
 
-        return res.status(200).json(respuesta);
+        return res.status(200).json(
+
+            respuesta
+
+        );
 
 
     } catch (error) {

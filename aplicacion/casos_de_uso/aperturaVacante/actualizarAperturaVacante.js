@@ -1,70 +1,144 @@
+import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
-import { ConflictError } from "../../../shared/errors/ConflictError.js";
-import { actualizarEstadoAperturaVacante } from "./actualizarEstadoAperturaVacante.js";
 
 export const actualizarAperturaVacante = async (
-    {
-        aperturaVacanteRepository,
-        postulacionRepository
-    },
-    id,
-    datos
+    aperturaVacanteRepository,
+    data,
+    id
 ) => {
 
-    const aperturaVacante =
+    // ============================================================
+    // BUSCAR APERTURA
+    // ============================================================
+
+    const apertura =
         await aperturaVacanteRepository.findById(id);
 
-    if (!aperturaVacante) {
-        throw new ConflictError(
-            "La apertura de vacante no existe"
+
+    if (!apertura) {
+
+        throw new NotFoundError(
+            "La apertura de vacante no existe."
         );
+
     }
+
+
+    // ============================================================
+    // VALIDAR PRÁCTICA
+    // ============================================================
+
+    const practica = apertura.practica;
+
+
+    if (!practica) {
+
+        throw new NotFoundError(
+            "La práctica asociada a la apertura no existe."
+        );
+
+    }
+
+
+    if (practica.estado === "FINALIZADA") {
+
+        throw new BadRequestError(
+            "No se puede actualizar la apertura de vacante porque la práctica ya está finalizada."
+        );
+
+    }
+
+
+    if (practica.estado !== "EN_CURSO") {
+
+        throw new BadRequestError(
+            "No se puede actualizar la apertura porque la práctica no está en curso."
+        );
+
+    }
+
+
+    // ============================================================
+    // CONTAR POSTULACIONES
+    // ============================================================
+
+    const postulaciones =
+        await aperturaVacanteRepository
+            .countByAperturaVacante(id);
+
+
+    // ============================================================
+    // VALIDAR CUPOS
+    // ============================================================
 
     if (
-        datos.cupos !== undefined &&
-        (!Number.isInteger(datos.cupos) || datos.cupos < 0)
+        data.cupos !== undefined &&
+        Number(data.cupos) < 1
     ) {
+
         throw new BadRequestError(
-            "Los cupos deben ser un número entero mayor o igual a cero"
+            "La apertura debe tener al menos un cupo."
         );
+
     }
 
-    const cuposOcupados =
-        await postulacionRepository.countByAperturaVacante(id);
+
+    // ============================================================
+    // VALIDAR QUE LOS CUPOS NO SEAN MENORES
+    // QUE LOS CUPOS OCUPADOS
+    // ============================================================
 
     if (
-        datos.cupos !== undefined &&
-        datos.cupos < cuposOcupados
+        data.cupos !== undefined &&
+        Number(data.cupos) < postulaciones
     ) {
+
         throw new BadRequestError(
-            `No es posible asignar ${datos.cupos} cupos porque ya existen ${cuposOcupados} postulaciones`
+            `Los cupos no pueden ser menores que los cupos ocupados (${postulaciones}).`
         );
+
     }
 
-    const dataActualizar = {};
 
-    if (datos.cupos !== undefined) {
-        dataActualizar.cupos = datos.cupos;
+    // ============================================================
+    // PREPARAR DATOS
+    // ============================================================
+
+    const datosActualizar = {};
+
+
+    if (data.cupos !== undefined) {
+
+        datosActualizar.cupos =
+            Number(data.cupos);
+
     }
 
-    if (datos.periodo_id !== undefined) {
-        dataActualizar.periodo_id = datos.periodo_id;
+
+    if (data.estado !== undefined) {
+
+        datosActualizar.estado =
+            data.estado;
+
     }
+
+
+    // ============================================================
+    // ACTUALIZAR
+    // ============================================================
 
     await aperturaVacanteRepository.update(
         id,
-        dataActualizar
+        datosActualizar
     );
 
-    await actualizarEstadoAperturaVacante(
-        {
-            aperturaVacanteRepository,
-            postulacionRepository
-        },
+
+    // ============================================================
+    // DEVOLVER APERTURA ACTUALIZADA
+    // ============================================================
+
+    return await aperturaVacanteRepository.findById(
         id
     );
 
-    return {
-        message: "Apertura de vacante actualizada correctamente"
-    };
 };

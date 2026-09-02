@@ -8,9 +8,31 @@ export const empresaRepository = {
         });
     },
 
+    async findById(id) {
+        return await models.Empresa.findByPk(id);
+    },
+
     async findByUserId(userId) {
+
         return await models.Empresa.findOne({
-            where: { user_id: userId }
+            where: {
+                usuario_id: userId
+            },
+
+            include: [
+                {
+                    model: models.User,
+                    attributes: [
+                        "id",
+                        "nombres",
+                        "apellidos",
+                        "correo",
+                        "tipo_documento",
+                        "cedula",
+                        "telefono"
+                    ]
+                }
+            ]
         });
     },
 
@@ -18,5 +40,23 @@ export const empresaRepository = {
         return await models.Empresa.findOne({
             where: { nit }
         });
+    },
+
+    update: async (id, data, transaction) => {
+
+        const empresa = await models.Empresa.findByPk(
+            id,
+            { transaction }
+        );
+
+        if (!empresa) {
+            return null;
+        }
+
+        return await empresa.update(
+            data,
+            { transaction }
+        );
     }
-}
+
+};

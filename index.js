@@ -14,17 +14,20 @@ import perfilRouter from "./presentacion/routes/perfil.routes.js"
 import rolRouter from "./presentacion/routes/rol.routes.js";
 import gruposRouter from "./presentacion/routes/grupos.routes.js";
 import tutorDocenteRouter from "./presentacion/routes/tutorDocente.routes.js";
-import vacanteRouter from "./presentacion/routes/vacante.router.js";
+import vacanteRouter from "./presentacion/routes/vacante.routes.js";
 import postulacionRouter from "./presentacion/routes/postulacion.routes.js"
-import convenioRouter from "./presentacion/routes/convenios.router.js";
+import convenioRouter from "./presentacion/routes/convenios.routes.js";
 import historialConvenioRouter from "./presentacion/routes/historialConvenio.routes.js";
 import encuestaRouter from "./presentacion/routes/encuesta.routes.js";
 import retiroPracticanteRouter from "./presentacion/routes/retiroPracticanteRoutes.js";
 import practicanteRouter from "./presentacion/routes/practicante.routes.js";
 import practicaRouter from "./presentacion/routes/practica.routes.js";
 import practicaRequisitoDocumentoRouter from "./presentacion/routes/practicaRequisitoDocumento.routes.js";
+import tutorEmpresarialRouter from "./presentacion/routes/tutorEmpresarial.routes.js"
+import aperturaVacanteRouter from "./presentacion/routes/aperturaVacantes.routes.js";
+import invitarRouter from "./presentacion/routes/invitacion.routes.js"
 import path from "path";
-
+import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 
 
 dotenv.config();
@@ -46,6 +49,7 @@ app.use(
 );
 
 app.use("/api/auth", authRouter);
+app.use("/api/invitacion/", invitarRouter);
 app.use("/api/empresa", empresaRouter);
 app.use("/api/candidato", candidatoRouter);
 app.use("/api/staff", staffRouter);
@@ -55,6 +59,7 @@ app.use("/api/perfil", perfilRouter);
 app.use("/api/rol", rolRouter);
 app.use("/api/grupo", gruposRouter);
 app.use("/api/tutorDocente", tutorDocenteRouter);
+app.use("/api/tutorEmpresarial", tutorEmpresarialRouter);
 app.use("/api/vacante", vacanteRouter);
 app.use("/api/postulacion", postulacionRouter);
 app.use("/api/convenio", convenioRouter);
@@ -64,6 +69,9 @@ app.use("/api/retiroPracticante", retiroPracticanteRouter);
 app.use("/api/practicante", practicanteRouter);
 app.use("/api/practica", practicaRouter);
 app.use("/api/practicaRequisitoDocumento", practicaRequisitoDocumentoRouter);
+app.use("/api/aperturaVacante", aperturaVacanteRouter);
+
+iniciarVencimientoConvenios();
 
 await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
 app.listen(process.env.PORT, () => {

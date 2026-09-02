@@ -2,8 +2,10 @@ import { models } from "../database/dbConnection.js";
 
 export const convenioRepository = {
 
-    async create(data) {
-        return await models.Convenio.create(data);
+    async create(data, transaction) {
+        return await models.Convenio.create(data, {
+            transaction
+        });
     },
 
     async findAll() {
@@ -104,9 +106,75 @@ export const convenioRepository = {
             where: { id }
         });
     },
-    async update(id, data) {
-        return await models.Convenio.update(data, {
-            where: { id }
+    async update(id, data, transaction) {
+        return await models.Convenio.update(
+            data,
+            {
+                where: { id },
+                transaction
+            }
+        );
+    },
+    async findAllByEmpresaId(empresa_id) {
+        return await models.Convenio.findAll({
+            where: {
+                empresa_id
+            },
+
+            include: [
+                {
+                    model: models.Empresa
+                },
+                {
+                    model: models.Archivo
+                },
+                {
+                    model: models.HistorialConvenio,
+                    include: [
+                        {
+                            model: models.Archivo
+                        },
+                        {
+                            model: models.User,
+                            include: [
+                                {
+                                    model: models.Rol
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+
+            order: [
+                ["id", "DESC"]
+            ]
         });
-    }
+    },
+    async findConveniosParaVencer() {
+
+        return await models.Convenio.findAll({
+            where: {
+                estado: "APROBADO"
+            },
+
+            attributes: [
+                "id",
+                "fecha_fin",
+                "estado",
+                "archivo_id"
+            ]
+        });
+    },
+    async findAprobadoByEmpresaId(empresa_id) {
+        return await models.Convenio.findOne({
+            where: {
+                empresa_id,
+                estado: "APROBADO"
+            },
+            order: [
+                ["id", "DESC"]
+            ]
+        });
+    },
 };

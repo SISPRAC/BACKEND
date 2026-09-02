@@ -2,16 +2,25 @@ import { models } from "../database/dbConnection.js";
 
 export const userRepository = {
     findBycorreo: async (correo) => {
+
         return await models.User.findOne({
             where: { correo },
+
             include: [
                 {
                     model: models.Rol,
                     attributes: ["id", "nombre"],
-                    through: { attributes: [] }
+                    through: {
+                        attributes: []
+                    }
+                },
+                {
+                    model: models.Empresa,
+                    attributes: ["id", "nombre"]
                 }
             ]
         });
+
     },
 
     create: async (data, transaction) => {
@@ -72,7 +81,7 @@ export const userRepository = {
     },
 
     updateRoles: async (userId, roles) => {
-      
+
         const user = await models.User.findByPk(userId);
 
         if (!user) {
@@ -95,5 +104,11 @@ export const userRepository = {
             ]
         });
     },
+
+    findByCorreoEmpresa: async (correo) => {
+    return await models.User.findOne({
+        where: { correo }
+    });
+},
 
 };

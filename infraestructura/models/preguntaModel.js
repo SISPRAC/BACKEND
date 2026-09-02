@@ -10,17 +10,9 @@ const createPreguntaModel = (sequelize) => {
             autoIncrement: true
         },
 
-        periodo_plantilla_id: {
+        plantilla_encuesta_id: {
             type: DataTypes.INTEGER,
-            allowNull: true,
-
-            references: {
-                model: "PeriodoPlantillas",
-                key: "id"
-            },
-
-            onDelete: "CASCADE",
-            onUpdate: "CASCADE"
+            allowNull: false,
         },
 
         texto: {

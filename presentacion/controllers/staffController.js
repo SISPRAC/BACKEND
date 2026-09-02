@@ -1,22 +1,46 @@
-import { createStaffUser} from "../../aplicacion/casos_de_uso/Staff/createStaffUser.js";
+import { createStaffUser } from "../../aplicacion/casos_de_uso/Staff/createStaffUser.js";
+
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryImpl.js";
-import {tokenService} from "../../infraestructura/tokenService.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
+
+import { sequelize } from "../../infraestructura/database/dbConnection.js";
+
 
 export const registerStaff = async (req, res) => {
-  try {
-    const invitacion = req.invitacion; // 👈 ya viene del middleware
-    const rol = invitacion.rol;
 
-    const result = await createStaffUser(
-      { userRepository, rolRepository },
-      { ...req.body, rol }
-    );
+    try {
 
-    res.status(201).json(result);
+        const invitacion = req.invitacion;
 
-  } catch (error) {
-     if (error.statusCode) { 
+        const result = await createStaffUser(
+            sequelize,
+
+            {
+                userRepository,
+                rolRepository,
+                TutorDocenteRepository,
+                tutorEmpresaRepository
+            },
+
+            {
+                ...req.body,
+
+                // Datos controlados por la invitación
+                rol: invitacion.rol,
+                correo: invitacion.correo,
+                empresa_id: invitacion.empresa_id
+            }
+        );
+
+        return res.status(201).json(result);
+
+    } catch (error) {
+
+        console.log("Error al registrar staff:", error);
+
+        if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
             });
@@ -25,5 +49,6 @@ export const registerStaff = async (req, res) => {
         return res.status(500).json({
             message: "Error interno del servidor"
         });
-  }
+    }
 };
+

@@ -5,7 +5,7 @@ const createAperturaVacanteModel = (sequelize) => {
     const AperturaVacante = sequelize.define('AperturaVacante', {
 
         id: {
-            type: DataTypes.INTEGER, 
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
@@ -15,16 +15,24 @@ const createAperturaVacanteModel = (sequelize) => {
             allowNull: false,
 
             references: {
-                model: "Vacantes", 
+                model: "Vacantes",
                 key: "id"
             }
         },
-         periodo_id: {
+
+        tutorEmpresa_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-
             references: {
-                model: "Periodos",
+                model: "TutorEmpresas",
+                key: "id"
+            }
+        },
+        practica_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: "Practicas",
                 key: "id"
             }
         },
@@ -40,8 +48,8 @@ const createAperturaVacanteModel = (sequelize) => {
                 'CERRADA'),
             allowNull: false,
             defaultValue: 'DISPONIBLE'
-            },
-        
+        },
+
 
     }, {
 

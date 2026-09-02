@@ -17,7 +17,7 @@ export const sendEmail = async ({
     });
 
     await transporter.sendMail({
-        from: `"Mi Aplicativo" <${process.env.EMAIL_USER}>`,
+        from: `"SISPRAC" <${process.env.EMAIL_USER}>`,
         to,
         subject,
         html

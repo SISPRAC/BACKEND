@@ -2,35 +2,158 @@ import bcrypt from "bcryptjs";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
-export const createStaffUser = async (repos, data) => {
-    const { userRepository, rolRepository} = repos;
+export const createStaffUser = async (
+    sequelize,
+    repos,
+    data
+) => {
 
-    const { rol, ...userData } = data;
+    const {
+        userRepository,
+        rolRepository,
+        TutorDocenteRepository,
+        tutorEmpresaRepository
+    } = repos;
 
-    // 1. validar existencia
-    const exist = await userRepository.findBycorreo(userData.correo) || await userRepository.findByCedula(userData.cedula);
-    if (exist) {
-        throw new ConflictError("USER_ALREADY_EXISTS");
-    }
+    const transaction = await sequelize.transaction();
 
-    // 2. hash contraseña
-    const hashedcontraseña = await bcrypt.hash(userData.contraseña, 10);
+    try {
 
-    // 3. crear usuario
-    const user = await userRepository.create({
-        ...userData,
-        contraseña: hashedcontraseña
-    });
+        const {
+            rol,
+            codigo,
+            cargo,
+            empresa_id,
+            ...userData
+        } = data;
 
-    // 4. asignar roles (puede tener varios)
-        const role = await rolRepository.findByName(rol);
+        // 1. Validar datos según el rol
 
-        if (!role) {
-            throw new BadRequestError(`ROLE_NOT_FOUND: ${role}`);
+        if (!rol) {
+            throw new BadRequestError(
+                "El rol es obligatorio"
+            );
         }
 
-        await user.addRole(role);
-   
+        if (rol === "Tutor Docente" && !codigo) {
+            throw new BadRequestError(
+                "El código del tutor docente es obligatorio"
+            );
+        }
 
-    return { user, "assignedRole": rol };
+        if (rol === "Tutor Empresarial") {
+
+            if (!cargo) {
+                throw new BadRequestError(
+                    "El cargo del tutor empresarial es obligatorio"
+                );
+            }
+
+            if (!empresa_id) {
+                throw new BadRequestError(
+                    "La empresa es obligatoria"
+                );
+            }
+        }
+
+        // 2. Validar existencia del usuario
+
+        const exist =
+            await userRepository.findBycorreo(
+                userData.correo
+            ) ||
+            await userRepository.findByCedula(
+                userData.cedula
+            );
+
+        if (exist) {
+            throw new ConflictError(
+                "Ya existe un usuario con esos datos"
+            );
+        }
+
+        // 3. Hash de contraseña
+
+        const hashedPassword =
+            await bcrypt.hash(
+                userData.password,
+                10
+            );
+
+        // 4. Crear usuario
+
+        const user =
+            await userRepository.create(
+                {
+                    ...userData,
+                    password: hashedPassword
+                },
+                transaction
+            );
+
+        // 5. Buscar rol
+
+        const role =
+            await rolRepository.findByNombre(rol);
+
+        if (!role) {
+            throw new BadRequestError(
+                `ROLE_NOT_FOUND: ${rol}`
+            );
+        }
+
+        // 6. Asignar rol
+
+        await user.addRole(
+            role,
+            { transaction }
+        );
+
+        // 7. Crear perfil específico del tutor
+
+        let tutor = null;
+
+        if (rol === "Tutor Docente") {
+
+            tutor =
+                await TutorDocenteRepository.create(
+                    {
+                        usuario_id: user.id,
+                        codigo
+                    },
+                    transaction
+                );
+        }
+
+        if (rol === "Tutor Empresarial") {
+
+            tutor =
+                await tutorEmpresaRepository.create(
+                    {
+                        usuario_id: user.id,
+                        empresa_id,
+                        cargo
+                    },
+                    transaction
+                );
+        }
+
+        // 8. Todo salió correctamente
+
+        await transaction.commit();
+
+        return {
+            user,
+            tutor,
+            assignedRole: rol
+        };
+
+    } catch (error) {
+
+        // Si algo falla, deshacer TODO
+        await transaction.rollback();
+
+        throw error;
+    }
 };
+

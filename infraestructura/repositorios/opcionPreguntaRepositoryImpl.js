@@ -1,35 +1,24 @@
 import { models } from "../database/dbConnection.js";
 
-
 export const opcionPreguntaRepository = {
 
-
-    async create(data){
+    async create(data) {
 
         return await models.OpcionPregunta.create(data);
 
     },
 
-
-    async findAll(){
-
-        return await models.OpcionPregunta.findAll();
-
-    },
-
-
-    async findById(id){
+    async findById(id) {
 
         return await models.OpcionPregunta.findByPk(id);
 
     },
 
-
-    async findByPreguntaId(pregunta_id){
+    async findByPreguntaId(pregunta_id) {
 
         return await models.OpcionPregunta.findAll({
 
-            where:{
+            where: {
                 pregunta_id
             }
 
@@ -37,42 +26,32 @@ export const opcionPreguntaRepository = {
 
     },
 
+    async update(id, data) {
 
-    async update(id, data){
+        return await models.OpcionPregunta.update(
 
-        const opcion = await models.OpcionPregunta.findByPk(id);
+            data,
 
+            {
+                where: {
+                    id
+                }
+            }
 
-        if(!opcion){
-
-            return null;
-
-        }
-
-
-        return await opcion.update(data);
+        );
 
     },
 
+    async delete(id) {
 
-    async delete(id){
+        return await models.OpcionPregunta.destroy({
 
-        const opcion = await models.OpcionPregunta.findByPk(id);
+            where: {
+                id
+            }
 
-
-        if(!opcion){
-
-            return null;
-
-        }
-
-
-        await opcion.destroy();
-
-
-        return opcion;
+        });
 
     }
-
 
 };

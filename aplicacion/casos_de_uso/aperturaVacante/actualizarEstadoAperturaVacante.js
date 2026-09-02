@@ -9,7 +9,9 @@ export const actualizarEstadoAperturaVacante = async (
 ) => {
 
     const aperturaVacante =
-        await aperturaVacanteRepository.findById(aperturaVacanteId);
+        await aperturaVacanteRepository.findById(
+            aperturaVacanteId
+        );
 
     if (!aperturaVacante) {
         throw new ConflictError(
@@ -18,9 +20,9 @@ export const actualizarEstadoAperturaVacante = async (
     }
 
     const cuposOcupados =
-    await postulacionRepository.countByAperturaVacante(
-        aperturaVacanteId
-    );
+        await postulacionRepository.countByAperturaVacante(
+            aperturaVacanteId
+        );
 
     let estado = "DISPONIBLE";
 
@@ -48,7 +50,9 @@ export const actualizarEstadoAperturaVacante = async (
         estado,
         cuposTotales: aperturaVacante.cupos,
         cuposOcupados,
-        cuposDisponibles:
+        cuposDisponibles: Math.max(
+            0,
             aperturaVacante.cupos - cuposOcupados
+        )
     };
 };

@@ -52,7 +52,9 @@ export const deletePeriodoController = async (req, res) => {
 export const getPeriodosController = async (req, res) => {
   try {
     const periodos = await getPeriodos( periodoRepository);
-    res.status(200).json(periodos);
+    return res.status(200).json(periodos);
+
+    console.log("periodos", periodos);
   } catch (error) {
     if (error.statusCode) { 
             return res.status(error.statusCode).json({
