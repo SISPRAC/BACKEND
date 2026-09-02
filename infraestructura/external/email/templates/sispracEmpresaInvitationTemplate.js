@@ -1,5 +1,4 @@
 export const sispracEmpresaInvitationTemplate = ({
-    nombreEmpresa,
     linkRegistro
 }) => {
 
@@ -34,7 +33,7 @@ export const sispracEmpresaInvitationTemplate = ({
                         margin:0;
                         font-size:30px;
                     ">
-                        Bienvenido a SISPRAC
+                        Invitación a SISPRAC
                     </h1>
 
                     <p style="
@@ -47,12 +46,13 @@ export const sispracEmpresaInvitationTemplate = ({
                 </td>
             </tr>
 
+
             <!-- BODY -->
             <tr>
                 <td style="padding:40px;">
 
                     <h2 style="color:#111827;">
-                        Invitación para vincular a su empresa
+                        Invitación para registrar su empresa
                     </h2>
 
                     <p style="
@@ -61,16 +61,15 @@ export const sispracEmpresaInvitationTemplate = ({
                         font-size:16px;
                     ">
 
-                        Estimados representantes de
-                        <strong>${nombreEmpresa}</strong>:
+                        Estimado representante:
 
                         <br/><br/>
 
-                        Es un placer darle la bienvenida a
-                        <strong>SISPRAC</strong>, una plataforma diseñada
-                        para facilitar la gestión, seguimiento y
-                        coordinación de los procesos relacionados con
-                        las prácticas profesionales.
+                        Hemos generado una invitación para que su empresa
+                        pueda registrarse en <strong>SISPRAC</strong>,
+                        una plataforma diseñada para facilitar la gestión,
+                        seguimiento y coordinación de los procesos
+                        relacionados con las prácticas profesionales.
 
                         <br/><br/>
 
@@ -78,15 +77,16 @@ export const sispracEmpresaInvitationTemplate = ({
                         en la gestión de oportunidades de práctica,
                         realizar el seguimiento de los procesos de
                         selección y mantener una comunicación organizada
-                        con los demás actores involucrados.
+                        con la institución y los practicantes.
 
                         <br/><br/>
 
-                        Para comenzar a utilizar la plataforma y completar
-                        el registro de su empresa, le invitamos a ingresar
-                        mediante el siguiente enlace:
+                        Para aceptar esta invitación y comenzar el proceso
+                        de registro de su empresa, haga clic en el siguiente
+                        botón:
 
                     </p>
+
 
                     ${
                         linkRegistro
@@ -124,6 +124,7 @@ export const sispracEmpresaInvitationTemplate = ({
                         `
                     }
 
+
                     <p style="
                         color:#6b7280;
                         line-height:1.6;
@@ -131,15 +132,22 @@ export const sispracEmpresaInvitationTemplate = ({
                         margin-top:35px;
                     ">
 
-                        Agradecemos su participación y esperamos que
-                        SISPRAC contribuya a fortalecer la gestión de
-                        las prácticas y la relación entre la institución,
-                        los estudiantes y las empresas.
+                        Esta invitación le permitirá acceder al formulario
+                        de registro y proporcionar la información necesaria
+                        para vincular su empresa a SISPRAC.
+
+                        <br/><br/>
+
+                        Agradecemos su interés en participar y esperamos
+                        que SISPRAC contribuya a fortalecer la gestión de
+                        las prácticas profesionales y la relación entre
+                        la institución, los practicantes y las empresas.
 
                     </p>
 
                 </td>
             </tr>
+
 
             <!-- FOOTER -->
             <tr>

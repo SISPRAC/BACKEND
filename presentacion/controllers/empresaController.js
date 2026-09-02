@@ -177,8 +177,7 @@ export const invitarEmpresaController = async (req, res) => {
     try {
 
         const resultado = await invitarEmpresa({
-            correo: req.body.correo,
-            nombreEmpresa: req.body.nombreEmpresa
+            correo: req.body.correo
         });
 
         return res.status(200).json(resultado);

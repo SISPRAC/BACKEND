@@ -30,7 +30,7 @@ router.post(
 router.post(
     "/invitacion",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Director de programa"]),
     invitarEmpresaController
 );
 

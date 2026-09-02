@@ -4,8 +4,7 @@ import { sispracEmpresaInvitationTemplate } from "../../../infraestructura/exter
 import { tokenService } from "../../../infraestructura/tokenService.js";
 
 export const invitarEmpresa = async ({
-    correo,
-    nombreEmpresa
+    correo
 }) => {
 
     if (!correo) {
@@ -14,11 +13,7 @@ export const invitarEmpresa = async ({
         );
     }
 
-    if (!nombreEmpresa) {
-        throw new BadRequestError(
-            "El nombre de la empresa es obligatorio"
-        );
-    }
+    
 
     const token =
         tokenService.generateInvitationEmpresaToken(
@@ -30,7 +25,6 @@ export const invitarEmpresa = async ({
 
     const html =
         sispracEmpresaInvitationTemplate({
-            nombreEmpresa,
             linkRegistro
         });
 

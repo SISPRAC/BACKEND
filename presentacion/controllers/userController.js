@@ -1,11 +1,20 @@
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 import { cambiarEstadoUsuario } from "../../aplicacion/casos_de_uso/usuario/cambiarEstado.js";
 
+
 export const getUsers = async (req, res) => {
   try {
+
     const users = await userRepository.findAll();
-    res.status(200).json(users);
+
+    const usuariosFiltrados = users.filter(
+      (user) => user.nombres !== "SISTEMA"
+    );
+
+    res.status(200).json(usuariosFiltrados);
+
   } catch (error) {
+
     if (error.statusCode) {
       return res.status(error.statusCode).json({
         message: error.message
@@ -17,6 +26,8 @@ export const getUsers = async (req, res) => {
     });
   }
 };
+
+
 
 export const getUser = async (req, res) => {
   try {
