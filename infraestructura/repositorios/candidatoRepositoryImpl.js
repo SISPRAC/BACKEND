@@ -4,16 +4,24 @@ import { models } from "../database/dbConnection.js";
 export const candidatoRepository = {
 
     async create(data, transaction) {
-        return await models.Candidato.create(data, { transaction });
+        return await models.Candidato.create(data, {
+            transaction
+        });
     },
 
-    async findById(id) {
-        return await models.Candidato.findByPk(id);
+    async findById(id, transaction) {
+        return await models.Candidato.findByPk(
+            id,
+            { transaction }
+        );
     },
 
-    async findByUserId(userId) {
+    async findByUserId(userId, transaction) {
         return await models.Candidato.findOne({
-            where: { usuario_id: userId }
+            where: {
+                usuario_id: userId
+            },
+            transaction
         });
     },
 
@@ -28,7 +36,10 @@ export const candidatoRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
+                    attributes: [
+                        "nombres",
+                        "apellidos"
+                    ]
                 }
             ]
         });
@@ -39,7 +50,10 @@ export const candidatoRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
+                    attributes: [
+                        "nombres",
+                        "apellidos"
+                    ]
                 },
                 {
                     model: models.GrupoCandidato,
@@ -89,7 +103,6 @@ export const candidatoRepository = {
 
                 {
                     model: models.User,
-
                     attributes: [
                         "nombres",
                         "apellidos"

@@ -8,14 +8,6 @@ export const PracticanteRepository = {
         });
     },
 
-    async findByUserId(userId) {
-        return await models.Practicante.findOne({
-            where: {
-                user_id: userId
-            }
-        });
-    },
-
     async findByCandidatoId(candidatoId, transaction) {
         return await models.Practicante.findOne({
             where: {
@@ -27,7 +19,9 @@ export const PracticanteRepository = {
 
     async findByCodigo(codigo) {
         return await models.Practicante.findOne({
-            where: { codigo }
+            where: {
+                codigo
+            }
         });
     },
 
@@ -55,5 +49,17 @@ export const PracticanteRepository = {
             ]
         });
     },
+
+    async update(id, data, transaction) {
+        return await models.Practicante.update(
+            data,
+            {
+                where: {
+                    id
+                },
+                transaction
+            }
+        );
+    }
 
 };

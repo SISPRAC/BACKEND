@@ -5,7 +5,7 @@ import { initDB } from "./infraestructura/database/dbConnection.js";
 import authRouter from "./presentacion/routes/auth.routes.js";
 import cors from "cors";
 import cookieparser from "cookie-parser";
-import userRouter from "./presentacion/routes/users.js";
+import userRouter from "./presentacion/routes/users.routes.js";
 import empresaRouter from "./presentacion/routes/empresa.routes.js"
 import candidatoRouter from "./presentacion/routes/candidato.routes.js"
 import staffRouter from "./presentacion/routes/tutores.routes.js"

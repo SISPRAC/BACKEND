@@ -5,11 +5,11 @@ import {
     getUser,
     getUsers,
     updateUserRoles,
-    cambiarEstado
+    cambiarEstado,
+    actualizarPerfilUsuario
 } from "../controllers/userController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
-
 import { verifyRole } from "../middleware/rolMiddleware.js";
 
 const userRouter = Router();
@@ -45,6 +45,12 @@ userRouter.patch(
     "/:id/estado",
     verifyToken,
     cambiarEstado
+);
+
+userRouter.put(
+    "/perfil",
+    verifyToken,
+    actualizarPerfilUsuario
 );
 
 export default userRouter;

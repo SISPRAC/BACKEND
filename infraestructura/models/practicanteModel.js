@@ -19,6 +19,11 @@ const createPracticanteModel = (sequelize) => {
                     key: "id",
                 },
             },
+            perfil_completado: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
 
             eps: {
                 type: DataTypes.STRING(100),

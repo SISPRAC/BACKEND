@@ -1,6 +1,7 @@
 import { models } from "../database/dbConnection.js";
 
 export const userRepository = {
+
     findBycorreo: async (correo) => {
 
         return await models.User.findOne({
@@ -33,7 +34,7 @@ export const userRepository = {
                 {
                     model: models.Rol,
                     through: {
-                        attributes: [] // Oculta los datos de UserRol
+                        attributes: []
                     },
                     attributes: ["id", "nombre"]
                 }
@@ -41,13 +42,14 @@ export const userRepository = {
         });
     },
 
-    findById: async (id) => {
+    findById: async (id, transaction) => {
         return await models.User.findByPk(id, {
+            transaction,
             include: [
                 {
                     model: models.Rol,
                     through: {
-                        attributes: [] // Oculta los datos de UserRol
+                        attributes: []
                     },
                     attributes: ["id", "nombre"]
                 }
@@ -56,11 +58,15 @@ export const userRepository = {
     },
 
     delete: async (id) => {
-        return await models.User.destroy({ where: { id } });
+        return await models.User.destroy({
+            where: { id }
+        });
     },
 
     findByCedula: async (cedula) => {
-        return await models.User.findOne({ where: { cedula } });
+        return await models.User.findOne({
+            where: { cedula }
+        });
     },
 
     update: async (id, data, transaction) => {
@@ -106,9 +112,9 @@ export const userRepository = {
     },
 
     findByCorreoEmpresa: async (correo) => {
-    return await models.User.findOne({
-        where: { correo }
-    });
-},
+        return await models.User.findOne({
+            where: { correo }
+        });
+    },
 
 };
