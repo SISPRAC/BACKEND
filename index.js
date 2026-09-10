@@ -25,7 +25,12 @@ import practicaRouter from "./presentacion/routes/practica.routes.js";
 import practicaRequisitoDocumentoRouter from "./presentacion/routes/practicaRequisitoDocumento.routes.js";
 import tutorEmpresarialRouter from "./presentacion/routes/tutorEmpresarial.routes.js"
 import aperturaVacanteRouter from "./presentacion/routes/aperturaVacantes.routes.js";
+import departamentoMunicipioRouter from "./presentacion/routes/departamentoMunicipio.routes.js"
 import invitarRouter from "./presentacion/routes/invitacion.routes.js"
+import tipoInformeRouter from "./presentacion/routes/tipoInforme.routes.js";
+import practicaInformeRouter from "./presentacion/routes/practicaInforme.routes.js";
+import tipoRequisitoDocumentoRouter from "./presentacion/routes/tipoRequisitoDocumento.routes.js";
+import entregaInformeRouter from "./presentacion/routes/entregaInforme.routes.js";
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 
@@ -68,9 +73,13 @@ app.use("/api/encuesta", encuestaRouter);
 app.use("/api/retiroPracticante", retiroPracticanteRouter);
 app.use("/api/practicante", practicanteRouter);
 app.use("/api/practica", practicaRouter);
+app.use("/api/tipoInforme", tipoInformeRouter);
+app.use("/api/practicaInforme", practicaInformeRouter);
+app.use("/api/tipoRequisitoDocumento", tipoRequisitoDocumentoRouter);
+app.use("/api/entregaInforme", entregaInformeRouter);
 app.use("/api/practicaRequisitoDocumento", practicaRequisitoDocumentoRouter);
 app.use("/api/aperturaVacante", aperturaVacanteRouter);
-
+app.use("/api/departamento/municipio", departamentoMunicipioRouter);
 iniciarVencimientoConvenios();
 
 await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);

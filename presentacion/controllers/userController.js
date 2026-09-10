@@ -1,6 +1,8 @@
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 import { candidatoRepository } from "../../infraestructura/repositorios/candidatoRepositoryImpl.js";
 import { PracticanteRepository } from "../../infraestructura/repositorios/practicanteRepositoryImpl.js";
+import { departamentoRepository } from "../../infraestructura/repositorios/departamentoRepositoryImpl.js";
+import { municipioRepository } from "../../infraestructura/repositorios/municipioRepositoryImpl.js";
 
 import { cambiarEstadoUsuario } from "../../aplicacion/casos_de_uso/usuario/cambiarEstado.js";
 import { actualizarPerfil } from "../../aplicacion/casos_de_uso/usuario/actualizarPerfil.js";
@@ -183,7 +185,9 @@ export const actualizarPerfilUsuario = async (req, res) => {
       {
         userRepository,
         candidatoRepository,
-        PracticanteRepository
+        PracticanteRepository,
+        departamentoRepository,
+        municipioRepository
       },
       req.user.id,
       req.body

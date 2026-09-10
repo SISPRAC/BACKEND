@@ -1,62 +1,35 @@
-import path from "path";
-
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
-import {
-    uploadArchivo,
-    deleteArchivo
-} from "../../../infraestructura/external/storageService.js";
+import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
 export const crearPracticaRequisitoDocumento = async (
     practicaRequisitoDocumentoRepository,
-    archivoRepository,
-    data,
-    file
+    data
 ) => {
 
-    const transaction = await sequelize.transaction();
-
-    let publicId = null;
+    const transaction =
+        await sequelize.transaction();
 
     try {
 
-        if (file) {
+        const existente =
+            await practicaRequisitoDocumentoRepository.findByPracticaId(
+                data.practica_id
+            );
 
-            const extension =
-                path.extname(file.originalname);
+        const yaExiste =
+            existente.some(
+                requisito =>
+                    requisito.tipo_requisito_documento_id ===
+                    data.tipo_requisito_documento_id
+            );
 
-            const nombreArchivo =
-                `REQ_DOC_${Date.now()}${extension}`;
+        if (yaExiste) {
 
-            const resultado =
-                await uploadArchivo(
-
-                    file.buffer,
-                    "SISPRAC/RequisitosDocumentales",
-                    nombreArchivo,
-                    file.mimetype
-
-                );
-
-            publicId = resultado.public_id;
-
-            const archivo =
-                await archivoRepository.create(
-
-                    {
-
-                        nombre: file.originalname,
-                        url: resultado.url,
-                        public_id: resultado.public_id,
-                        resource_type: resultado.resource_type
-
-                    },
-
-                    transaction
-
-                );
-
-            data.archivo_id = archivo.id;
+            throw new ConflictError(
+                "Este requisito documental ya está asignado a la práctica."
+            );
 
         }
 
@@ -74,24 +47,17 @@ export const crearPracticaRequisitoDocumento = async (
 
         await transaction.rollback();
 
-        if (publicId) {
-
-            try {
-
-                await deleteArchivo(publicId);
-
-            } catch (e) {
-
-                console.error(
-                    "No se pudo eliminar el archivo de Supabase:",
-                    e.message
-                );
-
-            }
-
+        if (
+            error instanceof ConflictError ||
+            error instanceof BadRequestError
+        ) {
+            throw error;
         }
 
-        throw error;
+        throw new BadRequestError(
+            error.message ||
+            "No se pudo asignar el requisito documental a la práctica."
+        );
 
     }
 

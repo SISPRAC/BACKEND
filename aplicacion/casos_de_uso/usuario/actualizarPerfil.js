@@ -1,11 +1,14 @@
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 export const actualizarPerfil = async (
     {
         userRepository,
         candidatoRepository,
-        PracticanteRepository
+        PracticanteRepository,
+        departamentoRepository,
+        municipioRepository
     },
     userId,
     datos
@@ -97,18 +100,78 @@ export const actualizarPerfil = async (
 
         if (practicante) {
 
+            // =========================
+            // 6.1 BUSCAR DEPARTAMENTO
+            // =========================
+
+            const departamento =
+                await departamentoRepository.findById(
+                    datos.departamentoId,
+                    transaction
+                );
+
+            if (!departamento) {
+                throw new NotFoundError(
+                    "Departamento no encontrado"
+                );
+            }
+
+
+            // =========================
+            // 6.2 BUSCAR MUNICIPIO
+            // =========================
+
+            const municipio =
+                await municipioRepository.findById(
+                    datos.municipioId,
+                    transaction
+                );
+
+            if (!municipio) {
+                throw new NotFoundError(
+                    "Municipio no encontrado"
+                );
+            }
+
+
+            // =========================
+            // 6.3 VALIDAR MUNICIPIO
+            // =========================
+
+            if (
+                municipio.departamento_id !==
+                departamento.id
+            ) {
+                throw new BadRequestError(
+                    "El municipio no pertenece al departamento seleccionado"
+                );
+            }
+
+
+            // =========================
+            // 6.4 ACTUALIZAR PRACTICANTE
+            // =========================
+
             await PracticanteRepository.update(
                 practicante.id,
                 {
                     eps: datos.eps,
+
                     codigoDepResidencia:
-                        datos.codigoDepResidencia,
+                        departamento.codigo,
+
                     codigoMunResidencia:
-                        datos.codigoMunResidencia,
+                        municipio.codigo,
+
                     fecha_nacimiento:
                         datos.fecha_nacimiento,
-                    genero: datos.genero,
-                    direccion: datos.direccion,
+
+                    genero:
+                        datos.genero,
+
+                    direccion:
+                        datos.direccion,
+
                     perfil_completado: true
                 },
                 transaction

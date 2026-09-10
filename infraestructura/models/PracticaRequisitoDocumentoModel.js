@@ -5,7 +5,6 @@ const createPracticaRequisitoDocumentoModel = (sequelize) => {
     const PracticaRequisitoDocumento = sequelize.define(
         "PracticaRequisitoDocumento",
         {
-
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
@@ -25,39 +24,16 @@ const createPracticaRequisitoDocumentoModel = (sequelize) => {
                 onUpdate: "CASCADE"
             },
 
-            rol_id: {
+            tipo_requisito_documento_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
 
                 references: {
-                    model: "Roles",
+                    model: "TipoRequisitoDocumento",
                     key: "id"
                 },
 
                 onDelete: "CASCADE",
-                onUpdate: "CASCADE"
-            },
-
-            nombre: {
-                type: DataTypes.STRING(100),
-                allowNull: false
-            },
-
-            descripcion: {
-                type: DataTypes.STRING(255),
-                allowNull: true
-            },
-
-            archivo_id: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-
-                references: {
-                    model: "Archivos",
-                    key: "id"
-                },
-
-                onDelete: "SET NULL",
                 onUpdate: "CASCADE"
             },
 
@@ -71,23 +47,27 @@ const createPracticaRequisitoDocumentoModel = (sequelize) => {
                 allowNull: true
             },
 
-            obligatorio: {
-                type: DataTypes.BOOLEAN,
-                allowNull: false,
-                defaultValue: true
-            },
-
             estado: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
                 defaultValue: true
             }
-
         },
         {
             tableName: "PracticaRequisitoDocumento",
             freezeTableName: true,
-            timestamps: false
+            timestamps: false,
+
+            indexes: [
+                {
+                    name: "practica_requisito_documento_unico",
+                    unique: true,
+                    fields: [
+                        "practica_id",
+                        "tipo_requisito_documento_id"
+                    ]
+                }
+            ]
         }
     );
 

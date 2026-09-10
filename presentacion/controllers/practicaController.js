@@ -4,6 +4,9 @@ import { eliminarPractica } from "../../aplicacion/casos_de_uso/practica/elimina
 import { obtenerPracticas } from "../../aplicacion/casos_de_uso/practica/obtenerPracticas.js";
 import { obtenerPracticaPorId } from "../../aplicacion/casos_de_uso/practica/obtenerPracticasPorId.js";
 import { obtenerPracticaPorPeriodo } from "../../aplicacion/casos_de_uso/practica/obtenerPracticasPorPeriodo.js";
+import { actualizarArlPractica } from "../../aplicacion/casos_de_uso/practica/actualizarArlPractica.js";
+
+import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 
 import { practicaRepository } from "../../infraestructura/repositorios/practicaRepositoryImpl.js";
 import { periodoRepository } from "../../infraestructura/repositorios/periodoRepositoryImpl.js";
@@ -170,6 +173,37 @@ export const actualizarPracticaController = async (req, res) => {
                 message: error.message
             });
         }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+export const actualizarArlPracticaController = async (req, res) => {
+
+    try {
+
+        const practicaActualizada = await actualizarArlPractica(
+            {
+                practicaRepository,
+                archivoRepository
+            },
+            req.params.id,
+            req.file
+        );
+
+        return res.status(200).json(practicaActualizada);
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        console.log("Error backend: ", error);
 
         return res.status(500).json({
             message: "Error interno del servidor"

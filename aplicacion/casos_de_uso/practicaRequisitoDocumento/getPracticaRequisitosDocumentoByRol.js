@@ -3,8 +3,10 @@ export const getPracticaRequisitosDocumentoByRol = async (
     practica_id,
     rol_id
 ) => {
+
     return await practicaRequisitoDocumentoRepository.findByPracticaAndRol(
         practica_id,
         rol_id
     );
-};  
+
+};

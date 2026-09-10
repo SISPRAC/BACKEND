@@ -1,42 +1,94 @@
 import { Router } from "express";
 
 import {
+
     createPracticaRequisitoDocumento,
-    updatePracticaRequisitoDocumento,
     deletePracticaRequisitoDocumento,
     findPracticaRequisitoDocumento,
     findPracticaRequisitosDocumento,
     findPracticaRequisitosDocumentoByRol,
-    findPracticaRequisitosDocumentoByPractica
+    updatePracticaRequisitoDocumento
+
 } from "../controllers/practicaDocumentoRequisitoController.js";
-import { upload } from "../middleware/uploadMulter.js";
+
+import { verifyToken } from "../middleware/authMiddleware.js";
+
+import { verifyRole } from "../middleware/rolMiddleware.js";
+
 
 const router = Router();
 
-router.post(
-    "/",
-    upload.single("archivo"),
-    createPracticaRequisitoDocumento
+
+router.get(
+
+    "/practica/:practica_id",
+
+    verifyToken,
+
+    findPracticaRequisitosDocumento
+
 );
+
+
+router.get(
+
+    "/practica/:practica_id/rol/:rol_id",
+
+    verifyToken,
+
+    findPracticaRequisitosDocumentoByRol
+
+);
+
+
+router.post(
+
+    "/crear",
+
+    verifyToken,
+
+    verifyRole(["Administrador", "Director de programa"]),
+
+    createPracticaRequisitoDocumento
+
+);
+
+
+router.delete(
+
+    "/:id",
+
+    verifyToken,
+
+    verifyRole(["Administrador", "Director de programa"]),
+
+    deletePracticaRequisitoDocumento
+
+);
+
+
+router.get(
+
+    "/:id",
+
+    verifyToken,
+
+    findPracticaRequisitoDocumento
+
+);
+
 
 router.put(
+
     "/:id",
-    upload.single("archivo"),
+
+    verifyToken,
+
+    verifyRole(["Administrador", "Director de programa"]),
+
     updatePracticaRequisitoDocumento
+
 );
 
-router.delete("/:id", deletePracticaRequisitoDocumento);
-
-router.get("/detalle/:id", findPracticaRequisitoDocumento);
-
-router.get(
-    "/practica/:practica_id/rol/:rol_id",
-    findPracticaRequisitosDocumentoByRol
-);
-
-router.get(
-    "/practica/:practica_id",
-    findPracticaRequisitosDocumentoByPractica
-);
 
 export default router;

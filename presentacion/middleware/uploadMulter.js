@@ -1,14 +1,34 @@
 import multer from "multer";
 
 export const upload = multer({
+
   storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB (ajústalo)
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype !== "application/pdf") {
-      return cb(new Error("Solo se permiten PDFs"), false);
-    }
-    cb(null, true);
+
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB
   },
+
+  fileFilter: (req, file, cb) => {
+
+    const tiposPermitidos = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+
+    if (!tiposPermitidos.includes(file.mimetype)) {
+
+      return cb(
+        new Error("Solo se permiten archivos PDF, Word (.doc) o Word (.docx)"),
+        false
+      );
+
+    }
+
+    cb(null, true);
+
+  },
+
 });
 
 export const uploadImage = multer({
@@ -23,4 +43,4 @@ export const uploadImage = multer({
   },
 });
 
-export const uploadDatos = multer({ storage: multer.memoryStorage()});
+export const uploadDatos = multer({ storage: multer.memoryStorage() });

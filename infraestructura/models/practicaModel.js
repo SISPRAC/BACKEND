@@ -35,6 +35,17 @@ const createPracticaModel = (sequelize) => {
                 },
                 onDelete: "RESTRICT",
                 onUpdate: "CASCADE"
+            },
+
+            archivo_arl_id: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                references: {
+                    model: "Archivos",
+                    key: "id"
+                },
+                onDelete: "SET NULL",
+                onUpdate: "CASCADE"
             }
         },
         {

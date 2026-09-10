@@ -1,50 +1,26 @@
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
-import {
-    deleteArchivo
-} from "../../../infraestructura/external/storageService.js";
+import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 export const eliminarPracticaRequisitoDocumento = async (
     practicaRequisitoDocumentoRepository,
-    archivoRepository,
     id
 ) => {
-
-    const requisito =
-        await practicaRequisitoDocumentoRepository.findById(id);
-
-    if (!requisito) {
-
-        throw new Error(
-            "El requisito documental no existe."
-        );
-
-    }
 
     const transaction =
         await sequelize.transaction();
 
-    let publicId = null;
-
     try {
 
-        if (requisito.archivo_id) {
+        const requisito =
+            await practicaRequisitoDocumentoRepository.findById(id);
 
-            const archivo =
-                await archivoRepository.findById(
-                    requisito.archivo_id
-                );
+        if (!requisito) {
 
-            if (archivo) {
-
-                publicId = archivo.public_id;
-
-                await archivoRepository.delete(
-                    archivo.id,
-                    transaction
-                );
-
-            }
+            throw new NotFoundError(
+                "El requisito documental de la práctica no existe."
+            );
 
         }
 
@@ -55,30 +31,26 @@ export const eliminarPracticaRequisitoDocumento = async (
 
         await transaction.commit();
 
-        if (publicId) {
-
-            try {
-
-                await deleteArchivo(
-                    publicId
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "No se pudo eliminar el archivo de Supabase:",
-                    error.message
-                );
-
-            }
-
-        }
+        return {
+            message:
+                "Requisito documental eliminado correctamente."
+        };
 
     } catch (error) {
 
         await transaction.rollback();
 
-        throw error;
+        if (
+            error instanceof NotFoundError ||
+            error instanceof BadRequestError
+        ) {
+            throw error;
+        }
+
+        throw new BadRequestError(
+            error.message ||
+            "No se pudo eliminar el requisito documental."
+        );
 
     }
 

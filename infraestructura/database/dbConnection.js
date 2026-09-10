@@ -24,21 +24,23 @@ import createRespuestaPreguntaModel from "../models/respuestaPreguntaModel.js";
 import createOpcionPreguntaModel from "../models/opcionPreguntaModel.js";
 import createRetiroPracticanteModel from "../models/retirarPracticanteModel.js";
 import createPracticanteModel from "../models/practicanteModel.js";
-import createTipoInformeModel from "../models/TipoInformeModel.js";
-import createPracticaInformeModel from "../models/PracticaInformeModel.js";
-import createEntregaInformeModel from "../models/EntregaInformeModel.js";
-import createRevisionInformeModel from "../models/RevisionInformeModel.js";
+import createTipoInformeModel from "../models/tipoInformeModel.js";
+import createPracticaInformeModel from "../models/practicaInformeModel.js";
+import createEntregaInformeModel from "../models/entregaInformeModel.js";
 import createPracticaModel from "../models/practicaModel.js";
 import createPracticaPracticanteModel from "../models/practicaPracticanteModel.js";
 import createPracticaEncuestaModel from "../models/practicaEncuestaModel.js";
 import createSolicitudVisitaModel from "../models/solicitudVisitaModel.js";
 import createFechaPropuestaVisitaModel from "../models/fechaPropuestaVisitaModel.js";
 import createVisitaModel from "../models/visitaModel.js";
+import createTipoRequisitoDocumentoModel from "../models/tipoRequisitoDocumentoModel.js";
 import createVisitaArchivoModel from "../models/visitaArchivoModel.js";
 import createPracticaRequisitoDocumentoModel from "../models/practicaRequisitoDocumentoModel.js";
 import createGrupoCandidatoModel from "../models/grupoCandidatoModel.js";
 import createHistorialAperturaVacanteModel
     from "../models/historialAperturaVacanteModel.js";
+import createDepartamentoModel from "../models/departamentoModel.js";
+import createMunicipioModel from "../models/municipiosModel.js";
 
 
 
@@ -85,9 +87,10 @@ export const initDB = async (database, username, contraseña) => {
         models.Practicante = createPracticanteModel(sequelize);
 
         models.TipoInforme = createTipoInformeModel(sequelize);
+        models.TipoRequisitoDocumento = createTipoRequisitoDocumentoModel(sequelize);
         models.PracticaInforme = createPracticaInformeModel(sequelize);
         models.EntregaInforme = createEntregaInformeModel(sequelize);
-        models.RevisionInforme = createRevisionInformeModel(sequelize);
+
 
         models.Practica = createPracticaModel(sequelize);
         models.PracticaPracticante = createPracticaPracticanteModel(sequelize);
@@ -97,6 +100,8 @@ export const initDB = async (database, username, contraseña) => {
         models.Visita = createVisitaModel(sequelize);
         models.VisitaArchivo = createVisitaArchivoModel(sequelize);
         models.PracticaRequisitoDocumento = createPracticaRequisitoDocumentoModel(sequelize);
+        models.Departamento = createDepartamentoModel(sequelize);
+        models.Municipio = createMunicipioModel(sequelize);
 
 
         models.User.belongsToMany(models.Rol, {
@@ -165,6 +170,16 @@ export const initDB = async (database, username, contraseña) => {
         models.Archivo.hasOne(models.Candidato, {
             foreignKey: "hoja_vida_archivo_id",
             as: "candidatoHojaVida"
+        });
+
+        models.Practica.belongsTo(models.Archivo, {
+            foreignKey: "archivo_arl_id",
+            as: "archivoArl"
+        });
+
+        models.Archivo.hasOne(models.Practica, {
+            foreignKey: "archivo_arl_id",
+            as: "practicaArl"
         });
 
         models.Practica.hasMany(models.Grupo, {
@@ -622,83 +637,121 @@ export const initDB = async (database, username, contraseña) => {
             as: "plantilla",
         });
 
-        models.PracticaPracticante.hasMany(models.PracticaInforme, {
+        models.Practica.hasMany(models.PracticaInforme, {
+            foreignKey: "practica_id",
+            as: "informes"
+        });
+
+        models.PracticaInforme.belongsTo(models.Practica, {
+            foreignKey: "practica_id",
+            as: "practica"
+        });
+
+
+        models.PracticaPracticante.hasMany(models.EntregaInforme, {
             foreignKey: "practica_practicante_id",
-            as: "informes",
+            as: "entregasInformes"
         });
 
-        models.PracticaInforme.belongsTo(models.PracticaPracticante, {
+        models.EntregaInforme.belongsTo(models.PracticaPracticante, {
             foreignKey: "practica_practicante_id",
-            as: "practicaPracticante",
+            as: "practicaPracticante"
         });
 
-
-        //entregainforme
-
-        models.PracticaInforme.hasMany(models.EntregaInforme, {
-            foreignKey: "practica_informe_id",
-            as: "entregas",
+        models.Rol.hasMany(models.TipoRequisitoDocumento, {
+            foreignKey: "rol_id",
+            as: "tiposRequisitoDocumento"
         });
 
+        models.TipoRequisitoDocumento.belongsTo(models.Rol, {
+            foreignKey: "rol_id",
+            as: "rol"
+        });
 
-        models.Archivo.hasMany(models.EntregaInforme, {
+        models.TipoRequisitoDocumento.hasMany(models.PracticaRequisitoDocumento, {
+            foreignKey: "tipo_requisito_documento_id",
+            as: "practicasRequisito"
+        });
+
+        models.PracticaRequisitoDocumento.belongsTo(models.TipoRequisitoDocumento, {
+            foreignKey: "tipo_requisito_documento_id",
+            as: "tipoRequisitoDocumento"
+        });
+
+        models.Archivo.hasMany(models.TipoRequisitoDocumento, {
             foreignKey: "archivo_id",
-            as: "entregasInforme",
+            as: "tiposRequisitoDocumento"
         });
 
-        models.EntregaInforme.belongsTo(models.Archivo, {
+        models.TipoRequisitoDocumento.belongsTo(models.Archivo, {
             foreignKey: "archivo_id",
-            as: "archivo",
+            as: "plantilla"
         });
 
-        models.EntregaInforme.hasMany(models.RevisionInforme, {
-            foreignKey: "entrega_informe_id",
-            as: "revisiones",
-            onDelete: "CASCADE",
-            onUpdate: "CASCADE",
+        models.TutorDocente.hasMany(models.EntregaInforme, {
+            foreignKey: "tutor_docente_id",
+            as: "entregasInformes"
         });
 
-        models.RevisionInforme.belongsTo(models.EntregaInforme, {
-            foreignKey: "entrega_informe_id",
-            as: "entrega",
+        models.EntregaInforme.belongsTo(models.TutorDocente, {
+            foreignKey: "tutor_docente_id",
+            as: "tutorDocente"
         });
 
-        models.User.hasMany(models.RevisionInforme, {
-            foreignKey: "usuario_revision_id",
-            as: "revisionesRealizadas",
+        models.TutorEmpresa.hasMany(models.EntregaInforme, {
+            foreignKey: "tutor_empresarial_id",
+            as: "entregasInformes"
         });
 
-        models.RevisionInforme.belongsTo(models.User, {
-            foreignKey: "usuario_revision_id",
-            as: "usuarioRevision",
+        models.EntregaInforme.belongsTo(models.TutorEmpresa, {
+            foreignKey: "tutor_empresarial_id",
+            as: "tutorEmpresarial"
         });
 
 
 
-        models.EntregaInforme.belongsTo(models.PracticaInforme, {
-            foreignKey: "practica_informe_id",
-            as: "practicaInforme",
+        models.Departamento.hasMany(
+            models.Municipio,
+            {
+                foreignKey: "departamento_id",
+                as: "municipios"
+            }
+        );
+
+        models.Municipio.belongsTo(
+            models.Departamento,
+            {
+                foreignKey: "departamento_id",
+                as: "departamentos"
+            }
+        );
+
+        models.Departamento.hasMany(models.Practicante, {
+            foreignKey: "codigoDepResidencia",
+            sourceKey: "codigo",
+            as: "practicantes",
         });
 
-        models.PracticaPracticante.hasOne(models.RetiroPracticante, {
-            foreignKey: "practica_practicante_id",
-            as: "retiro",
+        models.Practicante.belongsTo(models.Departamento, {
+            foreignKey: "codigoDepResidencia",
+            targetKey: "codigo",
+            as: "departamentoResidencia",
         });
 
-        models.RetiroPracticante.belongsTo(models.PracticaPracticante, {
-            foreignKey: "practica_practicante_id",
-            as: "practicaPracticante",
+
+        models.Municipio.hasMany(models.Practicante, {
+            foreignKey: "codigoMunResidencia",
+            sourceKey: "codigo",
+            as: "practicantes",
         });
 
-        models.User.hasMany(models.EntregaInforme, {
-            foreignKey: "usuario_id",
-            as: "entregas"
+        models.Practicante.belongsTo(models.Municipio, {
+            foreignKey: "codigoMunResidencia",
+            targetKey: "codigo",
+            as: "municipioResidencia",
         });
 
-        models.EntregaInforme.belongsTo(models.User, {
-            foreignKey: "usuario_id",
-            as: "usuario"
-        });
+
 
         // =============================
         // PERIODO -> PRACTICA
@@ -722,24 +775,9 @@ export const initDB = async (database, username, contraseña) => {
             foreignKey: "practica_id",
             as: "practica"
         });
-        models.Rol.hasMany(models.PracticaRequisitoDocumento, {
-            foreignKey: "rol_id",
-            as: "requisitosDocumentos"
-        });
 
-        models.PracticaRequisitoDocumento.belongsTo(models.Rol, {
-            foreignKey: "rol_id",
-            as: "rol"
-        });
-        models.Archivo.hasMany(models.PracticaRequisitoDocumento, {
-            foreignKey: "archivo_id",
-            as: "requisitosDocumentos"
-        });
 
-        models.PracticaRequisitoDocumento.belongsTo(models.Archivo, {
-            foreignKey: "archivo_id",
-            as: "plantilla"
-        });
+
         await sequelize.sync({ alter: true });
 
         console.log('DB connected');

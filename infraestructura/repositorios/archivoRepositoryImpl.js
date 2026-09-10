@@ -56,6 +56,38 @@ export const archivoRepository = {
         });
 
         return archivo;
+    },
 
+    async tieneReferencias(id, transaction) {
+
+        const tipoRequisitoDocumento =
+            await models.TipoRequisitoDocumento.count({
+                where: {
+                    archivo_id: id
+                },
+                transaction
+            });
+
+        const tipoInforme =
+            await models.TipoInforme.count({
+                where: {
+                    archivo_id: id
+                },
+                transaction
+            });
+
+        const entregaInforme =
+            await models.EntregaInforme.count({
+                where: {
+                    archivo_id: id
+                },
+                transaction
+            });
+
+        return (
+            tipoRequisitoDocumento > 0 ||
+            tipoInforme > 0 ||
+            entregaInforme > 0
+        );
     }
 };

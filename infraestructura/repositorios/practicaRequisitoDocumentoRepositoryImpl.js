@@ -14,45 +14,59 @@ export const practicaRequisitoDocumentoRepository = {
     },
 
     async findById(id) {
-        return await models.PracticaRequisitoDocumento.findByPk(id);
-    },
 
-    async findByPracticaId(practica_id) {
-        return await models.PracticaRequisitoDocumento.findAll({
-            where: { practica_id },
-            order: [["id", "ASC"]],
-        });
-    },
-
-    async findByPracticaAndRol(practica_id, rol_id) {
-        return await models.PracticaRequisitoDocumento.findAll({
-            where: {
-                practica_id,
-                rol_id,
-            },
-            order: [["id", "ASC"]],
-        });
-    },
-    async findByPracticaId(practica_id) {
-        return await models.PracticaRequisitoDocumento.findAll({
-            where: {
-                practica_id,
-            },
+        return await models.PracticaRequisitoDocumento.findByPk(id, {
             include: [
                 {
-                    model: models.Rol,
-                    as: "rol",
-                },
-                {
-                    model: models.Archivo,
-                    as: "plantilla",
-                },
-            ],
-            order: [
-                ["rol_id", "ASC"],
-                ["id", "ASC"],
-            ],
+                    model: models.TipoRequisitoDocumento,
+                    as: "tipoRequisitoDocumento",
+                    include: [
+                        {
+                            model: models.Rol,
+                            as: "rol"
+                        },
+                        {
+                            model: models.Archivo,
+                            as: "plantilla"
+                        }
+                    ]
+                }
+            ]
         });
+
+    },
+
+    async findByPracticaId(practica_id) {
+
+        return await models.PracticaRequisitoDocumento.findAll({
+
+            where: {
+                practica_id
+            },
+
+            include: [
+                {
+                    model: models.TipoRequisitoDocumento,
+                    as: "tipoRequisitoDocumento",
+                    include: [
+                        {
+                            model: models.Rol,
+                            as: "rol"
+                        },
+                        {
+                            model: models.Archivo,
+                            as: "plantilla"
+                        }
+                    ]
+                }
+            ],
+
+            order: [
+                ["id", "ASC"]
+            ]
+
+        });
+
     },
 
     async update(id, data, transaction) {
@@ -88,5 +102,46 @@ export const practicaRequisitoDocumentoRepository = {
 
         });
 
-    }
+    },
+    async findByPracticaAndRol(
+        practica_id,
+        rol_id
+    ) {
+
+        return await models.PracticaRequisitoDocumento.findAll({
+
+            where: {
+                practica_id
+            },
+
+            include: [
+                {
+                    model: models.TipoRequisitoDocumento,
+                    as: "tipoRequisitoDocumento",
+
+                    where: {
+                        rol_id
+                    },
+
+                    include: [
+                        {
+                            model: models.Rol,
+                            as: "rol"
+                        },
+                        {
+                            model: models.Archivo,
+                            as: "plantilla"
+                        }
+                    ]
+                }
+            ],
+
+            order: [
+                ["id", "ASC"]
+            ]
+
+        });
+
+    },
+
 };

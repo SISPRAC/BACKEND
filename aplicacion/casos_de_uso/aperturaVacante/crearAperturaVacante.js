@@ -13,6 +13,7 @@ export const crearAperturaVacante = async (
     const {
         vacante_id,
         practica_id,
+        tutorEmpresa_id,
         cupos
     } = data;
 
@@ -25,6 +26,19 @@ export const crearAperturaVacante = async (
 
         throw new BadRequestError(
             "La apertura debe tener al menos un cupo."
+        );
+
+    }
+
+
+    // ============================================================
+    // VALIDAR TUTOR EMPRESARIAL
+    // ============================================================
+
+    if (!tutorEmpresa_id) {
+
+        throw new BadRequestError(
+            "Debe seleccionar un tutor empresarial."
         );
 
     }
@@ -81,9 +95,11 @@ export const crearAperturaVacante = async (
     }
 
     if (practica.estado !== "EN_CURSO") {
+
         throw new BadRequestError(
             "No se puede crear una apertura porque la práctica no está en curso."
         );
+
     }
 
 
@@ -92,11 +108,14 @@ export const crearAperturaVacante = async (
     // ============================================================
 
     const hoy = new Date();
+
     hoy.setHours(0, 0, 0, 0);
+
 
     const fechaFin = new Date(
         `${practica.fecha_fin}T00:00:00`
     );
+
 
     if (fechaFin < hoy) {
 
@@ -108,11 +127,8 @@ export const crearAperturaVacante = async (
 
 
     // ============================================================
-    // TUTOR TEMPORAL
+    // OBTENER TUTOR EMPRESARIAL
     // ============================================================
-
-    const tutorEmpresa_id = 1;
-
 
     const tutor =
         await tutorEmpresaRepository.findById(
@@ -193,3 +209,4 @@ export const crearAperturaVacante = async (
     return apertura;
 
 };
+

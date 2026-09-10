@@ -31,13 +31,29 @@ const createPracticanteModel = (sequelize) => {
             },
 
             codigoDepResidencia: {
-                type: DataTypes.CHAR(2),
+                type: DataTypes.INTEGER,
                 allowNull: true,
+
+                references: {
+                    model: "Departamentos",
+                    key: "codigo"
+                },
+
+                onDelete: "RESTRICT",
+                onUpdate: "CASCADE"
             },
 
             codigoMunResidencia: {
-                type: DataTypes.CHAR(5),
+                type: DataTypes.INTEGER,
                 allowNull: true,
+
+                references: {
+                    model: "Municipios",
+                    key: "codigo"
+                },
+
+                onDelete: "RESTRICT",
+                onUpdate: "CASCADE"
             },
 
             fecha_nacimiento: {

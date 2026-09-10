@@ -8,7 +8,13 @@ export const practicaRepository = {
 
     async findById(id) {
         return await models.Practica.findOne({
-            where: { id }
+            where: { id },
+            include: [
+                {
+                    model: models.Archivo,
+                    as: "archivoArl"
+                }
+            ]
         });
     },
 
@@ -29,6 +35,10 @@ export const practicaRepository = {
                         "fecha_inicio",
                         "fecha_fin"
                     ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "archivoArl"
                 }
             ]
         });
