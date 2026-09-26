@@ -11,12 +11,12 @@ const createEntregaInformeModel = (sequelize) => {
                 autoIncrement: true
             },
 
-            practica_informe_id: {
+            practica_requisito_documento_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
 
                 references: {
-                    model: "PracticaInforme",
+                    model: "PracticaRequisitoDocumento",
                     key: "id"
                 },
 
@@ -25,7 +25,7 @@ const createEntregaInformeModel = (sequelize) => {
             },
 
             practica_practicante_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.INTEGER, 
                 allowNull: false,
 
                 references: {
@@ -66,7 +66,9 @@ const createEntregaInformeModel = (sequelize) => {
                 type: DataTypes.ENUM(
                     "PENDIENTE",
                     "APROBADO",
-                    "RECHAZADO"
+                    "RECHAZADO",
+                    "COMENTADO",
+                    "ACTUALIZADO"
                 ),
                 allowNull: false,
                 defaultValue: "PENDIENTE"
@@ -139,7 +141,7 @@ const createEntregaInformeModel = (sequelize) => {
                     unique: true,
                     fields: [
                         "practica_practicante_id",
-                        "practica_informe_id",
+                        "practica_requisito_documento_id",
                         "version"
                     ]
                 }

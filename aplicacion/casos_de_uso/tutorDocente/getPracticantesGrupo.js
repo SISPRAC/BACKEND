@@ -6,83 +6,130 @@ export const getPracticantesGrupo = async (
     practicaId
 ) => {
 
-    const grupo = await tutorDocenteRepository.findCandidatosByGrupoId(
-        grupoId,
-        practicaId
-    );
+    const grupo =
+        await tutorDocenteRepository.findGrupoById(
+            grupoId,
+            practicaId
+        );
 
     if (!grupo) {
+
         throw new BadRequestError(
-            "Grupo no encontrado"
+            "El grupo no existe o no pertenece a la práctica indicada"
         );
     }
+
+    const practicantes = [];
+
+    for (const grupoCandidato of grupo.candidatosAsignados) {
+
+        const candidato = grupoCandidato.candidato;
+
+        if (!candidato) {
+            continue;
+        }
+
+        const postulacion =
+            await tutorDocenteRepository
+                .findPostulacionByCandidatoAndPractica(
+                    candidato.id,
+                    practicaId
+                );
+
+        let practicaPracticante = null;
+
+        if (candidato.practicante) {
+
+            practicaPracticante =
+                await tutorDocenteRepository
+                    .findPracticaPracticanteByPracticanteAndPractica(
+                        candidato.practicante.id,
+                        practicaId
+                    );
+        }
+
+
+        /*
+         * Empresa
+         */
+        const empresa =
+            postulacion
+                ?.AperturaVacante
+                ?.Vacante
+                ?.Convenio
+                ?.Empresa;
+
+
+        /*
+         * Estado
+         *
+         * Si ya es practicante:
+         * estado de PracticaPracticante.
+         *
+         * Si todavía no es practicante:
+         * estado de Postulacion.
+         *
+         * Si nunca se postuló:
+         * SIN_POSTULACION.
+         */
+        let estado = "SIN_POSTULACION";
+
+        if (practicaPracticante) {
+
+            estado = practicaPracticante.estado;
+
+        } else if (postulacion) {
+
+            estado = postulacion.estado;
+        }
+
+
+        practicantes.push({
+
+            id_grupo_candidato: grupoCandidato.id,
+
+            id_candidato: candidato.id,
+
+            id_practicante:
+                candidato.practicante?.id || null,
+
+            codigo:
+                candidato.codigo || null,
+
+            nombre: [
+                candidato.Usuario?.nombres,
+                candidato.Usuario?.apellidos
+            ]
+                .filter(Boolean)
+                .join(" ") || null,
+
+            correo:
+                candidato.Usuario?.correo || null,
+
+            empresa:
+                empresa?.nombre || "Sin empresa",
+
+            estado
+        });
+    }
+
 
     return {
         id: grupo.id,
         nombre: grupo.nombre,
-
         practica_id: grupo.practica_id,
 
-        practica: grupo.practica
-            ? {
-                id: grupo.practica.id,
-                estado: grupo.practica.estado,
-                periodo: grupo.practica.Periodo?.nombre || null
+        practica: {
+            estado: grupo.practica?.estado || null,
+            fecha_inicio: grupo.practica?.fecha_inicio || null,
+            fecha_fin: grupo.practica?.fecha_fin || null,
+
+            periodo: {
+                id: grupo.practica?.Periodo?.id || null,
+                nombre: grupo.practica?.Periodo?.nombre || null
             }
-            : null,
+        },
 
-        tutorDocente_id: grupo.tutorDocente_id,
-
-        practicantes:
-            grupo.candidatosAsignados?.map(
-                grupoCandidato => {
-
-                    const candidato =
-                        grupoCandidato.candidato;
-
-                    const usuario =
-                        candidato?.Usuario;
-
-                    const practicante =
-                        candidato?.practicante;
-
-                    const postulacion =
-                        candidato?.Postulacions?.find(
-                            postulacion =>
-                                postulacion.estado === "ACEPTADO"
-                        );
-
-                    const apertura =
-                        postulacion?.AperturaVacante;
-
-                    const vacante =
-                        apertura?.Vacante;
-
-                    const convenio =
-                        vacante?.Convenio;
-
-                    const empresa =
-                        convenio?.Empresa;
-
-                    return {
-                        id: practicante?.id || null,
-
-                        candidato_id:
-                            candidato?.id || null,
-
-                        codigo:
-                            candidato?.codigo || null,
-
-                        nombre:
-                            `${usuario?.nombres || ""} ${usuario?.apellidos || ""}`.trim(),
-
-                        empresa:
-                            empresa?.nombre || null,
-
-                        estado:
-                            practicante ? "MATRICULADO" : "NO_MATRICULADO"
-                    };
-                }
-            ) || []
+        practicantes
     };
 };

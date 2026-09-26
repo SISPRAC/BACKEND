@@ -13,11 +13,16 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 export const crearEntregaInforme = async (
     entregaInformeRepository,
-    practicaInformeRepository,
+    practicaRequisitoDocumentoRepository,
     archivoRepository,
+    user_id,
     data,
     file
 ) => {
+
+    console.log("crearEntregaInforme - user_id:", user_id);
+    console.log("crearEntregaInforme - data:", data);
+    console.log("crearEntregaInforme - file:", file);
 
     const transaction =
         await sequelize.transaction();
@@ -25,6 +30,10 @@ export const crearEntregaInforme = async (
     let publicId = null;
 
     try {
+
+        // ============================================================
+        // VALIDAR ARCHIVO
+        // ============================================================
 
         if (!file) {
 
@@ -34,42 +43,128 @@ export const crearEntregaInforme = async (
 
         }
 
-        /*
-         * Verificamos que el informe esté configurado
-         * para la práctica.
-         */
-        const practicaInforme =
-            await practicaInformeRepository.findById(
-                data.practica_informe_id
+
+        // ============================================================
+        // BUSCAR LA PRÁCTICA DEL PRACTICANTE
+        // ============================================================
+
+        const practicaPracticante =
+            await entregaInformeRepository.findPracticaPracticanteByUserId(
+                user_id
             );
 
-        if (!practicaInforme) {
+        if (!practicaPracticante) {
 
             throw new NotFoundError(
-                "El informe de la práctica no existe."
+                "El practicante no tiene una práctica activa."
             );
 
         }
 
-        /*
-         * El informe debe estar activo para
-         * permitir nuevas entregas.
-         */
-        if (!practicaInforme.estado) {
+
+        // ============================================================
+        // VALIDAR QUE LA PRÁCTICA ESTÉ EN CURSO
+        // ============================================================
+
+        if (
+            practicaPracticante.estado !==
+            "En curso"
+        ) {
 
             throw new BadRequestError(
-                "El informe no está disponible para recibir entregas."
+                "La práctica no está disponible para realizar entregas."
             );
 
         }
 
-        /*
-         * Buscamos la última versión.
-         */
+
+        // ============================================================
+        // BUSCAR EL REQUISITO DOCUMENTO
+        // ============================================================
+
+        const practicaRequisitoDocumento =
+            await practicaRequisitoDocumentoRepository.findById(
+                data.practica_requisito_documento_id
+            );
+
+        if (!practicaRequisitoDocumento) {
+
+            throw new NotFoundError(
+                "El requisito de documento no existe."
+            );
+
+        }
+
+
+        // ============================================================
+        // VALIDAR QUE EL REQUISITO PERTENEZCA A LA PRÁCTICA
+        // ============================================================
+
+        if (
+            practicaRequisitoDocumento.practica_id !==
+            practicaPracticante.practica_id
+        ) {
+
+            throw new BadRequestError(
+                "El requisito de documento no pertenece a la práctica del practicante."
+            );
+
+        }
+
+
+        // ============================================================
+        // VALIDAR QUE EL REQUISITO ESTÉ ACTIVO
+        // ============================================================
+
+        if (!practicaRequisitoDocumento.estado) {
+
+            throw new BadRequestError(
+                "El requisito de documento no está disponible para recibir entregas."
+            );
+
+        }
+
+
+        // ============================================================
+        // VALIDAR FECHAS DEL REQUISITO
+        // ============================================================
+
+        const hoy =
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+        if (
+            practicaRequisitoDocumento.fecha_inicio &&
+            hoy < practicaRequisitoDocumento.fecha_inicio
+        ) {
+
+            throw new BadRequestError(
+                "El periodo para realizar la entrega todavía no ha comenzado."
+            );
+
+        }
+
+        if (
+            practicaRequisitoDocumento.fecha_limite &&
+            hoy > practicaRequisitoDocumento.fecha_limite
+        ) {
+
+            throw new BadRequestError(
+                "La fecha límite para realizar la entrega ya ha vencido."
+            );
+
+        }
+
+
+        // ============================================================
+        // BUSCAR ÚLTIMA VERSIÓN
+        // ============================================================
+
         const ultimaEntrega =
             await entregaInformeRepository.findLatestVersion(
-                data.practica_practicante_id,
-                data.practica_informe_id,
+                practicaPracticante.id,
+                data.practica_requisito_documento_id,
                 transaction
             );
 
@@ -82,14 +177,21 @@ export const crearEntregaInforme = async (
 
         }
 
-        /*
-         * Subimos el archivo nuevo.
-         */
+
+        // ============================================================
+        // CREAR NOMBRE DEL ARCHIVO
+        // ============================================================
+
         const extension =
             path.extname(file.originalname);
 
         const nombreArchivo =
-            `INFORME_${data.practica_informe_id}_${data.practica_practicante_id}_V${version}_${Date.now()}${extension}`;
+            `INFORME_${data.practica_requisito_documento_id}_${practicaPracticante.id}_V${version}_${Date.now()}${extension}`;
+
+
+        // ============================================================
+        // SUBIR ARCHIVO
+        // ============================================================
 
         const resultado =
             await uploadArchivo(
@@ -102,9 +204,11 @@ export const crearEntregaInforme = async (
         publicId =
             resultado.public_id;
 
-        /*
-         * Creamos el registro del archivo.
-         */
+
+        // ============================================================
+        // CREAR REGISTRO DEL ARCHIVO
+        // ============================================================
+
         const archivo =
             await archivoRepository.create(
                 {
@@ -116,17 +220,19 @@ export const crearEntregaInforme = async (
                 transaction
             );
 
-        /*
-         * Creamos la nueva versión.
-         */
+
+        // ============================================================
+        // CREAR ENTREGA
+        // ============================================================
+
         const entrega =
             await entregaInformeRepository.create(
                 {
-                    practica_informe_id:
-                        data.practica_informe_id,
+                    practica_requisito_documento_id:
+                        data.practica_requisito_documento_id,
 
                     practica_practicante_id:
-                        data.practica_practicante_id,
+                        practicaPracticante.id,
 
                     archivo_id:
                         archivo.id,
@@ -143,6 +249,11 @@ export const crearEntregaInforme = async (
                 transaction
             );
 
+
+        // ============================================================
+        // CONFIRMAR TRANSACCIÓN
+        // ============================================================
+
         await transaction.commit();
 
         return entrega;
@@ -151,11 +262,11 @@ export const crearEntregaInforme = async (
 
         await transaction.rollback();
 
-        /*
-         * Si el archivo alcanzó a subirse pero algo
-         * falló después, eliminamos únicamente
-         * ese archivo nuevo.
-         */
+
+        // ============================================================
+        // ELIMINAR ARCHIVO SI FALLÓ LA TRANSACCIÓN
+        // ============================================================
+
         if (publicId) {
 
             try {
@@ -175,13 +286,21 @@ export const crearEntregaInforme = async (
 
         }
 
+
+        // ============================================================
+        // ERRORES CONTROLADOS
+        // ============================================================
+
         if (
             error instanceof NotFoundError ||
             error instanceof BadRequestError ||
             error instanceof ConflictError
         ) {
+
             throw error;
+
         }
+
 
         throw new BadRequestError(
             error.message ||

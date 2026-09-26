@@ -13,33 +13,113 @@ export const entregaInformeRepository = {
 
     },
 
+    // ============================================================
+    // BUSCAR LA PRÁCTICA DEL PRACTICANTE POR USER ID
+    // ============================================================
+
+    async findPracticaPracticanteByUserId(user_id) {
+
+        return await models.PracticaPracticante.findOne({
+
+            where: {
+                estado: "En curso"
+            },
+
+            include: [
+
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+
+                    required: true,
+
+                    include: [
+
+                        {
+                            model: models.Candidato,
+                            as: "candidato",
+
+                            required: true,
+
+                            where: {
+                                usuario_id: user_id
+                            }
+
+                        }
+
+                    ]
+
+                },
+
+                {
+                    model: models.Practica,
+                    as: "practica"
+                }
+
+            ]
+
+        });
+
+    },
+
+    // ============================================================
+    // BUSCAR ENTREGA POR ID
+    // ============================================================
+
     async findById(id) {
 
         return await models.EntregaInforme.findByPk(id, {
 
             include: [
+
                 {
-                    model: models.PracticaInforme,
-                    as: "practicaInforme",
+                    model: models.PracticaRequisitoDocumento,
+                    as: "practicaRequisitoDocumento",
 
                     include: [
+
                         {
-                            model: models.TipoInforme,
-                            as: "tipoInforme",
+                            model: models.TipoRequisitoDocumento,
+                            as: "tipoRequisitoDocumento",
 
                             include: [
+
+                                {
+                                    model: models.Rol,
+                                    as: "rol"
+                                },
+
                                 {
                                     model: models.Archivo,
                                     as: "plantilla"
                                 }
+
                             ]
+
                         }
+
                     ]
+
                 },
 
                 {
                     model: models.PracticaPracticante,
-                    as: "practicaPracticante"
+                    as: "practicaPracticante",
+
+                    include: [
+
+                        {
+                            model: models.Practicante,
+                            as: "practicante"
+                        },
+
+                        {
+                            model: models.Practica,
+                            as: "practica"
+                        }
+
+                    ]
+
                 },
 
                 {
@@ -56,6 +136,7 @@ export const entregaInformeRepository = {
                             model: models.User
                         }
                     ]
+
                 },
 
                 {
@@ -67,62 +148,19 @@ export const entregaInformeRepository = {
                             model: models.User
                         }
                     ]
+
                 }
+
             ]
 
         });
 
     },
 
-    async findByPracticaInformeId(practica_informe_id) {
 
-        return await models.EntregaInforme.findAll({
-
-            where: {
-                practica_informe_id
-            },
-
-            include: [
-                {
-                    model: models.PracticaPracticante,
-                    as: "practicaPracticante"
-                },
-
-                {
-                    model: models.Archivo,
-                    as: "archivo"
-                },
-
-                {
-                    model: models.TutorDocente,
-                    as: "tutorDocente",
-
-                    include: [
-                        {
-                            model: models.User
-                        }
-                    ]
-                },
-
-                {
-                    model: models.TutorEmpresa,
-                    as: "tutorEmpresarial",
-
-                    include: [
-                        {
-                            model: models.User
-                        }
-                    ]
-                }
-            ],
-
-            order: [
-                ["version", "DESC"]
-            ]
-
-        });
-
-    },
+    // ============================================================
+    // ENTREGAS DE UNA PRÁCTICA-PRACTICANTE
+    // ============================================================
 
     async findByPracticaPracticanteId(practica_practicante_id) {
 
@@ -133,26 +171,55 @@ export const entregaInformeRepository = {
             },
 
             include: [
+
                 {
-                    model: models.PracticaInforme,
-                    as: "practicaInforme",
+                    model: models.PracticaRequisitoDocumento,
+                    as: "practicaRequisitoDocumento",
 
                     include: [
+
                         {
-                            model: models.TipoInforme,
-                            as: "tipoInforme"
+                            model: models.TipoRequisitoDocumento,
+                            as: "tipoRequisitoDocumento"
                         }
+
                     ]
+
                 },
 
                 {
                     model: models.Archivo,
                     as: "archivo"
+                },
+
+                {
+                    model: models.TutorDocente,
+                    as: "tutorDocente",
+
+                    include: [
+                        {
+                            model: models.User
+                        }
+                    ]
+
+                },
+
+                {
+                    model: models.TutorEmpresa,
+                    as: "tutorEmpresarial",
+
+                    include: [
+                        {
+                            model: models.User
+                        }
+                    ]
+
                 }
+
             ],
 
             order: [
-                ["practica_informe_id", "ASC"],
+                ["practica_requisito_documento_id", "ASC"],
                 ["version", "DESC"]
             ]
 
@@ -160,19 +227,25 @@ export const entregaInformeRepository = {
 
     },
 
-    async findByPracticaPracticanteAndInforme(
+
+    // ============================================================
+    // ENTREGAS DE UN REQUISITO ESPECÍFICO
+    // ============================================================
+
+    async findByPracticaPracticanteAndRequisito(
         practica_practicante_id,
-        practica_informe_id
+        practica_requisito_documento_id
     ) {
 
         return await models.EntregaInforme.findAll({
 
             where: {
                 practica_practicante_id,
-                practica_informe_id
+                practica_requisito_documento_id
             },
 
             include: [
+
                 {
                     model: models.Archivo,
                     as: "archivo"
@@ -187,6 +260,7 @@ export const entregaInformeRepository = {
                     model: models.TutorEmpresa,
                     as: "tutorEmpresarial"
                 }
+
             ],
 
             order: [
@@ -197,9 +271,14 @@ export const entregaInformeRepository = {
 
     },
 
+
+    // ============================================================
+    // ÚLTIMA VERSIÓN
+    // ============================================================
+
     async findLatestVersion(
         practica_practicante_id,
-        practica_informe_id,
+        practica_requisito_documento_id,
         transaction
     ) {
 
@@ -207,7 +286,7 @@ export const entregaInformeRepository = {
 
             where: {
                 practica_practicante_id,
-                practica_informe_id
+                practica_requisito_documento_id
             },
 
             order: [
@@ -220,12 +299,19 @@ export const entregaInformeRepository = {
 
     },
 
+
+    // ============================================================
+    // ACTUALIZAR ENTREGA
+    // ============================================================
+
     async update(id, data, transaction) {
 
         const entrega =
             await models.EntregaInforme.findByPk(
                 id,
-                { transaction }
+                {
+                    transaction
+                }
             );
 
         if (!entrega) {
@@ -234,11 +320,109 @@ export const entregaInformeRepository = {
 
         await entrega.update(
             data,
-            { transaction }
+            {
+                transaction
+            }
         );
 
         return entrega;
 
+    },
+
+    async findPracticaPracticanteByUserIdAndPracticaId(
+        user_id,
+        practica_id
+    ) {
+        return await models.PracticaPracticante.findOne({
+            where: {
+                practica_id
+            },
+            include: [
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+                    required: true,
+                    include: [
+                        {
+                            model: models.Candidato,
+                            as: "candidato",
+                            required: true,
+                            where: {
+                                usuario_id: user_id
+                            }
+                        }
+                    ]
+                },
+                {
+                    model: models.Practica,
+                    as: "practica"
+                }
+            ]
+        });
+    },
+
+    async findByPracticanteAndTipoRequisito(
+        practicante_id,
+        tipo_requisito_documento_id
+    ) {
+
+        return await models.EntregaInforme.findAll({
+
+            include: [
+                {
+                    model: models.PracticaPracticante,
+                    as: "practicaPracticante",
+                    required: true,
+                    where: {
+                        practicante_id
+                    },
+                    include: [
+                        {
+                            model: models.Practica,
+                            as: "practica"
+                        }
+                    ]
+                },
+                {
+                    model: models.PracticaRequisitoDocumento,
+                    as: "practicaRequisitoDocumento",
+                    required: true,
+                    where: {
+                        id: tipo_requisito_documento_id
+                    },
+                    include: [
+                        {
+                            model: models.TipoRequisitoDocumento,
+                            as: "tipoRequisitoDocumento",
+                            required: true,
+                            include: [
+                                {
+                                    model: models.Rol,
+                                    as: "rol"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "archivo"
+                },
+                {
+                    model: models.TutorDocente,
+                    as: "tutorDocente"
+                },
+                {
+                    model: models.TutorEmpresa,
+                    as: "tutorEmpresarial"
+                }
+            ],
+
+            order: [
+                ["version", "DESC"]
+            ]
+
+        });
     }
 
 };

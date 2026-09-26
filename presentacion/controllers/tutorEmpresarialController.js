@@ -134,6 +134,11 @@ export const getAperturasByPracticaController = async (req, res) => {
 
     } catch (error) {
 
+        console.log(
+            "Error al obtener las aperturas de la práctica:",
+            error
+        );
+
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message

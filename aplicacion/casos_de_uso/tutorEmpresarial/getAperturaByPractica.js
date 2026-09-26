@@ -12,7 +12,7 @@ export const getAperturasByPractica = async (
             practicaId
         );
 
-    return aperturas.map(apertura => ({
+    const resultado = aperturas.map(apertura => ({
 
         id: apertura.id,
 
@@ -30,20 +30,50 @@ export const getAperturasByPractica = async (
 
         estado: apertura.estado,
 
-        practicantes:
-            apertura.Postulacions?.map(postulacion => ({
+        practicantes: (() => {
 
-                id: postulacion.id,
+            const practicantesMap = new Map();
 
-                nombre: postulacion.Candidato?.User?.nombres,
+            apertura.Postulacions?.forEach(postulacion => {
 
-                correo: postulacion.Candidato?.User?.correo,
+                const practicante =
+                    postulacion.Candidato?.practicante;
 
-                telefono: postulacion.Candidato?.User?.telefono,
+                const practicaPracticante =
+                    practicante?.practicas?.[0];
 
-                estado: postulacion.estado
+                if (!practicante || !practicaPracticante) {
+                    return;
+                }
 
-            })) || []
+                practicantesMap.set(
+                    practicante.id,
+                    {
+                        id_practicante:
+                            practicante.id,
+
+                        nombre:
+                            postulacion.Candidato?.Usuario?.nombres +
+                            " " +
+                            postulacion.Candidato?.Usuario?.apellidos,
+
+                        correo:
+                            postulacion.Candidato?.Usuario?.correo,
+
+                        telefono:
+                            postulacion.Candidato?.Usuario?.telefono,
+
+                        estado:
+                            practicaPracticante.estado
+                    }
+                );
+            });
+
+            return Array.from(practicantesMap.values());
+
+        })()
 
     }));
+
+    return resultado;
 };

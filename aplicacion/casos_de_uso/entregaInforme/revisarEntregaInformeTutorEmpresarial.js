@@ -29,7 +29,7 @@ export const revisarEntregaInformeTutorEmpresarial = async (
 
         if (
             estado_tutor_empresarial !== "APROBADO" &&
-            estado_tutor_empresarial !== "RECHAZADO"
+            estado_tutor_empresarial !== "RECHAZADO" 
         ) {
 
             throw new BadRequestError(
@@ -38,10 +38,6 @@ export const revisarEntregaInformeTutorEmpresarial = async (
 
         }
 
-        /*
-         * Una versión histórica no debe volver
-         * a modificarse después de una decisión.
-         */
         if (
             entrega.estado_tutor_empresarial === "APROBADO" ||
             entrega.estado_tutor_empresarial === "RECHAZADO"
@@ -53,9 +49,6 @@ export const revisarEntregaInformeTutorEmpresarial = async (
 
         }
 
-        /*
-         * Si rechaza, debe existir una observación.
-         */
         if (
             estado_tutor_empresarial === "RECHAZADO" &&
             !observacion_tutor_empresarial?.trim()
@@ -79,8 +72,7 @@ export const revisarEntregaInformeTutorEmpresarial = async (
                         new Date(),
 
                     observacion_tutor_empresarial:
-                        observacion_tutor_empresarial || null
-
+                        observacion_tutor_empresarial?.trim() || null
                 },
                 transaction
             );
@@ -106,5 +98,4 @@ export const revisarEntregaInformeTutorEmpresarial = async (
         );
 
     }
-
 };

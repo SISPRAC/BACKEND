@@ -146,9 +146,28 @@ export const tutorEmpresaRepository = {
                     include: [
                         {
                             model: models.Candidato,
+
                             include: [
                                 {
                                     model: models.User
+                                },
+
+                                {
+                                    model: models.Practicante,
+                                    as: "practicante",
+
+                                    include: [
+                                        {
+                                            model: models.PracticaPracticante,
+                                            as: "practicas",
+
+                                            where: {
+                                                practica_id: practicaId
+                                            },
+
+                                            required: false
+                                        }
+                                    ]
                                 }
                             ]
                         }
@@ -162,4 +181,4 @@ export const tutorEmpresaRepository = {
         });
     }
 
-};
+}; 

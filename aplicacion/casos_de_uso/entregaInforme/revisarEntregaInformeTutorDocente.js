@@ -27,6 +27,24 @@ export const revisarEntregaInformeTutorDocente = async (
 
         }
 
+        // ============================================================
+        // VALIDAR QUE EL TUTOR EMPRESARIAL YA HAYA APROBADO
+        // ============================================================
+
+        if (
+            entrega.estado_tutor_empresarial !== "APROBADO"
+        ) {
+
+            throw new BadRequestError(
+                "El tutor empresarial debe aprobar primero la entrega del informe."
+            );
+
+        }
+
+        // ============================================================
+        // VALIDAR ESTADO
+        // ============================================================
+
         if (
             estado_tutor_docente !== "APROBADO" &&
             estado_tutor_docente !== "RECHAZADO"
@@ -38,10 +56,10 @@ export const revisarEntregaInformeTutorDocente = async (
 
         }
 
-        /*
-         * Una versión histórica no debe volver
-         * a modificarse después de una decisión.
-         */
+        // ============================================================
+        // UNA REVISIÓN NO SE PUEDE MODIFICAR
+        // ============================================================
+
         if (
             entrega.estado_tutor_docente === "APROBADO" ||
             entrega.estado_tutor_docente === "RECHAZADO"
@@ -53,9 +71,10 @@ export const revisarEntregaInformeTutorDocente = async (
 
         }
 
-        /*
-         * Si rechaza, debe existir una observación.
-         */
+        // ============================================================
+        // OBSERVACIÓN OBLIGATORIA SI RECHAZA
+        // ============================================================
+
         if (
             estado_tutor_docente === "RECHAZADO" &&
             !observacion_tutor_docente?.trim()
@@ -66,6 +85,10 @@ export const revisarEntregaInformeTutorDocente = async (
             );
 
         }
+
+        // ============================================================
+        // ACTUALIZAR ENTREGA
+        // ============================================================
 
         const actualizado =
             await entregaInformeRepository.update(
@@ -79,8 +102,7 @@ export const revisarEntregaInformeTutorDocente = async (
                         new Date(),
 
                     observacion_tutor_docente:
-                        observacion_tutor_docente || null
-
+                        observacion_tutor_docente?.trim() || null
                 },
                 transaction
             );
@@ -106,5 +128,4 @@ export const revisarEntregaInformeTutorDocente = async (
         );
 
     }
-
 };

@@ -1,5 +1,6 @@
 import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 
 import { crearPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/crearPracticaRequisitoDocumento.js";
 import { actualizarPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/actualizarPracticaRequisitoDocumento.js";
@@ -7,6 +8,9 @@ import { eliminarPracticaRequisitoDocumento } from "../../aplicacion/casos_de_us
 import { getPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/getPracticaRequisitoDocumento.js";
 import { getPracticaRequisitosDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/getPracticaRequisitosDocumento.js";
 import { getPracticaRequisitosDocumentoByRol } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/getPracticaRequisitosDocumentoByRol.js";
+
+import { obtenerRequisitosPracticanteVigentes } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/obtenerRequisitosPracticanteVigentes.js";
+import { obtenerInformesPracticanteVigentes } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/obtenerInformesPracticanteVigentes.js";
 
 export const createPracticaRequisitoDocumento = async (req, res) => {
 
@@ -42,10 +46,8 @@ export const updatePracticaRequisitoDocumento = async (req, res) => {
         const requisito =
             await actualizarPracticaRequisitoDocumento(
                 practicaRequisitoDocumentoRepository,
-                archivoRepository,
                 req.params.id,
-                req.body,
-                req.file
+                req.body
             );
 
         return res.status(200).json(requisito);
@@ -168,5 +170,67 @@ export const findPracticaRequisitosDocumentoByRol = async (req, res) => {
             message: "Error interno del servidor"
         });
     }
+};
+
+//practicante 
+
+export const findRequisitosPracticanteVigentes = async (req, res) => {
+
+    try {
+
+        const user_id = req.user.id;
+
+        const requisitos =
+            await obtenerRequisitosPracticanteVigentes(
+                practicaRequisitoDocumentoRepository,
+                user_id
+            );
+
+        return res.json(requisitos);
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+
+};
+
+
+export const findInformesPracticanteVigentes = async (req, res) => {
+
+    try {
+
+        const user_id = req.user.id;
+
+        const requisitos =
+            await obtenerInformesPracticanteVigentes(
+                practicaRequisitoDocumentoRepository,
+                userRepository,
+                user_id
+            );
+
+        return res.json(requisitos);
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+
 };
 

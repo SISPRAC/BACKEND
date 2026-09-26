@@ -1,10 +1,36 @@
 import { models } from "../database/dbConnection.js";
 
 export const PracticanteRepository = {
-
     async create(data, transaction) {
         return await models.Practicante.create(data, {
             transaction
+        });
+    },
+    async findById(id) {
+        return await models.Practicante.findOne({
+            where: {
+                id
+            },
+            include: [
+                {
+                    model: models.Candidato,
+                    as: "candidato",
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: [
+                                "id",
+                                "nombres",
+                                "apellidos",
+                                "correo",
+                                "tipo_documento",
+                                "cedula",
+                                "telefono"
+                            ]
+                        }
+                    ]
+                }
+            ]
         });
     },
 
@@ -182,5 +208,76 @@ export const PracticanteRepository = {
             ]
         });
     },
+
+    async findRolPracticante(practicanteId) {
+        return await models.Practicante.findByPk(
+            practicanteId,
+            {
+                include: [
+                    {
+                        model: models.Candidato,
+                        as: "candidato",
+                        include: [
+                            {
+                                model: models.User,
+                                include: [
+                                    {
+                                        model: models.UserRol,
+                                        as: "rolesAsignados",
+                                        include: [
+                                            {
+                                                model: models.Rol,
+                                                as: "rol"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        );
+    },
+
+    async findTiposRequisitoPorRol(rolIds, nombres) {
+        return await models.TipoRequisitoDocumento.findAll({
+            where: {
+                rol_id: rolIds
+            }
+        });
+    },
+
+    async findPracticaEnCursoPracticante(practicanteId) {
+        return await models.PracticaPracticante.findOne({
+            where: { estado: "En curso" },
+            include: [
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+                    where: { id: practicanteId }
+                },
+                {
+                    model: models.Practica,
+                    as: "practica"
+                }
+            ]
+        });
+    },
+
+    async findRequisitosDocumentosPractica(practicaId, tipoIds) {
+        return await models.PracticaRequisitoDocumento.findAll({
+            where: {
+                practica_id: practicaId,
+                tipo_requisito_documento_id: tipoIds
+            },
+            include: [
+                {
+                    model: models.TipoRequisitoDocumento,
+                    as: "tipoRequisitoDocumento"
+                }
+            ]
+        });
+    }
 
 };

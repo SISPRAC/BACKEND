@@ -1,26 +1,38 @@
 import { entregaInformeRepository } from "../../infraestructura/repositorios/entregaInformeRepositoryImpl.js";
-import { practicaInformeRepository } from "../../infraestructura/repositorios/practicaInformeRepositoryImpl.js";
+import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/tutorEmpresaRepositoryImpl.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
+
 import { crearEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/crearEntregaInforme.js";
+
+import { getEntregaInformeByPracticante } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregasInformeByPracticante.js";
+
+import { getTrazabilidadEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/getTrazabilidadEntregaInforme.js";
+
 import { revisarEntregaInformeTutorDocente } from "../../aplicacion/casos_de_uso/entregaInforme/revisarEntregaInformeTutorDocente.js";
+
 import { revisarEntregaInformeTutorEmpresarial } from "../../aplicacion/casos_de_uso/entregaInforme/revisarEntregaInformeTutorEmpresarial.js";
 
-import { getEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregaInforme.js";
-import { getEntregasInformeByPracticaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregasInformeByPracticaInforme.js";
-import { getEntregasInformeByPracticaPracticante } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregasInformeByPracticaPracticante.js";
-import { getEntregasInformeByPracticaPracticanteAndInforme } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregasInformeByPracticaPracticanteAndInforme.js";
 
+// ============================================================
+// CREAR ENTREGA DE INFORME
+// ============================================================
 
 export const createEntregaInforme = async (req, res) => {
 
     try {
 
+        const user_id = req.user.id;
+
         const entrega =
             await crearEntregaInforme(
                 entregaInformeRepository,
-                practicaInformeRepository,
+                practicaRequisitoDocumentoRepository,
                 archivoRepository,
+                user_id,
                 req.body,
                 req.file
             );
@@ -28,6 +40,8 @@ export const createEntregaInforme = async (req, res) => {
         return res.status(201).json(entrega);
 
     } catch (error) {
+
+        console.log("Error:", error);
 
         if (error.statusCode) {
 
@@ -46,16 +60,24 @@ export const createEntregaInforme = async (req, res) => {
 };
 
 
-export const findEntregaInforme = async (req, res) => {
+// ============================================================
+// OBTENER ENTREGA POR PRACTICANTE Y TIPO DE REQUISITO
+// ============================================================
+
+export const findEntregaInformeByPracticante = async (req, res) => {
 
     try {
 
-        const { id } = req.params;
+        const {
+            practicante_id,
+            tipo_requisito_documento_id
+        } = req.params;
 
         const entrega =
-            await getEntregaInforme(
+            await getEntregaInformeByPracticante(
                 entregaInformeRepository,
-                id
+                practicante_id,
+                tipo_requisito_documento_id
             );
 
         return res.status(200).json(entrega);
@@ -75,93 +97,33 @@ export const findEntregaInforme = async (req, res) => {
         });
 
     }
-
 };
 
 
-export const findEntregasInformeByPracticaInforme = async (req, res) => {
+// ============================================================
+// TRAZABILIDAD DE ENTREGA
+// ============================================================
+
+export const findTrazabilidadEntregaInforme = async (req, res) => {
 
     try {
 
-        const { practica_informe_id } = req.params;
-
-        const entregas =
-            await getEntregasInformeByPracticaInforme(
-                entregaInformeRepository,
-                practica_informe_id
-            );
-
-        return res.status(200).json(entregas);
-
-    } catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
-
-    }
-
-};
-
-
-export const findEntregasInformeByPracticaPracticante = async (req, res) => {
-
-    try {
-
-        const { practica_practicante_id } = req.params;
-
-        const entregas =
-            await getEntregasInformeByPracticaPracticante(
-                entregaInformeRepository,
-                practica_practicante_id
-            );
-
-        return res.status(200).json(entregas);
-
-    } catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
-
-    }
-
-};
-
-
-export const findEntregasInformeByPracticaPracticanteAndInforme = async (req, res) => {
-
-    try {
+        const user_id = req.user.sub;
 
         const {
-            practica_practicante_id,
-            practica_informe_id
+            practicante_id,
+            tipo_requisito_documento_id
         } = req.params;
 
-        const entregas =
-            await getEntregasInformeByPracticaPracticanteAndInforme(
+        const trazabilidad =
+            await getTrazabilidadEntregaInforme(
                 entregaInformeRepository,
-                practica_practicante_id,
-                practica_informe_id
+                user_id,
+                practicante_id,
+                tipo_requisito_documento_id
             );
 
-        return res.status(200).json(entregas);
+        return res.status(200).json(trazabilidad);
 
     } catch (error) {
 
@@ -182,12 +144,16 @@ export const findEntregasInformeByPracticaPracticanteAndInforme = async (req, re
 };
 
 
+// ============================================================
+// REVISAR ENTREGA - TUTOR DOCENTE
+// ============================================================
 export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
     try {
 
+        const user_id = req.user.sub;
+
         const {
-            tutor_docente_id,
             estado_tutor_docente,
             observacion_tutor_docente
         } = req.body;
@@ -198,7 +164,7 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
             await revisarEntregaInformeTutorDocente(
                 entregaInformeRepository,
                 id,
-                tutor_docente_id,
+                user_id,
                 estado_tutor_docente,
                 observacion_tutor_docente
             );
@@ -223,13 +189,17 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
 };
 
+// ============================================================
+// REVISAR ENTREGA - TUTOR EMPRESARIAL
+// ============================================================
 
 export const reviewEntregaInformeTutorEmpresarial = async (req, res) => {
 
     try {
 
+        const user_id = req.user.sub;
+
         const {
-            tutor_empresarial_id,
             estado_tutor_empresarial,
             observacion_tutor_empresarial
         } = req.body;
@@ -240,7 +210,7 @@ export const reviewEntregaInformeTutorEmpresarial = async (req, res) => {
             await revisarEntregaInformeTutorEmpresarial(
                 entregaInformeRepository,
                 id,
-                tutor_empresarial_id,
+                user_id,
                 estado_tutor_empresarial,
                 observacion_tutor_empresarial
             );

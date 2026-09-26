@@ -2,78 +2,64 @@ import { Router } from "express";
 
 import {
     createEntregaInforme,
-    findEntregaInforme,
-    findEntregasInformeByPracticaInforme,
-    findEntregasInformeByPracticaPracticante,
-    findEntregasInformeByPracticaPracticanteAndInforme,
+    findEntregaInformeByPracticante,
+    findTrazabilidadEntregaInforme,
     reviewEntregaInformeTutorDocente,
     reviewEntregaInformeTutorEmpresarial
 } from "../controllers/entregaInformeController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
-
 import { verifyRole } from "../middleware/rolMiddleware.js";
+
+import { upload } from "../middleware/uploadMulter.js";
 
 
 const router = Router();
 
+// ============================================================
+// OBTENER ENTREGAS DE UN PRACTICANTE POR TIPO DE DOCUMENTO
+// ============================================================
 
 router.get(
 
-    "/practica-informe/:practica_informe_id",
+    "/practicante/:practicante_id/tipo/:tipo_requisito_documento_id",
 
     verifyToken,
 
-    findEntregasInformeByPracticaInforme
+    findEntregaInformeByPracticante
 
 );
 
 
-router.get(
-
-    "/practica-practicante/:practica_practicante_id",
-
-    verifyToken,
-
-    findEntregasInformeByPracticaPracticante
-
-);
-
+// ============================================================
+// TRAZABILIDAD DE ENTREGAS
+// ============================================================
 
 router.get(
 
-    "/practica-practicante/:practica_practicante_id/informe/:practica_informe_id",
+    "/trazabilidad/practicante/:practicante_id/tipo/:tipo_requisito_documento_id",
 
     verifyToken,
 
-    findEntregasInformeByPracticaPracticanteAndInforme
+    findTrazabilidadEntregaInforme
 
 );
 
+// ============================================================
+// CREAR ENTREGA
+// ============================================================
 
 router.post(
-
     "/crear",
-
     verifyToken,
-
     verifyRole(["Practicante"]),
-
+    upload.single("archivo"),
     createEntregaInforme
-
 );
 
-
-router.get(
-
-    "/:id",
-
-    verifyToken,
-
-    findEntregaInforme
-
-);
-
+// ============================================================
+// REVISIÓN TUTOR DOCENTE
+// ============================================================
 
 router.put(
 
@@ -87,6 +73,9 @@ router.put(
 
 );
 
+// ============================================================
+// REVISIÓN TUTOR EMPRESARIAL
+// ============================================================
 
 router.put(
 

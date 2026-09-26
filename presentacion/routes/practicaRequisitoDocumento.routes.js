@@ -7,6 +7,8 @@ import {
     findPracticaRequisitoDocumento,
     findPracticaRequisitosDocumento,
     findPracticaRequisitosDocumentoByRol,
+    findRequisitosPracticanteVigentes,
+    findInformesPracticanteVigentes,
     updatePracticaRequisitoDocumento
 
 } from "../controllers/practicaDocumentoRequisitoController.js";
@@ -19,6 +21,10 @@ import { verifyRole } from "../middleware/rolMiddleware.js";
 const router = Router();
 
 
+// ============================================================
+// REQUISITOS DE UNA PRÁCTICA
+// ============================================================
+
 router.get(
 
     "/practica/:practica_id",
@@ -30,6 +36,10 @@ router.get(
 );
 
 
+// ============================================================
+// REQUISITOS DE UNA PRÁCTICA POR ROL
+// ============================================================
+
 router.get(
 
     "/practica/:practica_id/rol/:rol_id",
@@ -40,6 +50,40 @@ router.get(
 
 );
 
+
+// ============================================================
+// REQUISITOS VIGENTES DEL PRACTICANTE
+// ============================================================
+
+router.get(
+
+    "/practicante/vigentes",
+
+    verifyToken,
+
+    findRequisitosPracticanteVigentes
+
+);
+
+
+// ============================================================
+// INFORMES VIGENTES DEL PRACTICANTE
+// ============================================================
+
+router.get(
+
+    "/practicante/informes/vigentes",
+
+    verifyToken,
+
+    findInformesPracticanteVigentes
+
+);
+
+
+// ============================================================
+// CREAR
+// ============================================================
 
 router.post(
 
@@ -54,6 +98,10 @@ router.post(
 );
 
 
+// ============================================================
+// ELIMINAR
+// ============================================================
+
 router.delete(
 
     "/:id",
@@ -67,6 +115,10 @@ router.delete(
 );
 
 
+// ============================================================
+// OBTENER UNO
+// ============================================================
+
 router.get(
 
     "/:id",
@@ -77,6 +129,10 @@ router.get(
 
 );
 
+
+// ============================================================
+// ACTUALIZAR
+// ============================================================
 
 router.put(
 
