@@ -8,16 +8,31 @@ export const tutorEmpresaRepository = {
         });
     },
 
-
     async findById(id) {
-        return await models.TutorEmpresa.findByPk(id);
+
+        return await models.TutorEmpresa.findByPk(id, {
+            include: [
+                {
+                    model: models.User
+                }
+            ]
+        });
+
     },
 
+    async findByUserId(usuarioId) {
 
-    async findByUserId(userId) {
         return await models.TutorEmpresa.findOne({
-            where: { usuario_id: userId }
+            where: {
+                usuario_id: usuarioId
+            },
+            include: [
+                {
+                    model: models.User
+                }
+            ]
         });
+
     },
 
 

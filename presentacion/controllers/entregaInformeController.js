@@ -3,7 +3,7 @@ import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repo
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
-import { tutorEmpresaRepository } from "../../infraestructura/repositorios/tutorEmpresaRepositoryImpl.js";
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
 import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
 
 import { crearEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/crearEntregaInforme.js";
@@ -108,7 +108,7 @@ export const findTrazabilidadEntregaInforme = async (req, res) => {
 
     try {
 
-        const user_id = req.user.sub;
+        const user_id = req.user.id;
 
         const {
             practicante_id,
@@ -151,7 +151,7 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
     try {
 
-        const user_id = req.user.sub;
+        const user_id = req.user.id;
 
         const {
             estado_tutor_docente,
@@ -197,7 +197,7 @@ export const reviewEntregaInformeTutorEmpresarial = async (req, res) => {
 
     try {
 
-        const user_id = req.user.sub;
+        const user_id = req.user.id;
 
         const {
             estado_tutor_empresarial,

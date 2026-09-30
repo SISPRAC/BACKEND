@@ -11,6 +11,17 @@ export const TutorDocenteRepository = {
             where: { usuario_id: userId }
         });
     },
+    async findById(id) {
+
+        return await models.TutorDocente.findByPk(id, {
+            include: [
+                {
+                    model: models.User
+                }
+            ]
+        });
+
+    },
 
     async findByCodigo(codigo) {
         return await models.TutorDocente.findOne({

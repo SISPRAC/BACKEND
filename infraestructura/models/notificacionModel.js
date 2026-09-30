@@ -1,8 +1,9 @@
 import { DataTypes } from "sequelize";
 
-const createFechaPropuestaVisitaModel = (sequelize) => {
-    const FechaPropuestaVisita = sequelize.define(
-        "FechaPropuestaVisita",
+const createNotificacionModel = (sequelize) => {
+
+    const Notificacion = sequelize.define(
+        "Notificaciones",
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -10,45 +11,44 @@ const createFechaPropuestaVisitaModel = (sequelize) => {
                 autoIncrement: true,
             },
 
-            solicitud_visita_id: {
+            usuario_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
 
-            usuario_propone_id: {
-                type: DataTypes.INTEGER,
+            titulo: {
+                type: DataTypes.STRING(150),
                 allowNull: false,
             },
 
-            fecha_hora: {
-                type: DataTypes.DATE,
+            descripcion: {
+                type: DataTypes.TEXT,
                 allowNull: false,
             },
 
             estado: {
                 type: DataTypes.ENUM(
-                    "Pendiente",
-                    "Aceptada",
-                    "Rechazada",
-                    "Cancelada"
+                    "SIN_LEER",
+                    "LEIDA"
                 ),
                 allowNull: false,
-                defaultValue: "Pendiente",
+                defaultValue: "SIN_LEER",
             },
 
-            fecha_respuesta: {
+            fecha_creacion: {
                 type: DataTypes.DATE,
-                allowNull: true,
+                allowNull: false,
+                defaultValue: DataTypes.NOW,
             },
         },
         {
-            tableName: "FechaPropuestaVisita",
+            tableName: "Notificaciones",
             freezeTableName: true,
             timestamps: false,
         }
     );
 
-    return FechaPropuestaVisita;
+    return Notificacion;
 };
 
-export default createFechaPropuestaVisitaModel;
+export default createNotificacionModel;

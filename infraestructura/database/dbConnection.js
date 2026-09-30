@@ -16,6 +16,7 @@ import createTutorEmpresaModel from "../models/tutorEmpresaModel.js";
 import createConvenioModel from "../models/convenioModel.js";
 import createPerfilVacanteModel from "../models/perfilVacanteModel.js";
 import createArchivoModel from "../models/archivoModel.js";
+import createNotificacionModel from "../models/notificacionModel.js";
 import createHistorialConvenioModel from "../models/historialConvenioModel.js";
 import createPlantillaEncuestaModel from "../models/plantillaEncuestaModel.js";
 import createPreguntaModel from "../models/preguntaModel.js";
@@ -30,7 +31,7 @@ import createPracticaModel from "../models/practicaModel.js";
 import createPracticaPracticanteModel from "../models/practicaPracticanteModel.js";
 import createPracticaEncuestaModel from "../models/practicaEncuestaModel.js";
 import createSolicitudVisitaModel from "../models/solicitudVisitaModel.js";
-import createFechaPropuestaVisitaModel from "../models/fechaPropuestaVisitaModel.js";
+
 import createVisitaModel from "../models/visitaModel.js";
 import createTipoRequisitoDocumentoModel from "../models/tipoRequisitoDocumentoModel.js";
 import createVisitaArchivoModel from "../models/visitaArchivoModel.js";
@@ -40,6 +41,8 @@ import createHistorialAperturaVacanteModel
     from "../models/historialAperturaVacanteModel.js";
 import createDepartamentoModel from "../models/departamentoModel.js";
 import createMunicipioModel from "../models/municipiosModel.js";
+import createSolicitudVisitaPracticanteModel from "../models/SolicitudVisitaPracticanteModel.js";
+import createSolicitudVisitaFechaModel from "../models/SolicitudVisitaFechaModel.js";
 
 
 
@@ -62,6 +65,7 @@ export const initDB = async (database, username, contraseña) => {
         models.TutorDocente = createTutorDocenteModel(sequelize);
         models.Empresa = createEmpresaModel(sequelize);
         models.Candidato = createCandidatoModel(sequelize);
+        models.Notificacion = createNotificacionModel(sequelize);
         models.Periodo = createPeriodoModel(sequelize);
         models.Grupo = createGrupoModel(sequelize);
         models.GrupoCandidato = createGrupoCandidatoModel(sequelize);
@@ -93,7 +97,10 @@ export const initDB = async (database, username, contraseña) => {
         models.PracticaPracticante = createPracticaPracticanteModel(sequelize);
         models.PracticaEncuesta = createPracticaEncuestaModel(sequelize);
         models.SolicitudVisita = createSolicitudVisitaModel(sequelize);
-        models.FechaPropuestaVisita = createFechaPropuestaVisitaModel(sequelize);
+        models.SolicitudVisitaPracticante =
+            createSolicitudVisitaPracticanteModel(sequelize);
+        models.SolicitudVisitaFecha =
+            createSolicitudVisitaFechaModel(sequelize);
         models.Visita = createVisitaModel(sequelize);
         models.VisitaArchivo = createVisitaArchivoModel(sequelize);
         models.PracticaRequisitoDocumento = createPracticaRequisitoDocumentoModel(sequelize);
@@ -145,6 +152,19 @@ export const initDB = async (database, username, contraseña) => {
         models.User.hasOne(models.TutorDocente, { foreignKey: "usuario_id" });
         models.TutorDocente.belongsTo(models.User, { foreignKey: "usuario_id" });
 
+        // =============================
+        // USUARIO -> NOTIFICACIONES
+        // =============================
+
+        models.User.hasMany(models.Notificacion, {
+            foreignKey: "usuario_id",
+            as: "notificaciones",
+        });
+
+        models.Notificacion.belongsTo(models.User, {
+            foreignKey: "usuario_id",
+            as: "usuario",
+        });
 
         models.Candidato.belongsToMany(models.Perfil, {
             through: models.CandidatoPerfil,
@@ -530,15 +550,24 @@ export const initDB = async (database, username, contraseña) => {
         });
 
 
-        models.PracticaPracticante.hasMany(models.SolicitudVisita, {
-            foreignKey: "practica_practicante_id",
+        // ==========================================
+        // SOLICITUDES DE VISITA
+        // ==========================================
+
+        // Empresa -> Solicitudes de visita
+
+        models.Empresa.hasMany(models.SolicitudVisita, {
+            foreignKey: "empresa_id",
             as: "solicitudesVisita",
         });
 
-        models.SolicitudVisita.belongsTo(models.PracticaPracticante, {
-            foreignKey: "practica_practicante_id",
-            as: "practicaPracticante",
+        models.SolicitudVisita.belongsTo(models.Empresa, {
+            foreignKey: "empresa_id",
+            as: "empresa",
         });
+
+
+        // Tutor Docente -> Solicitudes de visita
 
         models.TutorDocente.hasMany(models.SolicitudVisita, {
             foreignKey: "tutor_docente_id",
@@ -550,6 +579,9 @@ export const initDB = async (database, username, contraseña) => {
             as: "tutorDocente",
         });
 
+
+        // Usuario -> Solicitudes respondidas
+
         models.User.hasMany(models.SolicitudVisita, {
             foreignKey: "usuario_respuesta_id",
             as: "solicitudesRespondidas",
@@ -560,37 +592,87 @@ export const initDB = async (database, username, contraseña) => {
             as: "usuarioRespuesta",
         });
 
-        models.SolicitudVisita.hasMany(models.FechaPropuestaVisita, {
-            foreignKey: "solicitud_visita_id",
-            as: "fechasPropuestas",
-        });
 
-        models.FechaPropuestaVisita.belongsTo(models.SolicitudVisita, {
-            foreignKey: "solicitud_visita_id",
-            as: "solicitud",
-        });
+        // ==========================================
+        // SOLICITUD -> PRACTICANTES
+        // ==========================================
 
-        models.User.hasMany(models.FechaPropuestaVisita, {
-            foreignKey: "usuario_propone_id",
-            as: "fechasPropuestas",
-        });
+        models.SolicitudVisita.hasMany(
+            models.SolicitudVisitaPracticante,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "practicantes",
+            }
+        );
 
-        models.FechaPropuestaVisita.belongsTo(models.User, {
-            foreignKey: "usuario_propone_id",
-            as: "usuarioPropone",
-        });
+        models.SolicitudVisitaPracticante.belongsTo(
+            models.SolicitudVisita,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "solicitud",
+            }
+        );
 
-        //solicitud Visita
 
-        models.SolicitudVisita.hasOne(models.Visita, {
-            foreignKey: "solicitud_visita_id",
-            as: "visita",
-        });
+        // PracticaPracticante -> Solicitudes de visita
 
-        models.Visita.belongsTo(models.SolicitudVisita, {
-            foreignKey: "solicitud_visita_id",
-            as: "solicitud",
-        });
+        models.PracticaPracticante.hasMany(
+            models.SolicitudVisitaPracticante,
+            {
+                foreignKey: "practica_practicante_id",
+                as: "solicitudesVisita",
+            }
+        );
+
+        models.SolicitudVisitaPracticante.belongsTo(
+            models.PracticaPracticante,
+            {
+                foreignKey: "practica_practicante_id",
+                as: "practicaPracticante",
+            }
+        ); 
+
+
+        // ==========================================
+        // SOLICITUD -> FECHAS PROPUESTAS
+        // ==========================================
+
+        models.SolicitudVisita.hasMany(
+            models.SolicitudVisitaFecha,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "fechasPropuestas",
+            }
+        );
+
+        models.SolicitudVisitaFecha.belongsTo(
+            models.SolicitudVisita,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "solicitud",
+            }
+        );
+
+
+        // ==========================================
+        // SOLICITUD -> VISITA
+        // ==========================================
+
+        models.SolicitudVisita.hasOne(
+            models.Visita,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "visita",
+            }
+        );
+
+        models.Visita.belongsTo(
+            models.SolicitudVisita,
+            {
+                foreignKey: "solicitud_visita_id",
+                as: "solicitud",
+            }
+        );
 
         models.Visita.hasMany(models.VisitaArchivo, {
             foreignKey: "visita_id",

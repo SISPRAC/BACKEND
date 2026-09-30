@@ -1,16 +1,18 @@
 import { DataTypes } from "sequelize";
 
 const createSolicitudVisitaModel = (sequelize) => {
+
     const SolicitudVisita = sequelize.define(
         "SolicitudVisita",
         {
+
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
             },
 
-            practica_practicante_id: {
+            empresa_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
@@ -22,6 +24,11 @@ const createSolicitudVisitaModel = (sequelize) => {
 
             usuario_respuesta_id: {
                 type: DataTypes.INTEGER,
+                allowNull: true,
+            },
+
+            fecha_respuesta: {
+                type: DataTypes.DATE,
                 allowNull: true,
             },
 
@@ -46,6 +53,7 @@ const createSolicitudVisitaModel = (sequelize) => {
                 allowNull: false,
                 defaultValue: DataTypes.NOW,
             },
+
         },
         {
             tableName: "SolicitudVisita",

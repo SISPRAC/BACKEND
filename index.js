@@ -31,8 +31,11 @@ import tipoInformeRouter from "./presentacion/routes/tipoInforme.routes.js";
 import practicaInformeRouter from "./presentacion/routes/practicaInforme.routes.js";
 import tipoRequisitoDocumentoRouter from "./presentacion/routes/tipoRequisitoDocumento.routes.js";
 import entregaInformeRouter from "./presentacion/routes/entregaInforme.routes.js";
+import notificacionesRouter from "./presentacion/routes/notificaciones.routes.js";
+import solicitudVisitaRouter from "./presentacion/routes/solicitudVisita.routes.js";
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
+
 
 
 dotenv.config();
@@ -80,6 +83,8 @@ app.use("/api/entregaInforme", entregaInformeRouter);
 app.use("/api/practicaRequisitoDocumento", practicaRequisitoDocumentoRouter);
 app.use("/api/aperturaVacante", aperturaVacanteRouter);
 app.use("/api/departamento/municipio", departamentoMunicipioRouter);
+app.use("/api/notificaciones", notificacionesRouter);
+app.use("/api/solicitudVisita", solicitudVisitaRouter);
 iniciarVencimientoConvenios();
 
 await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
