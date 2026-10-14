@@ -10,7 +10,6 @@ export const aceptarPostulacion = async (
         aperturaVacanteRepository
     },
     postulacionId,
-    datosPracticante
 ) => {
 
     const transaction = await sequelize.transaction();

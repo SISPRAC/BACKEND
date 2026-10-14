@@ -33,6 +33,7 @@ import tipoRequisitoDocumentoRouter from "./presentacion/routes/tipoRequisitoDoc
 import entregaInformeRouter from "./presentacion/routes/entregaInforme.routes.js";
 import notificacionesRouter from "./presentacion/routes/notificaciones.routes.js";
 import solicitudVisitaRouter from "./presentacion/routes/solicitudVisita.routes.js";
+import visitaRouter from "./presentacion/routes/visita.routes.js";
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 
@@ -85,6 +86,7 @@ app.use("/api/aperturaVacante", aperturaVacanteRouter);
 app.use("/api/departamento/municipio", departamentoMunicipioRouter);
 app.use("/api/notificaciones", notificacionesRouter);
 app.use("/api/solicitudVisita", solicitudVisitaRouter);
+app.use("/api/visita", visitaRouter);
 iniciarVencimientoConvenios();
 
 await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);

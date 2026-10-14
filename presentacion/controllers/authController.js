@@ -1,4 +1,3 @@
-import e from "express";
 import { loginUser } from "../../aplicacion/casos_de_uso/auth/loginUser.js";
 import { refreshTokenUseCase } from "../../aplicacion/casos_de_uso/auth/refreshToken.js";
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";

@@ -75,7 +75,7 @@ export const deletePracticaRequisitoDocumento = async (req, res) => {
         await eliminarPracticaRequisitoDocumento(
             practicaRequisitoDocumentoRepository,
             archivoRepository,
-            req.params.id
+            id
         );
 
         return res.json({

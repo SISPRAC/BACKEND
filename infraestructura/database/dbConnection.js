@@ -847,7 +847,7 @@ export const initDB = async (database, username, contraseña) => {
 
 
 
-        await sequelize.sync({ alter: true });
+      //  await sequelize.sync({ alter: true });
 
         console.log('DB connected');
     } catch (error) {

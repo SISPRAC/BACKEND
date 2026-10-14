@@ -19,6 +19,17 @@ export const visitaArchivoRepository = {
         );
 
     },
+    async update(id, data, transaction) {
+
+        return await models.VisitaArchivo.update(
+            data,
+            {
+                where: { id },
+                transaction
+            }
+        );
+
+    },
 
     async findByVisitaId(visitaId) {
 

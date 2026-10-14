@@ -40,6 +40,7 @@ export const registerCandidato = async (
             try {
                 perfilesParseados = JSON.parse(perfiles);
             } catch (error) {
+                console.log("Error al parsear perfiles:", error);
                 throw new BadRequestError(
                     "El formato de los perfiles no es válido."
                 );

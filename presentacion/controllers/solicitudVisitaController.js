@@ -1,10 +1,10 @@
 import { solicitudVisitaRepository } from "../../infraestructura/repositorios/solicitudVisitaRepositoryImpl.js";
 import { solicitudVisitaPracticanteRepository } from "../../infraestructura/repositorios/solicitudVisitaPracticanteRepositoryImpl.js";
 import { solicitudVisitaFechaRepository } from "../../infraestructura/repositorios/solicitudVisitaFechaRepositoryImpl.js";
-import { practicaPracticanteRepository } from "../../infraestructura/repositorios/practicaPracticanteRepositoryImpl.js";
-import { postulacionRepository } from "../../infraestructura/repositorios/postulacionRepositoryImpl.js";
-import { TutorDocenteRepository } from "../../infraestructura/repositorios/TutorDocenteRepositoryImpl.js";
-import { tutorEmpresaRepository } from "../../infraestructura/repositorios/tutorEmpresaRepositoryImpl.js";
+import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js";
+import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
 import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js";
 import { visitaRepository } from "../../infraestructura/repositorios/visitaRepositoryImpl.js";
 
@@ -13,6 +13,7 @@ import { obtenerSolicitudesVisitaTutorDocente } from "../../aplicacion/casos_de_
 import { obtenerSolicitudesVisitaPorPractica } from "../../aplicacion/casos_de_uso/solicitudVisita/obtenerSolicitudesVisitaPorPractica.js";
 import { editarSolicitudVisita } from "../../aplicacion/casos_de_uso/solicitudVisita/editarSolicitudVisita.js";
 import { cancelarSolicitudVisita } from "../../aplicacion/casos_de_uso/solicitudVisita/cancelarSolicitudVisita.js";
+import { obtenerSolicitudParaGestionar } from "../../aplicacion/casos_de_uso/solicitudVisita/obtenerSolicitudParaGestionar.js";
 
 import { crearNotificacion } from "../../aplicacion/casos_de_uso/notificacion/crearNotificacion.js";
 
@@ -226,10 +227,10 @@ export const cancelarSolicitudVisitaController = async (
         const solicitud =
             await cancelarSolicitudVisita(
                 {
-                    solicitudVisitaRepository,
+                    solicitudVisitaRepository, 
                     postulacionRepository,
                     notificacionRepository,
-                    crearNotificacion
+                    sequelize
                 },
                 id,
                 motivo
@@ -330,6 +331,52 @@ export const rechazarSolicitudVisitaController = async (
                     sequelize
                 },
                 req.body,
+                usuarioId
+            );
+
+        return res.status(200).json(solicitud);
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+// ============================================================
+// OBTENER SOLICITUD PARA GESTIONAR
+// TUTOR DOCENTE AUTENTICADO
+// ============================================================
+
+export const getSolicitudParaGestionar = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { id } = req.params;
+
+        const usuarioId = req.user.id;
+
+        const solicitud =
+            await obtenerSolicitudParaGestionar(
+                {
+                    solicitudVisitaRepository,
+                    tutorDocenteRepository: TutorDocenteRepository
+                },
+                id,
                 usuarioId
             );
 

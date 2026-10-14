@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "nodemon index.js",
+    "check": "eslint .",
+    "build": "npm run check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -29,5 +31,9 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
     "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0"
   }
 }

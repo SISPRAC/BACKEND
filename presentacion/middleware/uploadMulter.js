@@ -31,6 +31,7 @@ export const upload = multer({
 
 });
 
+
 export const uploadImage = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, //2MB
@@ -43,4 +44,62 @@ export const uploadImage = multer({
   },
 });
 
-export const uploadDatos = multer({ storage: multer.memoryStorage() });
+
+export const uploadDatos = multer({
+  storage: multer.memoryStorage()
+});
+
+
+// Archivos de una visita
+export const uploadVisita = multer({
+
+  storage: multer.memoryStorage(),
+
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB por archivo
+  },
+
+  fileFilter: (req, file, cb) => {
+
+    // Fotografías
+    if (file.fieldname === "fotos") {
+
+      if (file.mimetype.startsWith("image/")) {
+        return cb(null, true);
+      }
+
+      return cb(
+        new Error(
+          "Solo se permiten imágenes para las fotografías"
+        ),
+        false
+      );
+    }
+
+
+    // Acta
+    if (file.fieldname === "acta") {
+
+      if (file.mimetype === "application/pdf") {
+        return cb(null, true);
+      }
+
+      return cb(
+        new Error(
+          "El acta debe ser un archivo PDF"
+        ),
+        false
+      );
+    }
+
+
+    return cb(
+      new Error(
+        "Campo de archivo no permitido"
+      ),
+      false
+    );
+
+  },
+
+});

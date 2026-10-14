@@ -63,28 +63,6 @@ export const practicaEncuestaRepository = {
     },
 
 
-    async findByPlantillaId(plantilla_encuesta_id) {
-
-        return await models.PracticaEncuesta.findAll({
-
-            where: {
-                plantilla_encuesta_id
-            },
-
-            include: [
-
-                {
-                    model: models.Practica,
-                    as: "practica"
-                }
-
-            ]
-
-        });
-
-    },
-
-
     async countByPlantilla(plantilla_encuesta_id) {
 
         return await models.PracticaEncuesta.count({

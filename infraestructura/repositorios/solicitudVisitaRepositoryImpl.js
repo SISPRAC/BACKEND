@@ -29,21 +29,17 @@ export const solicitudVisitaRepository = {
                     },
                     {
                         model: models.TutorDocente,
-                        as: "tutorDocente"
+                        as: "tutorDocente",
+                        include: [
+                            {
+                                model: models.User,
+                                as: "Usuario"
+                            }
+                        ]
                     },
                     {
                         model: models.User,
                         as: "usuarioRespuesta"
-                    },
-                    {
-                        model: models.SolicitudVisitaPracticante,
-                        as: "practicantes",
-                        include: [
-                            {
-                                model: models.PracticaPracticante,
-                                as: "practicaPracticante"
-                            }
-                        ]
                     },
                     {
                         model: models.SolicitudVisitaFecha,
@@ -56,6 +52,41 @@ export const solicitudVisitaRepository = {
                 ]
             }
         );
+
+    },
+    async findPracticantesWithDetailsBySolicitudId(solicitudVisitaId) {
+
+        return await models.SolicitudVisitaPracticante.findAll({
+
+            where: {
+                solicitud_visita_id: solicitudVisitaId
+            },
+
+            include: [
+                {
+                    model: models.PracticaPracticante,
+                    as: "practicaPracticante",
+                    include: [
+                        {
+                            model: models.Practicante,
+                            as: "practicante",
+                            include: [
+                                {
+                                    model: models.Candidato,
+                                    as: "candidato",
+                                    include: [
+                                        {
+                                            model: models.User,
+                                            as: "Usuario"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
 
     },
 
@@ -107,6 +138,22 @@ export const solicitudVisitaRepository = {
             }
         );
 
+    },
+
+    async actualizarEstado(
+        id,
+        estado,
+        transaction
+    ) {
+        return await models.SolicitudVisita.update(
+            {
+                estado
+            },
+            {
+                where: { id },
+                transaction
+            }
+        );
     },
 
     async findPendientesByEmpresa(empresaId) {
@@ -186,7 +233,14 @@ export const solicitudVisitaRepository = {
 
                 {
                     model: models.Visita,
-                    as: "visita"
+                    as: "visita",
+                    attributes: [
+                        "id",
+                        "fecha_visita",
+                        "hora_visita",
+                        "fecha_realizada",
+                        "descripcion"
+                    ]
                 }
 
             ],
@@ -270,13 +324,6 @@ export const solicitudVisitaRepository = {
                 {
                     model: models.SolicitudVisitaFecha,
                     as: "fechasPropuestas",
-
-                    attributes: [
-                        "id",
-                        "fecha_inicio",
-                        "fecha_fin",
-                        "seleccionada"
-                    ]
                 }
 
             ],
@@ -349,4 +396,143 @@ export const solicitudVisitaRepository = {
 
     },
 
+    async findByIdForGestionar(id) {
+
+        return await models.SolicitudVisita.findByPk(
+            id,
+            {
+                attributes: [
+                    "id",
+                    "empresa_id",
+                    "tutor_docente_id",
+                    "usuario_respuesta_id",
+                    "estado",
+                    "observacion",
+                    "fecha_respuesta"
+                ],
+
+                include: [
+
+                    {
+                        model: models.Empresa,
+                        as: "empresa",
+
+                        attributes: [
+                            "id",
+                            "nit",
+                            "nombre",
+                            "direccion",
+                            "logo"
+                        ],
+
+                        include: [
+                            {
+                                model: models.TutorEmpresa,
+
+                                attributes: [
+                                    "id",
+                                    "usuario_id",
+                                    "empresa_id",
+                                    "cargo"
+                                ],
+
+                                include: [
+                                    {
+                                        model: models.User,
+                                        as: "Usuario",
+
+                                        attributes: [
+                                            "id",
+                                            "nombres",
+                                            "apellidos"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+
+                    {
+                        model: models.Visita,
+                        as: "visita",
+
+                        attributes: [
+                            "id",
+                            "solicitud_visita_id",
+                            "fecha_visita",
+                            "hora_visita",
+                            "fecha_realizada",
+                            "descripcion"
+                        ]
+                    }
+                ]
+            }
+        );
+    },
+
+    async findPracticantesBySolicitudId(solicitudVisitaId) {
+
+        return await models.SolicitudVisitaPracticante.findAll({
+
+            where: {
+                solicitud_visita_id: solicitudVisitaId
+            },
+
+            attributes: [
+                "id",
+                "solicitud_visita_id",
+                "practica_practicante_id"
+            ],
+
+            include: [
+                {
+                    model: models.PracticaPracticante,
+                    as: "practicaPracticante",
+
+                    attributes: [
+                        "id",
+                        "practicante_id"
+                    ],
+
+                    include: [
+                        {
+                            model: models.Practicante,
+                            as: "practicante",
+
+                            attributes: [
+                                "id",
+                                "candidato_id"
+                            ],
+
+                            include: [
+                                {
+                                    model: models.Candidato,
+                                    as: "candidato",
+
+                                    attributes: [
+                                        "id",
+                                        "codigo",
+                                        "usuario_id"
+                                    ],
+
+                                    include: [
+                                        {
+                                            model: models.User,
+                                            as: "Usuario",
+
+                                            attributes: [
+                                                "id",
+                                                "nombres",
+                                                "apellidos"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+    },
 };

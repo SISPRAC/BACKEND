@@ -10,27 +10,18 @@ export const eliminarTipoInforme = async (
     archivoRepository,
     id
 ) => {
-
-    const transaction =
-        await sequelize.transaction();
-
-    let archivoId = null;
+    const transaction = await sequelize.transaction();
 
     try {
-
-        const tipo =
-            await tipoInformeRepository.findById(id);
+        const tipo = await tipoInformeRepository.findById(id);
 
         if (!tipo) {
-
             throw new NotFoundError(
                 "El tipo de informe no existe."
             );
-
         }
 
-        archivoId =
-            tipo.archivo_id;
+        const archivoId = tipo.archivo_id;
 
         await tipoInformeRepository.delete(
             id,
@@ -46,33 +37,27 @@ export const eliminarTipoInforme = async (
          * todavía tiene otras referencias.
          */
         if (archivoId) {
-
             try {
-
                 await eliminarArchivoSiNoTieneReferencias(
                     archivoRepository,
                     archivoId
                 );
-
             } catch (e) {
-
                 console.error(
                     "No se pudo limpiar el archivo asociado:",
                     e.message
                 );
-
             }
-
         }
 
         return {
-            message:
-                "Tipo de informe eliminado correctamente."
+            message: "Tipo de informe eliminado correctamente."
         };
 
     } catch (error) {
-
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
         if (
             error instanceof NotFoundError ||
@@ -85,7 +70,5 @@ export const eliminarTipoInforme = async (
             error.message ||
             "No se pudo eliminar el tipo de informe."
         );
-
     }
-
 };

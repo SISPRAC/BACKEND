@@ -10,27 +10,19 @@ export const eliminarTipoRequisitoDocumento = async (
     archivoRepository,
     id
 ) => {
-
-    const transaction =
-        await sequelize.transaction();
-
-    let archivoId = null;
+    const transaction = await sequelize.transaction();
 
     try {
-
         const tipo =
             await tipoRequisitoDocumentoRepository.findById(id);
 
         if (!tipo) {
-
             throw new NotFoundError(
                 "El tipo de requisito documental no existe."
             );
-
         }
 
-        archivoId =
-            tipo.archivo_id;
+        const archivoId = tipo.archivo_id;
 
         await tipoRequisitoDocumentoRepository.delete(
             id,
@@ -46,23 +38,17 @@ export const eliminarTipoRequisitoDocumento = async (
          * tiene otras referencias.
          */
         if (archivoId) {
-
             try {
-
                 await eliminarArchivoSiNoTieneReferencias(
                     archivoRepository,
                     archivoId
                 );
-
             } catch (e) {
-
                 console.error(
                     "No se pudo limpiar el archivo asociado:",
                     e.message
                 );
-
             }
-
         }
 
         return {
@@ -71,8 +57,9 @@ export const eliminarTipoRequisitoDocumento = async (
         };
 
     } catch (error) {
-
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
         if (
             error instanceof NotFoundError ||
@@ -85,7 +72,5 @@ export const eliminarTipoRequisitoDocumento = async (
             error.message ||
             "No se pudo eliminar el tipo de requisito documental."
         );
-
     }
-
 };

@@ -2,10 +2,6 @@ import { entregaInformeRepository } from "../../infraestructura/repositorios/ent
 import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 
-import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
-import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
-import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
-
 import { crearEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/crearEntregaInforme.js";
 
 import { getEntregaInformeByPracticante } from "../../aplicacion/casos_de_uso/entregaInforme/getEntregasInformeByPracticante.js";

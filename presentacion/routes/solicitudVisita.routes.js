@@ -13,6 +13,7 @@ import {
     cancelarSolicitudVisitaController,
 
     postVisita,
+    getSolicitudParaGestionar,
 
     rechazarSolicitudVisitaController
 
@@ -44,6 +45,18 @@ router.get(
     verifyToken,
     getSolicitudesVisitaTutorDocente
 );
+
+// ============================================================
+// OBTENER SOLICITUD PARA GESTIONAR
+// TUTOR DOCENTE AUTENTICADO
+// ============================================================
+
+router.get(
+    "/:id/gestionar",
+    verifyToken,
+    getSolicitudParaGestionar
+);
+
 
 
 // ============================================================

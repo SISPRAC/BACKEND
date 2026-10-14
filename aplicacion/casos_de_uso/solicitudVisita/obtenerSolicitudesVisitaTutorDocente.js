@@ -19,8 +19,11 @@ export const obtenerSolicitudesVisitaTutorDocente = async (
         );
     }
 
-    return await solicitudVisitaRepository
-        .findByTutorDocenteWithDetails(
-            tutorDocente.id
-        );
+    const solicitudes =
+        await solicitudVisitaRepository
+            .findByTutorDocenteWithDetails(
+                tutorDocente.id
+            );
+
+    return solicitudes;
 };

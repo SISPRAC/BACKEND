@@ -2,7 +2,6 @@ import { registerEmpresa } from "../../aplicacion/casos_de_uso/empresa/registrar
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
 import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryImpl.js";
-import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 import { actualizarEmpresa } from "../../aplicacion/casos_de_uso/empresa/actualizarEmpresa.js";
 import { obtenerEmpresa } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresa.js";

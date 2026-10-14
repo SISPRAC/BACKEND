@@ -34,7 +34,8 @@ export const CrearPeriodoController = async (req, res) => {
 export const deletePeriodoController = async (req, res) => {
   try {
     const deleted = await deletePeriodo(periodoRepository, req.params.id);
-    res.status(200).json({ message: "periodo eliminado correctamente" });
+    console.log("deleted", deleted);
+    return res.status(200).json({ message: "periodo eliminado correctamente" });
 
   } catch (error) {
      if (error.statusCode) { 
@@ -54,7 +55,6 @@ export const getPeriodosController = async (req, res) => {
     const periodos = await getPeriodos( periodoRepository);
     return res.status(200).json(periodos);
 
-    console.log("periodos", periodos);
   } catch (error) {
     if (error.statusCode) { 
             return res.status(error.statusCode).json({

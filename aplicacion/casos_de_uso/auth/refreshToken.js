@@ -1,4 +1,3 @@
-import e from "express";
 import jwt from "jsonwebtoken";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 

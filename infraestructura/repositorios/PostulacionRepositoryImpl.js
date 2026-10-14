@@ -181,17 +181,6 @@ export const postulacionRepository = {
                 postulacion.candidato_id
         );
     },
-    async findByCandidatoAndApertura(
-        candidatoId,
-        aperturaVacanteId
-    ) {
-        return await models.Postulacion.findOne({
-            where: {
-                candidato_id: candidatoId,
-                aperturaVacante_id: aperturaVacanteId
-            }
-        });
-    },
 
     async findPostulacionActivaByCandidato(candidatoId) {
         return await models.Postulacion.findOne({
@@ -204,7 +193,7 @@ export const postulacionRepository = {
         });
     },
 
-    async countByAperturaVacante(aperturaVacanteId) {
+    async countByAperturaVacanteAceptado(aperturaVacanteId) {
         return await models.Postulacion.count({
             where: {
                 aperturaVacante_id: aperturaVacanteId,

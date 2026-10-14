@@ -240,7 +240,7 @@ export const PracticanteRepository = {
         );
     },
 
-    async findTiposRequisitoPorRol(rolIds, nombres) {
+    async findTiposRequisitoPorRol(rolIds) {
         return await models.TipoRequisitoDocumento.findAll({
             where: {
                 rol_id: rolIds
