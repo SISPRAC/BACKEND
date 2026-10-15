@@ -102,7 +102,7 @@ export const obtenerDetalleGrupoEmpresa = async (
         await models.PracticaPracticante.findAll({
             where: {
                 practica_id: practicaId,
-                estado: ["En curso", "Finalizada"]
+                estado: ["En curso", "Finalizada", "Retirado","Cancelado"] // 👈 solo practicantes activos o finalizados
             },
             include: [
                 {

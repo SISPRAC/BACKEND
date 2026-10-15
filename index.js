@@ -19,7 +19,7 @@ import postulacionRouter from "./presentacion/routes/postulacion.routes.js"
 import convenioRouter from "./presentacion/routes/convenios.routes.js";
 import historialConvenioRouter from "./presentacion/routes/historialConvenio.routes.js";
 import encuestaRouter from "./presentacion/routes/encuesta.routes.js";
-import retiroPracticanteRouter from "./presentacion/routes/retiroPracticanteRoutes.js";
+import retiroPracticanteRouter from "./presentacion/routes/retiroPracticante.routes.js";
 import practicanteRouter from "./presentacion/routes/practicante.routes.js";
 import practicaRouter from "./presentacion/routes/practica.routes.js";
 import practicaRequisitoDocumentoRouter from "./presentacion/routes/practicaRequisitoDocumento.routes.js";

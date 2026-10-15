@@ -23,8 +23,11 @@ export const crearRetiroPracticante = async (req, res) => {
 
         const data = {
             ...req.body,
-            usuario_id: req.usuario.id
+            usuario_id: req.user.id
         };
+
+        console.log("Datos recibidos para crear retiro:", data);
+        console.log("Archivo recibido:", req.file);
 
 
         const retiro = await retirarPracticante(
@@ -43,6 +46,7 @@ export const crearRetiroPracticante = async (req, res) => {
 
 
     } catch (error) {
+        console.log("Error en crearRetiroPracticante:", error);
 
         if (error.statusCode) { 
             return res.status(error.statusCode).json({

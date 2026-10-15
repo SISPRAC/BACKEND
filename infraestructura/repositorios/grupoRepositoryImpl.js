@@ -151,11 +151,14 @@ export const grupoRepository = {
                             as: "candidato",
                             attributes: [
                                 "id",
-                                "codigo",
+                                "codigo"
                             ],
                             include: [
 
-                                // Datos personales
+                                // =============================
+                                // DATOS PERSONALES
+                                // =============================
+
                                 {
                                     model: models.User,
                                     attributes: [
@@ -168,7 +171,33 @@ export const grupoRepository = {
                                     ]
                                 },
 
-                                // Postulación
+                                // =============================
+                                // PRACTICANTE Y SUS PRÁCTICAS
+                                // =============================
+
+                                {
+                                    model: models.Practicante,
+                                    as: "practicante",
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.PracticaPracticante,
+                                            as: "practicas",
+                                            required: false,
+                                            attributes: [
+                                                "id",
+                                                "practica_id",
+                                                "practicante_id",
+                                                "estado"
+                                            ]
+                                        }
+                                    ]
+                                },
+
+                                // =============================
+                                // POSTULACIÓN
+                                // =============================
+
                                 {
                                     model: models.Postulacion,
                                     required: false,
