@@ -11,6 +11,7 @@ import { getPracticaRequisitosDocumentoByRol } from "../../aplicacion/casos_de_u
 
 import { obtenerRequisitosPracticanteVigentes } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/obtenerRequisitosPracticanteVigentes.js";
 import { obtenerInformesPracticanteVigentes } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/obtenerInformesPracticanteVigentes.js";
+import { obtenerRequisitosEmpresaVigentes } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/obtenerRequisitosEmpresaVigente.js";
 
 export const createPracticaRequisitoDocumento = async (req, res) => {
 
@@ -182,6 +183,37 @@ export const findRequisitosPracticanteVigentes = async (req, res) => {
 
         const requisitos =
             await obtenerRequisitosPracticanteVigentes(
+                practicaRequisitoDocumentoRepository,
+                user_id
+            );
+
+        return res.json(requisitos);
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+
+};
+
+// Empresa
+
+export const findRequisitosEmpresaVigentes = async (req, res) => {
+
+    try {
+
+        const user_id = req.user.id;
+
+        const requisitos =
+            await obtenerRequisitosEmpresaVigentes(
                 practicaRequisitoDocumentoRepository,
                 user_id
             );

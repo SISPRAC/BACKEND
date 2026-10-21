@@ -43,6 +43,7 @@ import createDepartamentoModel from "../models/departamentoModel.js";
 import createMunicipioModel from "../models/municipiosModel.js";
 import createSolicitudVisitaPracticanteModel from "../models/SolicitudVisitaPracticanteModel.js";
 import createSolicitudVisitaFechaModel from "../models/SolicitudVisitaFechaModel.js";
+import createPracticaRequisitoDocumentoSubidoModel from "../models/practicaRequisitoDocumentoSubidoModel.js";
 
 
 
@@ -106,7 +107,7 @@ export const initDB = async (database, username, contraseña) => {
         models.PracticaRequisitoDocumento = createPracticaRequisitoDocumentoModel(sequelize);
         models.Departamento = createDepartamentoModel(sequelize);
         models.Municipio = createMunicipioModel(sequelize);
-
+        models.PracticaRequisitoDocumentoSubido = createPracticaRequisitoDocumentoSubidoModel(sequelize);
 
         models.User.belongsToMany(models.Rol, {
             through: models.UserRol,
@@ -630,7 +631,7 @@ export const initDB = async (database, username, contraseña) => {
                 foreignKey: "practica_practicante_id",
                 as: "practicaPracticante",
             }
-        ); 
+        );
 
 
         // ==========================================
@@ -845,9 +846,66 @@ export const initDB = async (database, username, contraseña) => {
             as: "practica"
         });
 
+        // ==========================================
+        // DOCUMENTOS SUBIDOS DE REQUISITOS
+        // ==========================================
+
+        // Usuario -> Documentos subidos
+        models.User.hasMany(models.PracticaRequisitoDocumentoSubido, {
+            foreignKey: "usuario_id",
+            as: "documentosRequisitosSubidos",
+        });
+
+        models.PracticaRequisitoDocumentoSubido.belongsTo(models.User, {
+            foreignKey: "usuario_id",
+            as: "usuario",
+        });
 
 
-      //  await sequelize.sync({ alter: true });
+        // Usuario -> Documentos revisados
+        models.User.hasMany(models.PracticaRequisitoDocumentoSubido, {
+            foreignKey: "usuario_revision_id",
+            as: "documentosRequisitosRevisados",
+        });
+
+        models.PracticaRequisitoDocumentoSubido.belongsTo(models.User, {
+            foreignKey: "usuario_revision_id",
+            as: "usuarioRevision",
+        });
+
+
+        // PracticaRequisitoDocumento -> Documentos subidos
+        models.PracticaRequisitoDocumento.hasMany(
+            models.PracticaRequisitoDocumentoSubido,
+            {
+                foreignKey: "practica_requisito_documento_id",
+                as: "documentosSubidos",
+            }
+        );
+
+        models.PracticaRequisitoDocumentoSubido.belongsTo(
+            models.PracticaRequisitoDocumento,
+            {
+                foreignKey: "practica_requisito_documento_id",
+                as: "practicaRequisitoDocumento",
+            }
+        );
+
+
+        // Archivo -> Documentos subidos
+        models.Archivo.hasMany(models.PracticaRequisitoDocumentoSubido, {
+            foreignKey: "archivo_id",
+            as: "documentosRequisitos",
+        });
+
+        models.PracticaRequisitoDocumentoSubido.belongsTo(models.Archivo, {
+            foreignKey: "archivo_id",
+            as: "archivo",
+        });
+
+
+
+          //await sequelize.sync({ alter: true });
 
         console.log('DB connected');
     } catch (error) {

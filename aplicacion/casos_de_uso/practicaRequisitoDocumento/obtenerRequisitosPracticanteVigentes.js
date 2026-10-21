@@ -7,5 +7,4 @@ export const obtenerRequisitosPracticanteVigentes = async (
         .findRequisitosPracticanteVigentes(
             user_id
         );
-
 };

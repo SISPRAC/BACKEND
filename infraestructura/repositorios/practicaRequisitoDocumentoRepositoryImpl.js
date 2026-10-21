@@ -176,24 +176,16 @@ export const practicaRequisitoDocumentoRepository = {
                 }
             });
 
+
         if (!practicaPracticante) {
             return [];
         }
 
-        const hoy = new Date();
 
-        return await models.PracticaRequisitoDocumento.findAll({
+        const requisitos = await models.PracticaRequisitoDocumento.findAll({
 
             where: {
                 practica_id: practicaPracticante.practica_id,
-
-                fecha_inicio: {
-                    [Op.lte]: hoy
-                },
-
-                fecha_limite: {
-                    [Op.gte]: hoy
-                },
 
                 estado: true
             },
@@ -216,7 +208,10 @@ export const practicaRequisitoDocumentoRepository = {
                     include: [
                         {
                             model: models.Rol,
-                            as: "rol"
+                            as: "rol",
+                            where: {
+                                nombre: "Practicante"
+                            }
                         },
                         {
                             model: models.Archivo,
@@ -237,6 +232,118 @@ export const practicaRequisitoDocumentoRepository = {
 
         });
 
+        return requisitos;
+
+    },
+
+    async findRequisitosEmpresaVigentes(user_id) {
+
+        const empresa = await models.Empresa.findOne({
+            where: {
+                usuario_id: user_id
+            },
+            include: [
+                {
+                    model: models.Convenio,
+                    where: {
+                        estado: "APROBADO"
+                    },
+                    required: false,
+                    include: [
+                        {
+                            model: models.Vacante,
+                            required: false,
+                            include: [
+                                {
+                                    model: models.AperturaVacante,
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.Practica,
+                                            as: "practica",
+                                            required: false
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (!empresa) {
+            console.log("No se encontró una empresa para este usuario.");
+            return [];
+        }
+
+        const datosEmpresa = empresa.toJSON();
+
+        const convenios = datosEmpresa.Convenios || [];
+
+        const practicaIds = [
+            ...new Set(
+                convenios.flatMap((convenio) =>
+                    (convenio.Vacantes || []).flatMap((vacante) =>
+                        (vacante.AperturaVacantes || [])
+                            .map((apertura) => apertura.practica_id)
+                            .filter(Boolean)
+                    )
+                )
+            )
+        ];
+
+        if (practicaIds.length === 0) {
+            console.log(
+                "No se encontraron prácticas relacionadas con convenios aprobados."
+            );
+            return [];
+        }
+
+        const requisitos =
+            await models.PracticaRequisitoDocumento.findAll({
+
+                where: {
+                    practica_id: {
+                        [Op.in]: practicaIds
+                    },
+                    estado: true
+                },
+
+                include: [
+                    {
+                        model: models.TipoRequisitoDocumento,
+                        as: "tipoRequisitoDocumento",
+                        where: {
+                            nombre: {
+                                [Op.ne]: "Convenio"
+                            }
+                        },
+                        include: [
+                            {
+                                model: models.Rol,
+                                as: "rol",
+                                where: {
+                                    nombre: "Empresa"
+                                }
+                            },
+                            {
+                                model: models.Archivo,
+                                as: "plantilla"
+                            }
+                        ]
+                    },
+                    {
+                        model: models.Practica,
+                        as: "practica"
+                    }
+                ],
+
+                order: [["id", "ASC"]]
+
+            });
+
+        return requisitos;
     },
 
 

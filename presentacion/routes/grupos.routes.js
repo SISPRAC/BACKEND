@@ -1,3 +1,4 @@
+
 import express from "express";
 
 import {
@@ -5,13 +6,15 @@ import {
     getGruposController,
     getGrupoController,
     getCandidatosByGrupoController,
+    getGruposByPracticaIdController,
+    getPracticantesDocumentosByGrupoController,
     EditarGrupoController,
     deleteGrupoController
 } from "../controllers/grupoController.js";
 
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
 
 // =============================
 // CREAR GRUPO
@@ -19,9 +22,9 @@ const router = express.Router();
 
 router.post(
     "/crear",
+    verifyToken,
     CrearGrupoController
 );
-
 
 // =============================
 // OBTENER TODOS LOS GRUPOS
@@ -29,9 +32,19 @@ router.post(
 
 router.get(
     "/all",
+    verifyToken,
     getGruposController
 );
 
+// =============================
+// OBTENER GRUPOS POR PRÁCTICA
+// =============================
+
+router.get(
+    "/practica/:practica_id",
+    verifyToken,
+    getGruposByPracticaIdController
+);
 
 // =============================
 // OBTENER CANDIDATOS DEL GRUPO
@@ -39,9 +52,19 @@ router.get(
 
 router.get(
     "/:id/candidatos",
+    verifyToken,
     getCandidatosByGrupoController
 );
 
+// =============================
+// OBTENER DOCUMENTOS DE PRACTICANTES POR GRUPO
+// =============================
+
+router.get(
+    "/:id/documentos-practicantes",
+    verifyToken,
+    getPracticantesDocumentosByGrupoController
+);
 
 // =============================
 // OBTENER UN GRUPO
@@ -49,9 +72,9 @@ router.get(
 
 router.get(
     "/:id",
+    verifyToken,
     getGrupoController
 );
-
 
 // =============================
 // EDITAR GRUPO
@@ -59,9 +82,9 @@ router.get(
 
 router.put(
     "/:id",
+    verifyToken,
     EditarGrupoController
 );
-
 
 // =============================
 // ELIMINAR GRUPO
@@ -69,8 +92,8 @@ router.put(
 
 router.delete(
     "/:id",
+    verifyToken,
     deleteGrupoController
 );
-
 
 export default router;
