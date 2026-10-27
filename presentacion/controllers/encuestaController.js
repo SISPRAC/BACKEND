@@ -37,7 +37,22 @@ import { rolRepository }
 import { respuestaEncuestaRepository }
     from "../../infraestructura/repositorios/respuestaEncuestaRepositoryImpl.js";
 
+import { obtenerEncuestasEvaluacionPracticante }
+    from "../../aplicacion/casos_de_uso/encuestas/obtenerEncuestasEvaluacionPracticante.js";
 
+import { obtenerEncuestasPracticante }
+    from "../../aplicacion/casos_de_uso/encuestas/obtenerEncuestasPracticante.js";
+
+import { responderEncuestaEvaluacionPracticante }
+    from "../../aplicacion/casos_de_uso/encuestas/responderEncuestaEvaluacionPracticante.js";
+
+import { respuestaPreguntaRepository }
+    from "../../infraestructura/repositorios/respuestasPreguntaRepositoryImpl.js";
+
+import { responderEncuestaPracticante }
+    from "../../aplicacion/casos_de_uso/encuestas/responderEncuestaPracticante.js";
+
+import { obtenerRespuestasEncuestasPracticante } from "../../aplicacion/casos_de_uso/encuestas/obtenerRespuestasEncuestasPracticante.js";
 
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
@@ -416,4 +431,212 @@ export const eliminarEncuestaController = async (req, res) => {
 
     }
 
+};
+
+// ========================================
+// OBTENER ENCUESTAS DE EVALUACIÓN DEL PRACTICANTE
+// ========================================
+
+export const obtenerEncuestasEvaluacionPracticanteController = async (req, res) => {
+
+    try {
+
+        const encuestas =
+            await obtenerEncuestasEvaluacionPracticante(
+                { plantillaEncuestaRepository, respuestaEncuestaRepository},
+                req.params.practicante_id,
+                req.params.rolEvaluador
+            );
+
+        return res.status(200).json(
+            encuestas
+        );
+
+    } catch (error) {
+
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+
+        }
+
+        console.error(
+            "Error obtener encuestas de evaluación del practicante:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+
+    }
+
+};
+
+// ========================================
+// OBTENER ENCUESTAS DEL PRACTICANTE
+// ========================================
+
+export const obtenerEncuestasPracticanteController = async (req, res) => {
+
+    try {
+
+        const encuestas =
+            await obtenerEncuestasPracticante(
+                {
+                    plantillaEncuestaRepository,
+                    respuestaEncuestaRepository,
+                },
+                req.user.id
+            );
+
+        return res.status(200).json(
+            encuestas
+        );
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        console.error(
+            "Error obtener encuestas del practicante:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+
+    }
+
+};
+
+
+// ========================================
+// RESPONDER ENCUESTA DE EVALUACIÓN DEL PRACTICANTE
+// ========================================
+
+export const responderEncuestaEvaluacionPracticanteController = async (req, res) => {
+
+    try {
+
+        const respuesta =
+            await responderEncuestaEvaluacionPracticante(
+                {
+                    plantillaEncuestaRepository,
+                    respuestaEncuestaRepository,
+                    respuestaPreguntaRepository,
+                },
+                req.user.id,
+                req.body.practicante_id,
+                req.body.practica_encuesta_id,
+                req.body.respuestas
+            );
+
+        return res.status(201).json({
+            message: "Encuesta respondida correctamente",
+            data: respuesta,
+        });
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error(
+            "Error responder encuesta de evaluación del practicante:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+
+    }
+
+};
+
+
+// ========================================
+// RESPONDER ENCUESTA DEL PRACTICANTE
+// ========================================
+
+export const responderEncuestaPracticanteController = async (req, res) => {
+
+    try {
+
+        const respuesta =
+            await responderEncuestaPracticante(
+                {
+                    plantillaEncuestaRepository,
+                    respuestaEncuestaRepository,
+                    respuestaPreguntaRepository,
+                },
+                req.user.id,
+                req.body.practica_encuesta_id,
+                req.body.respuestas
+            );
+
+        return res.status(201).json({
+            message: "Encuesta respondida correctamente",
+            data: respuesta,
+        });
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error(
+            "Error responder encuesta del practicante:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+
+    }
+
+};
+
+export const obtenerRespuestasEncuestasPracticanteController = async (
+    req,
+    res
+) => {
+    try {
+        const resultado = await obtenerRespuestasEncuestasPracticante(
+            {
+                plantillaEncuestaRepository,
+                respuestaEncuestaRepository,
+            },
+            req.params.practicante_id
+        );
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error(
+            "Error al obtener las respuestas de las encuestas del practicante:",
+            error
+        );
+
+        return res.status(error.statusCode || 500).json({
+            message:
+                error.statusCode
+                    ? error.message
+                    : "Error interno al consultar las encuestas del practicante",
+        });
+    }
 };

@@ -169,6 +169,69 @@ export const plantillaEncuestaRepository = {
 
         });
 
-    }
+    },
+
+    async findEncuestasByPractica(practica_id) {
+        return await models.PracticaEncuesta.findAll({
+            where: {
+                practica_id,
+            },
+            include: [
+                {
+                    model: models.PlantillaEncuesta,
+                    as: "plantilla",
+                    where: {
+                        activa: true,
+                    },
+                    include: [
+                        {
+                            model: models.Rol,
+                        },
+                        {
+                            model: models.Pregunta,
+                            as: "preguntas",
+                            include: [
+                                {
+                                    model: models.OpcionPregunta,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    },
+
+    async findPracticaPracticanteEnCurso(practicante_id) {
+        return await models.PracticaPracticante.findOne({
+            where: {
+                practicante_id,
+                estado: "En curso",
+            },
+        });
+    },
+
+    async findPracticanteByUsuario(user_id) {
+        return await models.Candidato.findOne({
+            where: {
+                usuario_id: user_id,
+            },
+            include: [
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+                },
+            ],
+        });
+    },
+
+    async findPracticasPracticanteParaEncuestas(practicante_id) {
+        return await models.PracticaPracticante.findAll({
+            where: {
+                practicante_id,
+                estado: ["En curso", "Finalizada"],
+            },
+        });
+    },
 
 };

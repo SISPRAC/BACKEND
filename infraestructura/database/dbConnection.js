@@ -460,6 +460,19 @@ export const initDB = async (database, username, contraseña) => {
             as: "practicaEncuesta"
         });
 
+        // ==========================================
+        // PRACTICANTE -> RESPUESTAS DE ENCUESTAS
+        // ==========================================
+
+        models.Practicante.hasMany(models.RespuestaEncuesta, {
+            foreignKey: "practicante_id",
+            as: "respuestasEncuestas",
+        });
+
+        models.RespuestaEncuesta.belongsTo(models.Practicante, {
+            foreignKey: "practicante_id",
+            as: "practicante",
+        });
 
         // RespuestaEncuesta -> RespuestaPregunta
         models.RespuestaEncuesta.hasMany(models.RespuestaPregunta, {
@@ -905,7 +918,7 @@ export const initDB = async (database, username, contraseña) => {
 
 
 
-          //await sequelize.sync({ alter: true });
+       // await sequelize.sync({ alter: true });
 
         console.log('DB connected');
     } catch (error) {
