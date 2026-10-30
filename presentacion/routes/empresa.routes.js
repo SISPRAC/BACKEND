@@ -6,7 +6,8 @@ import {
     obtenerEmpresaController,
     obtenerGruposEmpresaController,
     obtenerDetalleGrupoEmpresaController,
-    invitarEmpresaController
+    invitarEmpresaController,
+    obtenerEmpresasParaReportePorPeriodoController
 } from "../controllers/empresaController.js";
 
 import { uploadImage } from "../middleware/uploadMulter.js";
@@ -15,9 +16,7 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 import { verifyRole } from "../middleware/rolMiddleware.js";
 import { verifyInvitationToken } from "../middleware/invitationMiddleware.js";
 
-
 const router = Router();
-
 
 router.post(
     "/registrarEmpresa",
@@ -26,7 +25,6 @@ router.post(
     registerEmpresaController
 );
 
-
 router.post(
     "/invitacion",
     verifyToken,
@@ -34,13 +32,11 @@ router.post(
     invitarEmpresaController
 );
 
-
 router.get(
     "/mi-empresa",
     verifyToken,
     obtenerEmpresaController
 );
-
 
 router.put(
     "/:id",
@@ -49,13 +45,11 @@ router.put(
     actualizarEmpresaController
 );
 
-
 router.get(
     "/mis-grupos",
     verifyToken,
     obtenerGruposEmpresaController
 );
-
 
 router.get(
     "/mis-grupos/:practicaId",
@@ -63,5 +57,12 @@ router.get(
     obtenerDetalleGrupoEmpresaController
 );
 
+// Obtener empresas para el reporte de un período
+router.get(
+    "/reporte/periodo/:periodo_id",
+    verifyToken,
+    verifyRole(["Director de programa"]),
+    obtenerEmpresasParaReportePorPeriodoController
+);
 
 export default router;

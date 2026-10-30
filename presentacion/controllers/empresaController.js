@@ -8,6 +8,7 @@ import { obtenerEmpresa } from "../../aplicacion/casos_de_uso/empresa/obtenerEmp
 import { obtenerGruposEmpresa } from "../../aplicacion/casos_de_uso/empresa/getMisGruposPractica.js";
 import { obtenerDetalleGrupoEmpresa } from "../../aplicacion/casos_de_uso/empresa/getDetalleGrupoPractica.js";
 import { invitarEmpresa } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarEmpresa.js";
+import { obtenerEmpresasParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresasParaReportePorPeriodo.js";
 
 export const registerEmpresaController = async (req, res) => {
 
@@ -185,6 +186,45 @@ export const invitarEmpresaController = async (req, res) => {
 
         console.log(
             "Error en invitarEmpresaController:",
+            error
+        );
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+export const obtenerEmpresasParaReportePorPeriodoController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { periodo_id } = req.params;
+
+        const empresas =
+            await obtenerEmpresasParaReportePorPeriodo(
+                empresaRepository,
+                periodo_id
+            );
+
+        return res.status(200).json({
+            success: true,
+            data: empresas
+        });
+
+    } catch (error) {
+
+        console.log(
+            "Error en obtenerEmpresasParaReportePorPeriodoController:",
             error
         );
 

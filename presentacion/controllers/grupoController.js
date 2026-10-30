@@ -9,6 +9,7 @@ import { editarGrupo } from "../../aplicacion/casos_de_uso/grupo/editarGrupo.js"
 import { getGruposByPracticaId } from "../../aplicacion/casos_de_uso/grupo/getGruposByPracticaId.js";
 import { getPracticantesDocumentosByGrupo } from "../../aplicacion/casos_de_uso/grupo/getPracticantesDocumentosByGrupo.js";
 import { practicaRequisitoDocumentoSubidoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoSubidoRepositoryImpl.js";
+import { obtenerGruposParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/grupo/obtenerGruposParaReportePorPeriodo.js";
 
 export const CrearGrupoController = async (req, res) => {
 
@@ -176,7 +177,6 @@ export const getPracticantesDocumentosByGrupoController = async (req, res) => {
     }
 };
 
-
 export const EditarGrupoController = async (req, res) => {
 
     try {
@@ -228,6 +228,38 @@ export const deleteGrupoController = async (req, res) => {
 
         return res.status(500).json({
             message: "Error al eliminar el grupo"
+        });
+    }
+};
+
+export const obtenerGruposParaReportePorPeriodoController = async (req, res) => {
+
+    try {
+
+        const periodo_id = req.params.periodo_id;
+
+        const grupos = await obtenerGruposParaReportePorPeriodo(
+            { grupoRepository },
+            periodo_id
+        );
+
+        return res.status(200).json(grupos);
+
+    } catch (error) {
+
+        console.log(
+            "Error en obtenerGruposParaReportePorPeriodoController:",
+            error
+        );
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error al obtener los grupos para el reporte"
         });
     }
 };

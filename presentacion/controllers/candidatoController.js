@@ -11,6 +11,7 @@ import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryI
 import { perfilRepository } from "../../infraestructura/repositorios/perfilRepositoryImpl.js";
 import { candidatoPerfilRepository } from "../../infraestructura/repositorios/candidatoPerfilRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { obtenerCandidatosParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/candidato/obtenerCandidatosParaReportePorPeriodo.js";
 
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
@@ -172,5 +173,29 @@ export const invitarCandidatoController = async (req, res) => {
             return res.status(error.statusCode).json({ message: error.message });
         } console.log("Error al enviar invitación al candidato:", error);
         return res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+export const obtenerCandidatosParaReportePorPeriodoController = async (req, res) => {
+    try {
+        const candidatos = await obtenerCandidatosParaReportePorPeriodo(
+            { candidatoRepository },
+            req.params.periodo_id
+        );
+
+        return res.status(200).json(candidatos);
+
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        console.error("Error al obtener candidatos para el reporte:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
     }
 };

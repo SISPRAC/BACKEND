@@ -149,4 +149,97 @@ export const empresaRepository = {
             };
         });
     },
+
+
+    async findAllParaReportePorPeriodo(periodo_id) {
+        return await models.Empresa.findAll({
+            attributes: [
+                "id",
+                "nit",
+                "nombre",
+                "direccion",
+                "logo",
+                "usuario_id",
+            ],
+            include: [
+                {
+                    model: models.User,
+                    attributes: [
+                        "id",
+                        "nombres",
+                        "apellidos",
+                        "correo",
+                        "telefono",
+                        "estado",
+                    ],
+                    required: false,
+                },
+                {
+                    model: models.Convenio,
+                    attributes: [
+                        "id",
+                        "estado",
+                        "fecha_inicio",
+                        "fecha_fin",
+                        "fecha_envio",
+                    ],
+                    required: false,
+                    include: [
+                        {
+                            model: models.Vacante,
+                            attributes: [
+                                "id",
+                                "nombre",
+                                "descripcion",
+                                "estado",
+                            ],
+                            required: false,
+                            include: [
+                                {
+                                    model: models.AperturaVacante,
+                                    attributes: [
+                                        "id",
+                                        "practica_id",
+                                        "cupos",
+                                        "estado",
+                                        "vacante_id",
+                                    ],
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: models.Practica,
+                                            as: "practica",
+                                            attributes: [
+                                                "id",
+                                                "periodo_id",
+                                                "fecha_inicio",
+                                                "fecha_fin",
+                                                "estado",
+                                            ],
+                                            where: {
+                                                periodo_id,
+                                            },
+                                            required: true,
+                                        },
+                                        {
+                                            model: models.Postulacion,
+                                            attributes: [
+                                                "id",
+                                                "estado",
+                                                "candidato_id",
+                                                "aperturaVacante_id",
+                                            ],
+                                            required: false,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            order: [["nombre", "ASC"]],
+        });
+    },
+
 };

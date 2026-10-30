@@ -1,5 +1,6 @@
 import { models } from "../database/dbConnection.js";
 import { Op } from "sequelize";
+import { Sequelize } from "sequelize";
 
 export const grupoRepository = {
 
@@ -423,6 +424,48 @@ export const grupoRepository = {
     async update(id, data) {
         return await models.Grupo.update(data, {
             where: { id }
+        });
+    },
+
+    async obtenerGruposParaReportePorPeriodo(periodo_id) {
+        return await models.Grupo.findAll({
+            attributes: [
+                "id",
+                "nombre",
+                [
+                    Sequelize.literal(`(
+    SELECT COUNT(*)
+    FROM "GrupoCandidatos" AS gc
+    WHERE gc.grupo_id = "Grupo"."id"
+)`),
+                    "cantidadPracticantes"
+                ]
+            ],
+            include: [
+                {
+                    model: models.Practica,
+                    as: "practica",
+                    where: {
+                        periodo_id
+                    },
+                    attributes: ["id", "periodo_id", "estado"],
+                    required: true
+                },
+                {
+                    model: models.TutorDocente,
+                    attributes: ["id", "codigo"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: [
+                                "nombres",
+                                "apellidos"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            order: [["nombre", "ASC"]]
         });
     }
 };

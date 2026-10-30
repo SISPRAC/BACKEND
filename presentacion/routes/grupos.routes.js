@@ -1,4 +1,3 @@
-
 import express from "express";
 
 import {
@@ -9,7 +8,8 @@ import {
     getGruposByPracticaIdController,
     getPracticantesDocumentosByGrupoController,
     EditarGrupoController,
-    deleteGrupoController
+    deleteGrupoController,
+    obtenerGruposParaReportePorPeriodoController
 } from "../controllers/grupoController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
@@ -44,6 +44,16 @@ router.get(
     "/practica/:practica_id",
     verifyToken,
     getGruposByPracticaIdController
+);
+
+// =============================
+// OBTENER GRUPOS PARA REPORTE POR PERIODO
+// =============================
+
+router.get(
+    "/reporte/periodo/:periodo_id",
+    verifyToken,
+    obtenerGruposParaReportePorPeriodoController
 );
 
 // =============================
