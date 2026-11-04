@@ -117,4 +117,28 @@ export const userRepository = {
         });
     },
 
+    async findUsuariosPorRol(nombreRol) {
+        return await models.User.findAll({
+            attributes: [
+                "id",
+                "nombres",
+                "apellidos",
+                "correo"
+            ],
+            include: [
+                {
+                    model: models.Rol,
+                    attributes: [],
+                    where: {
+                        nombre: nombreRol
+                    },
+                    through: {
+                        attributes: []
+                    },
+                    required: true
+                }
+            ]
+        });
+    }
+
 };

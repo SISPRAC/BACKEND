@@ -2,17 +2,23 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
+import { notificarAceptacion } from "../../casos_de_uso/notificarEmail/notificarAceptacion.js";
+
 export const aceptarPostulacion = async (
     {
         postulacionRepository,
         PracticanteRepository,
         practicaPracticanteRepository,
-        aperturaVacanteRepository
+        aperturaVacanteRepository,
+        userRepository
     },
     postulacionId,
 ) => {
 
     const transaction = await sequelize.transaction();
+
+    let resultado;
+    let postulacion;
 
     try {
 
@@ -20,7 +26,7 @@ export const aceptarPostulacion = async (
         // BUSCAR POSTULACIÓN
         // ==========================================
 
-        const postulacion =
+        postulacion =
             await postulacionRepository.findByIdParaAceptar(
                 postulacionId,
                 transaction
@@ -38,26 +44,20 @@ export const aceptarPostulacion = async (
             );
         }
 
-
         // ==========================================
         // DATOS NECESARIOS
         // ==========================================
 
-        const candidatoId =
-            postulacion.candidato_id;
+        const candidatoId = postulacion.candidato_id;
 
-        const aperturaVacanteId =
-            postulacion.aperturaVacante_id;
+        const aperturaVacanteId = postulacion.aperturaVacante_id;
 
-        const practicaId =
-            postulacion.AperturaVacante.practica.id;
+        const practicaId = postulacion.AperturaVacante.practica.id;
 
-        const cupos =
-            postulacion.AperturaVacante.cupos;
-
+        const cupos = postulacion.AperturaVacante.cupos;
 
         // ==========================================
-        // BUSCAR SI EL CANDIDATO YA ES PRACTICANTE
+        // BUSCAR PRACTICANTE
         // ==========================================
 
         let practicante =
@@ -65,11 +65,6 @@ export const aceptarPostulacion = async (
                 candidatoId,
                 transaction
             );
-
-
-        // ==========================================
-        // SI YA ES PRACTICANTE
-        // ==========================================
 
         if (practicante) {
 
@@ -81,7 +76,6 @@ export const aceptarPostulacion = async (
                     );
 
             if (practicaActiva) {
-
                 throw new BadRequestError(
                     "El candidato ya tiene una práctica en curso"
                 );
@@ -102,9 +96,8 @@ export const aceptarPostulacion = async (
                 );
         }
 
-
         // ==========================================
-        // CREAR RELACIÓN PRACTICA-PRACTICANTE
+        // CREAR RELACIÓN PRÁCTICA-PRACTICANTE
         // ==========================================
 
         const practicaPracticante =
@@ -116,7 +109,6 @@ export const aceptarPostulacion = async (
                 },
                 transaction
             );
-
 
         // ==========================================
         // ACTUALIZAR POSTULACIÓN
@@ -131,35 +123,22 @@ export const aceptarPostulacion = async (
             transaction
         );
 
-
         // ==========================================
         // CONTAR CUPOS OCUPADOS
         // ==========================================
 
         const cuposOcupados =
             await postulacionRepository.countByAperturaVacante(
-                aperturaVacanteId
+                aperturaVacanteId,
+                transaction
             );
 
-
-        console.log(
-            "Apertura:",
-            aperturaVacanteId
-        );
-
-        console.log(
-            "Cupos totales:",
-            cupos
-        );
-
-        console.log(
-            "Cupos ocupados:",
-            cuposOcupados
-        );
-
+        console.log("Apertura:", aperturaVacanteId);
+        console.log("Cupos totales:", cupos);
+        console.log("Cupos ocupados:", cuposOcupados);
 
         // ==========================================
-        // SI SE LLENARON LOS CUPOS
+        // ACTUALIZAR ESTADO DE LA APERTURA
         // ==========================================
 
         if (cuposOcupados >= cupos) {
@@ -171,9 +150,7 @@ export const aceptarPostulacion = async (
                 },
                 transaction
             );
-
         }
-
 
         // ==========================================
         // CONFIRMAR TRANSACCIÓN
@@ -181,19 +158,39 @@ export const aceptarPostulacion = async (
 
         await transaction.commit();
 
-
-        return {
+        resultado = {
             postulacion,
             practicante,
             practicaPracticante
         };
 
-
     } catch (error) {
 
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
         throw error;
     }
-};
 
+    // ==========================================
+    // ENVIAR NOTIFICACIONES
+    // ==========================================
+
+    try {
+
+        await notificarAceptacion({
+            postulacion,
+            userRepository
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error al enviar las notificaciones de aceptación:",
+            error
+        );
+    }
+
+    return resultado;
+};

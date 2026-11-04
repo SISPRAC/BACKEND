@@ -29,6 +29,15 @@ const createRetiroPracticanteModel = (sequelize) => {
                 },
             },
 
+            practica_practicante_id: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                references: {
+                    model: "PracticaPracticante",
+                    key: "id",
+                },
+            },
+
             archivo_id: {
                 type: DataTypes.INTEGER,
                 allowNull: true,

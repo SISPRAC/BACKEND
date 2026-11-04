@@ -15,7 +15,7 @@ const router = Router();
 router.post(
     "/",
     verifyToken,
-    verifyRole(["Empresa", "Director de programa"]),
+    verifyRole(["Empresa", "Director de programa", "Practicante"]),
     upload.single("archivo"),
     crearRetiroPracticante
 );

@@ -11,9 +11,12 @@ import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryI
 import { perfilRepository } from "../../infraestructura/repositorios/perfilRepositoryImpl.js";
 import { candidatoPerfilRepository } from "../../infraestructura/repositorios/candidatoPerfilRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { grupoRepository } from "../../infraestructura/repositorios/grupoRepositoryImpl.js"; // ajusta la ruta
 import { obtenerCandidatosParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/candidato/obtenerCandidatosParaReportePorPeriodo.js";
 
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
+
+import { grupoCandidatoRepository } from "../../infraestructura/repositorios/grupoCandidatoRepository.js"; // ajusta la ruta
 
 export const registerCandidatoController = async (req, res) => {
 
@@ -29,10 +32,13 @@ export const registerCandidatoController = async (req, res) => {
             perfilRepository,
             candidatoPerfilRepository,
             archivoRepository,
+            grupoCandidatoRepository,   // 👈 nuevo
             {
                 ...req.body,
+                // van después del spread para que el body nunca los sobrescriba
                 correo: invitacion.correo,
-                codigo: invitacion.codigo
+                codigo: invitacion.codigo,
+                grupo_id: invitacion.grupo_id   // 👈 nuevo
             },
             req.file
         );
@@ -46,6 +52,8 @@ export const registerCandidatoController = async (req, res) => {
                 message: error.message
             });
         }
+
+        console.log("Error al registrar candidato:", error);
 
         return res.status(500).json({
             message: "Error interno del servidor"
@@ -162,16 +170,21 @@ export const getCandidatosPerfilController = async (req, res) => {
 
 export const invitarCandidatoController = async (req, res) => {
     try {
-        const result = await invitarCandidato({
-            correo: req.body.correo,
-            codigo: req.body.codigo,
-            nombre: req.body.nombre
-        });
+        const result = await invitarCandidato(
+            grupoRepository,
+            {
+                correo: req.body.correo,
+                codigo: req.body.codigo,
+                nombre: req.body.nombre,
+                grupo_id: req.body.grupo_id
+            }
+        );
         return res.status(200).json(result);
     } catch (error) {
         if (error.statusCode) {
             return res.status(error.statusCode).json({ message: error.message });
-        } console.log("Error al enviar invitación al candidato:", error);
+        }
+        console.log("Error al enviar invitación al candidato:", error);
         return res.status(500).json({ message: "Error interno del servidor" });
     }
 };

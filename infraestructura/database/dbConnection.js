@@ -512,11 +512,20 @@ export const initDB = async (database, username, contraseña) => {
         });
 
 
-        // Relación entre RetiroPracticante y Practicante
+        // ==========================================
+        // RETIRO DE PRACTICANTES
+        // ==========================================
 
+        // Usuario -> Retiros realizados
         models.User.hasMany(models.RetiroPracticante, {
             foreignKey: "usuario_id",
             as: "retirosRealizados",
+        });
+
+        // Archivo -> Retiros
+        models.Archivo.hasMany(models.RetiroPracticante, {
+            foreignKey: "archivo_id",
+            as: "retiros",
         });
 
         models.RetiroPracticante.belongsTo(models.Archivo, {
@@ -524,9 +533,15 @@ export const initDB = async (database, username, contraseña) => {
             as: "archivoSoporte",
         });
 
-        models.Archivo.hasMany(models.RetiroPracticante, {
-            foreignKey: "archivo_id",
-            as: "retiros",
+        // PracticaPracticante -> Retiro
+        models.PracticaPracticante.hasOne(models.RetiroPracticante, {
+            foreignKey: "practica_practicante_id",
+            as: "retiro",
+        });
+
+        models.RetiroPracticante.belongsTo(models.PracticaPracticante, {
+            foreignKey: "practica_practicante_id",
+            as: "practicaPracticante",
         });
 
         models.Practicante.belongsTo(models.Candidato, {
@@ -916,9 +931,7 @@ export const initDB = async (database, username, contraseña) => {
             as: "archivo",
         });
 
-
-
-       // await sequelize.sync({ alter: true });
+       //  await sequelize.sync({ alter: true });
 
         console.log('DB connected');
     } catch (error) {

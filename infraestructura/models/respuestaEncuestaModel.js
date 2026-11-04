@@ -44,18 +44,7 @@ const createRespuestaEncuestaModel = (sequelize) => {
         {
             tableName: "RespuestaEncuesta",
             freezeTableName: true,
-            timestamps: false,
-
-            indexes: [
-                {
-                    unique: true,
-                    fields: [
-                        "usuario_id",
-                        "practica_encuesta_id",
-                        "practicante_id",
-                    ],
-                },
-            ],
+            timestamps: false,         
         }
     );
 

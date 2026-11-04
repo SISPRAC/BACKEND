@@ -82,7 +82,6 @@ export const getDashboardReporte = async (
     // 6. Distribución de resultados de selección (%)
     const resultadosSeleccion = [
         { estado: "Pendiente", valor: porcentaje(post.POSTULADO ?? 0, totalPostulaciones) },
-        { estado: "Retirado", valor: porcentaje(post.RETIRADO ?? 0, totalPostulaciones) },
         { estado: "Aceptado", valor: porcentaje(post.ACEPTADO ?? 0, totalPostulaciones) },
         { estado: "Rechazado", valor: porcentaje(post.RECHAZADO ?? 0, totalPostulaciones) },
     ];

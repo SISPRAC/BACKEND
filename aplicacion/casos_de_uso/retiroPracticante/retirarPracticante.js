@@ -1,6 +1,10 @@
+
 import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+
+const ESTADO_RETIRADO = "Retirado";
+const ESTADO_CANCELADO = "Cancelado";
 
 export const retirarPracticante = async (
     retiroPracticanteRepository,
@@ -13,7 +17,8 @@ export const retirarPracticante = async (
     const {
         motivo,
         usuario_id,
-        practicante_id
+        practicante_id,
+        esAutoRetiro = false
     } = data;
 
     const fecha_retiro = new Intl.DateTimeFormat("en-CA", {
@@ -64,13 +69,14 @@ export const retirarPracticante = async (
         motivo,
         usuario_id,
         practicante_id,
+        practica_practicante_id: practicaPracticante.id,
         archivo_id: archivo.id
     });
 
     // 6. Cambiar estado de la práctica del practicante
     await practicaPracticanteRepository.updateEstado(
         practicaPracticante.id,
-        "Retirado"
+        esAutoRetiro ? ESTADO_CANCELADO : ESTADO_RETIRADO
     );
 
     return retiro;

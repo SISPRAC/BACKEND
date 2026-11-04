@@ -33,12 +33,13 @@ export const tokenService = {
 
     },
 
-    generateInvitationCandidatoToken: (correo, codigo) => {
+    generateInvitationCandidatoToken: (correo, codigo, grupo_id) => {
 
         return jwt.sign(
             {
                 correo,
                 codigo,
+                grupo_id,
                 rol: "Candidato"
             },
             process.env.ACCESS_TOKEN_SECRET,
@@ -71,7 +72,7 @@ export const tokenService = {
             process.env.ACCESS_TOKEN_SECRET
         );
 
-    }
+    },
 
 };
 

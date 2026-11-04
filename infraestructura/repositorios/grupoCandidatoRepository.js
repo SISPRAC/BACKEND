@@ -2,8 +2,8 @@ import { models } from "../database/dbConnection.js";
 
 export const grupoCandidatoRepository = {
 
-    async create(data) {
-        return await models.GrupoCandidato.create(data);
+    async create(data, transaction) {
+        return await models.GrupoCandidato.create(data, { transaction });
     },
 
     async findById(id) {

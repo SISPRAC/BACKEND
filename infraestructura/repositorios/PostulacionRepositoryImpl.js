@@ -122,13 +122,16 @@ export const postulacionRepository = {
         });
     },
     async findByIdParaAceptar(id, transaction) {
-
         return await models.Postulacion.findByPk(id, {
             include: [
                 {
                     model: models.Candidato,
-                    attributes: [
-                        "id"
+                    attributes: ["id", "codigo"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos", "correo"]
+                        }
                     ]
                 },
                 {
@@ -145,13 +148,50 @@ export const postulacionRepository = {
                                 "fecha_fin",
                                 "periodo_id"
                             ]
+                        },
+                        {
+                            model: models.Vacante,
+                            include: [
+                                {
+                                    model: models.Convenio,
+                                    include: [
+                                        {
+                                            model: models.Empresa,
+                                            include: [
+                                                {
+                                                    model: models.User,
+                                                    attributes: [
+                                                        "id",
+                                                        "nombres",
+                                                        "apellidos",
+                                                        "correo"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            model: models.TutorEmpresa,
+                            include: [
+                                {
+                                    model: models.User,
+                                    attributes: [
+                                        "id",
+                                        "nombres",
+                                        "apellidos",
+                                        "correo"
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 }
             ],
             transaction
         });
-
     },
 
     async findIdsConPostulacionActiva() {

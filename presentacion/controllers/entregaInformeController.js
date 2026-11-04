@@ -1,6 +1,7 @@
 import { entregaInformeRepository } from "../../infraestructura/repositorios/entregaInformeRepositoryImpl.js";
 import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
 
 import { crearEntregaInforme } from "../../aplicacion/casos_de_uso/entregaInforme/crearEntregaInforme.js";
 
@@ -143,6 +144,7 @@ export const findTrazabilidadEntregaInforme = async (req, res) => {
 // ============================================================
 // REVISAR ENTREGA - TUTOR DOCENTE
 // ============================================================
+
 export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
     try {
@@ -159,6 +161,7 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
         const entrega =
             await revisarEntregaInformeTutorDocente(
                 entregaInformeRepository,
+                TutorDocenteRepository,
                 id,
                 user_id,
                 estado_tutor_docente,
@@ -177,6 +180,8 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
         }
 
+        console.log("Error al revisar entrega:", error);
+
         return res.status(500).json({
             message: "Error interno del servidor"
         });
@@ -184,6 +189,7 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
     }
 
 };
+
 
 // ============================================================
 // REVISAR ENTREGA - TUTOR EMPRESARIAL
