@@ -17,14 +17,10 @@ export const obtenerCandidatosParaReportePorPeriodo = async (
     const periodoId = Number(periodo_id);
 
     const candidatos =
-        await candidatoRepository.findAllParaReportePorPeriodo(
-            periodoId
-        );
+        await candidatoRepository.findAllParaReportePorPeriodo(periodoId);
 
     const candidatosFiltrados = candidatos.filter((candidato) => {
-        const practicante = candidato.practicante;
-
-        const tienePractica = (practicante?.practicas ?? []).some(
+        const tienePractica = (candidato.practicante?.practicas ?? []).some(
             (registro) =>
                 Number(registro.practica?.periodo_id) === periodoId
         );
@@ -50,9 +46,7 @@ export const obtenerCandidatosParaReportePorPeriodo = async (
             )
             .sort((a, b) => b.id - a.id);
 
-        const practicante = candidato.practicante;
-
-        const practicas = (practicante?.practicas ?? [])
+        const practicas = (candidato.practicante?.practicas ?? [])
             .filter(
                 (registro) =>
                     Number(registro.practica?.periodo_id) === periodoId
@@ -60,47 +54,38 @@ export const obtenerCandidatosParaReportePorPeriodo = async (
             .sort((a, b) => b.id - a.id);
 
         const practicaActual =
-            practicas.find(
-                (registro) => registro.estado === "En curso"
-            ) ?? practicas[0];
+            practicas.find((registro) => registro.estado === "En curso") ??
+            practicas[0];
 
         const postulacionActual = postulaciones[0];
 
-        const apertura = postulacionActual?.AperturaVacante;
-        const vacante = apertura?.Vacante;
-        const empresa = vacante?.Convenio?.Empresa;
+        const empresa =
+            postulacionActual?.AperturaVacante?.Vacante?.Convenio?.Empresa;
 
         const grupos = (candidato.gruposAsignados ?? [])
             .map((asignacion) => asignacion.grupo)
             .filter(Boolean);
 
-        let estado;
-
-        if (practicaActual) {
-            estado = practicaActual.estado;
-        } else if (postulacionActual) {
-            estado = postulacionActual.estado;
-        } else {
-            estado = "DISPONIBLE";
-        }
+        const estado =
+            practicaActual?.estado ??
+            postulacionActual?.estado ??
+            "DISPONIBLE";
 
         return {
             id: candidato.id,
             codigo: candidato.codigo,
+            cedula: candidato.Usuario?.cedula ?? "Sin información",
 
-            nombreEstudiante: [
-                candidato.Usuario?.nombres,
-                candidato.Usuario?.apellidos
-            ]
-                .filter(Boolean)
-                .join(" ") || "Sin información",
+            nombreEstudiante:
+                [candidato.Usuario?.nombres, candidato.Usuario?.apellidos]
+                    .filter(Boolean)
+                    .join(" ") || "Sin información",
 
             correo: candidato.Usuario?.correo ?? "Sin información",
 
             estado,
 
             empresa: empresa?.nombre ?? "Sin asignar",
-            vacante: vacante?.nombre ?? "Sin asignar",
 
             grupo: grupos.length
                 ? grupos.map((grupo) => grupo.nombre).join(", ")

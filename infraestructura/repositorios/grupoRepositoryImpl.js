@@ -429,25 +429,12 @@ export const grupoRepository = {
 
     async obtenerGruposParaReportePorPeriodo(periodo_id) {
         return await models.Grupo.findAll({
-            attributes: [
-                "id",
-                "nombre",
-                [
-                    Sequelize.literal(`(
-    SELECT COUNT(*)
-    FROM "GrupoCandidatos" AS gc
-    WHERE gc.grupo_id = "Grupo"."id"
-)`),
-                    "cantidadPracticantes"
-                ]
-            ],
+            attributes: ["id", "nombre"],
             include: [
                 {
                     model: models.Practica,
                     as: "practica",
-                    where: {
-                        periodo_id
-                    },
+                    where: { periodo_id },
                     attributes: ["id", "periodo_id", "estado"],
                     required: true
                 },
@@ -457,15 +444,28 @@ export const grupoRepository = {
                     include: [
                         {
                             model: models.User,
-                            attributes: [
-                                "nombres",
-                                "apellidos"
-                            ]
+                            attributes: ["nombres", "apellidos"]
+                        }
+                    ]
+                },
+                {
+                    model: models.Candidato,
+                    as: "Candidatos",
+                    attributes: ["id", "codigo"],          // <- confirma que "codigo" está en Candidato
+                    through: { attributes: [] },           // no traer columnas de GrupoCandidato
+                    required: false,                       // grupos sin practicantes también salen
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["nombres", "apellidos", "correo"]  // <- confirma "correo"
                         }
                     ]
                 }
             ],
-            order: [["nombre", "ASC"]]
+            order: [
+                ["nombre", "ASC"],
+                [{ model: models.Candidato, as: "Candidatos" }, models.User, "apellidos", "ASC"]
+            ]
         });
     }
 };

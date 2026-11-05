@@ -145,7 +145,8 @@ export const candidatoRepository = {
                         "id",
                         "nombres",
                         "apellidos",
-                        "correo"
+                        "correo",
+                        "cedula"
                     ],
                     required: true
                 },
@@ -218,26 +219,17 @@ export const candidatoRepository = {
                                 },
                                 {
                                     model: models.Vacante,
-                                    attributes: [
-                                        "id",
-                                        "nombre"
-                                    ],
+                                    attributes: ["id"],
                                     required: true,
                                     include: [
                                         {
                                             model: models.Convenio,
-                                            attributes: [
-                                                "id",
-                                                "estado"
-                                            ],
+                                            attributes: ["id", "estado"],
                                             required: true,
                                             include: [
                                                 {
                                                     model: models.Empresa,
-                                                    attributes: [
-                                                        "id",
-                                                        "nombre"
-                                                    ],
+                                                    attributes: ["id", "nombre"],
                                                     required: true
                                                 }
                                             ]

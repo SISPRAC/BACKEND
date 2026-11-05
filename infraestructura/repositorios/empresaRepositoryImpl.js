@@ -150,7 +150,6 @@ export const empresaRepository = {
         });
     },
 
-
     async findAllParaReportePorPeriodo(periodo_id) {
         return await models.Empresa.findAll({
             attributes: [
@@ -187,12 +186,7 @@ export const empresaRepository = {
                     include: [
                         {
                             model: models.Vacante,
-                            attributes: [
-                                "id",
-                                "nombre",
-                                "descripcion",
-                                "estado",
-                            ],
+                            attributes: ["id", "nombre", "descripcion", "estado"],
                             required: false,
                             include: [
                                 {
@@ -216,9 +210,7 @@ export const empresaRepository = {
                                                 "fecha_fin",
                                                 "estado",
                                             ],
-                                            where: {
-                                                periodo_id,
-                                            },
+                                            where: { periodo_id },
                                             required: true,
                                         },
                                         {
@@ -236,6 +228,95 @@ export const empresaRepository = {
                             ],
                         },
                     ],
+                },
+            ],
+            order: [["nombre", "ASC"]],
+        });
+    },
+
+    async findPracticantesParaReportePorPeriodo(periodo_id) {
+        return await models.Postulacion.findAll({
+            attributes: ["id", "estado", "candidato_id", "aperturaVacante_id"],
+            include: [
+                {
+                    model: models.AperturaVacante,
+                    attributes: ["id", "vacante_id", "practica_id"],
+                    required: true,
+                    include: [
+                        {
+                            model: models.Practica,
+                            as: "practica",
+                            attributes: ["id", "periodo_id"],
+                            where: { periodo_id },
+                            required: true,
+                        },
+                        {
+                            model: models.Vacante,
+                            attributes: ["id", "nombre", "convenio_id"],
+                            required: true,
+                            include: [
+                                {
+                                    model: models.Convenio,
+                                    attributes: ["id", "empresa_id"],
+                                    required: true,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    model: models.Candidato,
+                    attributes: ["id", "codigo", "usuario_id"],
+                    required: true,
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: [
+                                "id",
+                                "nombres",
+                                "apellidos",
+                                "correo",
+                                "cedula",
+                            ],
+                            required: true,
+                        },
+                        {
+                            model: models.Practicante,
+                            as: "practicante",
+                            attributes: ["id", "candidato_id"],
+                            required: true,
+                            include: [
+                                {
+                                    model: models.PracticaPracticante,
+                                    as: "practicas",
+                                    attributes: ["id", "estado", "practica_id"],
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: models.Practica,
+                                            as: "practica",
+                                            attributes: ["id", "periodo_id"],
+                                            where: { periodo_id },
+                                            required: true,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+    },
+
+    async findAllConConvenios() {
+        return await models.Empresa.findAll({
+            attributes: ["id", "nombre", "nit"],
+            include: [
+                {
+                    model: models.Convenio,
+                    attributes: ["id", "estado", "fecha_inicio", "fecha_fin"],
+                    required: true, // sin convenio no aparece
                 },
             ],
             order: [["nombre", "ASC"]],

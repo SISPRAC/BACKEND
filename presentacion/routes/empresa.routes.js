@@ -7,7 +7,8 @@ import {
     obtenerGruposEmpresaController,
     obtenerDetalleGrupoEmpresaController,
     invitarEmpresaController,
-    obtenerEmpresasParaReportePorPeriodoController
+    obtenerEmpresasParaReportePorPeriodoController,
+    obtenerEmpresasParaSelectController
 } from "../controllers/empresaController.js";
 
 import { uploadImage } from "../middleware/uploadMulter.js";
@@ -36,6 +37,14 @@ router.get(
     "/mi-empresa",
     verifyToken,
     obtenerEmpresaController
+);
+
+// Empresas para los selects (?convenio=activo | todos)
+router.get(
+    "/select",
+    verifyToken,
+    verifyRole(["Director de programa"]),
+    obtenerEmpresasParaSelectController
 );
 
 router.put(
