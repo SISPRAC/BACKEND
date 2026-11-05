@@ -1,76 +1,65 @@
-import { models } from "../database/dbConnection.js";
 
+import { models } from "../database/dbConnection.js";
 
 export const respuestaPreguntaRepository = {
 
-
     async create(data) {
-
         return await models.RespuestaPregunta.create(data);
-
     },
-
 
     async findById(id) {
-
         return await models.RespuestaPregunta.findByPk(id);
-
     },
-
 
     async findAll() {
-
         return await models.RespuestaPregunta.findAll();
-
     },
-
 
     async update(id, data) {
-
         const respuesta = await models.RespuestaPregunta.findByPk(id);
 
-
-        if(!respuesta){
-
+        if (!respuesta) {
             return null;
-
         }
-
 
         return await respuesta.update(data);
-
     },
 
-
     async delete(id) {
-
         const respuesta = await models.RespuestaPregunta.findByPk(id);
 
-
-        if(!respuesta){
-
+        if (!respuesta) {
             return null;
-
         }
-
 
         await respuesta.destroy();
 
-
         return respuesta;
-
     },
-   async countByPregunta(id){
 
-    return await models.RespuestaPregunta.count({
+    async countByPregunta(id) {
+        return await models.RespuestaPregunta.count({
+            where: {
+                pregunta_id: id,
+            },
+        });
+    },
 
-        where:{
-            pregunta_id:id
-        }
+    async findByRespuestaEncuesta(respuesta_encuesta_id) {
+        return await models.RespuestaPregunta.findAll({
+            where: {
+                respuesta_encuesta_id,
+            },
+        });
+    },
 
-    });
-
-}
-
+    async findByRespuestaEncuestaAndPregunta(respuesta_encuesta_id, pregunta_id) {
+        return await models.RespuestaPregunta.findOne({
+            where: {
+                respuesta_encuesta_id,
+                pregunta_id,
+            },
+        });
+    },
 
 };

@@ -1,4 +1,6 @@
 import { models } from "../database/dbConnection.js";
+import { Op } from "sequelize";
+import { Sequelize } from "sequelize";
 
 export const grupoRepository = {
 
@@ -151,11 +153,14 @@ export const grupoRepository = {
                             as: "candidato",
                             attributes: [
                                 "id",
-                                "codigo",
+                                "codigo"
                             ],
                             include: [
 
-                                // Datos personales
+                                // =============================
+                                // DATOS PERSONALES
+                                // =============================
+
                                 {
                                     model: models.User,
                                     attributes: [
@@ -168,7 +173,33 @@ export const grupoRepository = {
                                     ]
                                 },
 
-                                // Postulación
+                                // =============================
+                                // PRACTICANTE Y SUS PRÁCTICAS
+                                // =============================
+
+                                {
+                                    model: models.Practicante,
+                                    as: "practicante",
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.PracticaPracticante,
+                                            as: "practicas",
+                                            required: false,
+                                            attributes: [
+                                                "id",
+                                                "practica_id",
+                                                "practicante_id",
+                                                "estado"
+                                            ]
+                                        }
+                                    ]
+                                },
+
+                                // =============================
+                                // POSTULACIÓN
+                                // =============================
+
                                 {
                                     model: models.Postulacion,
                                     required: false,
@@ -209,12 +240,150 @@ export const grupoRepository = {
         });
     },
 
+    async findByPracticaId(practica_id) {
+        return await models.Grupo.findAll({
+            where: {
+                practica_id
+            },
+            attributes: ["id", "nombre"]
+        });
+    },
+
     async findByNameAndPractica(nombre, practica_id) {
         return await models.Grupo.findOne({
             where: {
                 nombre,
                 practica_id
             }
+        });
+    },
+
+    async findGrupoDocumentosById(id) {
+        return await models.Grupo.findByPk(id, {
+            attributes: ["id", "nombre", "practica_id"],
+            include: [
+                {
+                    model: models.Practica,
+                    as: "practica",
+                    attributes: ["id"],
+                    include: [
+                        {
+                            model: models.PracticaRequisitoDocumento,
+                            as: "requisitosDocumentos",
+                            attributes: ["id"],
+                            where: {
+                                estado: true
+                            },
+                            required: false,
+                            include: [
+                                {
+                                    model: models.TipoRequisitoDocumento,
+                                    as: "tipoRequisitoDocumento",
+                                    attributes: ["id", "nombre"],
+                                    where: {
+                                        nombre: {
+                                            [Op.notIn]: [
+                                                "Plan de Trabajo",
+                                                "Informe Parcial",
+                                                "Informe Final"
+                                            ]
+                                        }
+                                    },
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: models.Rol,
+                                            as: "rol",
+                                            attributes: ["id", "nombre"],
+                                            where: {
+                                                nombre: "Practicante"
+                                            },
+                                            required: true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+    },
+
+    async findPracticantesDocumentosByGrupoId(id) {
+        return await models.GrupoCandidato.findAll({
+            where: {
+                grupo_id: id
+            },
+            attributes: ["id", "grupo_id", "candidato_id"],
+            include: [
+                {
+                    model: models.Candidato,
+                    as: "candidato",
+                    attributes: ["id", "codigo"],
+                    required: true,
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"],
+                            required: true,
+                            include: [
+
+                                {
+                                    model: models.PracticaRequisitoDocumentoSubido,
+                                    as: "documentosRequisitosSubidos",
+                                    attributes: [
+                                        "id",
+                                        "usuario_id",
+                                        "practica_requisito_documento_id",
+                                        "estado"
+                                    ],
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.Archivo,
+                                            as: "archivo",
+                                            required: false
+                                        },
+                                        {
+                                            model: models.PracticaRequisitoDocumento,
+                                            as: "practicaRequisitoDocumento",
+                                            attributes: ["id", "practica_id", "estado"],
+                                            required: false
+                                        }
+                                    ]
+                                }
+
+                            ]
+                        },
+                        {
+                            model: models.Practicante,
+                            as: "practicante",
+                            required: true,
+                            attributes: ["id"],
+                            include: [
+                                {
+                                    model: models.PracticaPracticante,
+                                    as: "practicas",
+                                    required: true,
+                                    attributes: [
+                                        "id",
+                                        "practica_id",
+                                        "practicante_id",
+                                        "estado"
+                                    ],
+                                    where: {
+                                        estado: [
+                                            "En curso",
+                                            "Finalizada"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         });
     },
 
@@ -255,6 +424,48 @@ export const grupoRepository = {
     async update(id, data) {
         return await models.Grupo.update(data, {
             where: { id }
+        });
+    },
+
+    async obtenerGruposParaReportePorPeriodo(periodo_id) {
+        return await models.Grupo.findAll({
+            attributes: ["id", "nombre"],
+            include: [
+                {
+                    model: models.Practica,
+                    as: "practica",
+                    where: { periodo_id },
+                    attributes: ["id", "periodo_id", "estado"],
+                    required: true
+                },
+                {
+                    model: models.TutorDocente,
+                    attributes: ["id", "codigo"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["nombres", "apellidos"]
+                        }
+                    ]
+                },
+                {
+                    model: models.Candidato,
+                    as: "Candidatos",
+                    attributes: ["id", "codigo"],          // <- confirma que "codigo" está en Candidato
+                    through: { attributes: [] },           // no traer columnas de GrupoCandidato
+                    required: false,                       // grupos sin practicantes también salen
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["nombres", "apellidos", "correo"]  // <- confirma "correo"
+                        }
+                    ]
+                }
+            ],
+            order: [
+                ["nombre", "ASC"],
+                [{ model: models.Candidato, as: "Candidatos" }, models.User, "apellidos", "ASC"]
+            ]
         });
     }
 };

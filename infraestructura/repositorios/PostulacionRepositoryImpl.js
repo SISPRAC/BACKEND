@@ -53,82 +53,85 @@ export const postulacionRepository = {
 
     async findByEmpresa(empresaId) {
 
-    return await models.Postulacion.findAll({
+        return await models.Postulacion.findAll({
 
-        include: [
+            include: [
 
-            {
-                model: models.Candidato,
+                {
+                    model: models.Candidato,
 
-                attributes: [
-                    "id",
-                    "codigo",
-                    "hoja_vida_archivo_id"
-                ],
+                    attributes: [
+                        "id",
+                        "codigo",
+                        "hoja_vida_archivo_id"
+                    ],
 
-                include: [
+                    include: [
 
-                    {
-                        model: models.User
-                        // Sin attributes => trae todos los campos de User
-                    },
+                        {
+                            model: models.User
+                            // Sin attributes => trae todos los campos de User
+                        },
 
-                    {
-                        model: models.Archivo,
-                        as: "hojaVida",
+                        {
+                            model: models.Archivo,
+                            as: "hojaVida",
 
-                        attributes: [
-                            "id",
-                            "nombre",
-                            "url",
-                            "public_id",
-                            "resource_type",
-                            "fecha_subida"
-                        ]
-                    }
+                            attributes: [
+                                "id",
+                                "nombre",
+                                "url",
+                                "public_id",
+                                "resource_type",
+                                "fecha_subida"
+                            ]
+                        }
 
-                ]
-            },
+                    ]
+                },
 
-            {
-                model: models.AperturaVacante,
-                required: true,
+                {
+                    model: models.AperturaVacante,
+                    required: true,
 
-                include: [
+                    include: [
 
-                    {
-                        model: models.Vacante,
-                        required: true,
+                        {
+                            model: models.Vacante,
+                            required: true,
 
-                        include: [
+                            include: [
 
-                            {
-                                model: models.Convenio,
-                                required: true,
+                                {
+                                    model: models.Convenio,
+                                    required: true,
 
-                                where: {
-                                    empresa_id: empresaId
+                                    where: {
+                                        empresa_id: empresaId
+                                    }
                                 }
-                            }
 
-                        ]
-                    }
+                            ]
+                        }
 
-                ]
-            }
+                    ]
+                }
 
-        ]
+            ]
 
-    });
-},
+        });
+    },
     async findByIdParaAceptar(id, transaction) {
-
         return await models.Postulacion.findByPk(id, {
             include: [
                 {
                     model: models.Candidato,
-                    attributes: [
-                        "id"
+                    attributes: ["id", "codigo"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos", "correo"]
+                        }
                     ]
                 },
                 {
@@ -145,14 +148,52 @@ export const postulacionRepository = {
                                 "fecha_fin",
                                 "periodo_id"
                             ]
+                        },
+                        {
+                            model: models.Vacante,
+                            include: [
+                                {
+                                    model: models.Convenio,
+                                    include: [
+                                        {
+                                            model: models.Empresa,
+                                            include: [
+                                                {
+                                                    model: models.User,
+                                                    attributes: [
+                                                        "id",
+                                                        "nombres",
+                                                        "apellidos",
+                                                        "correo"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            model: models.TutorEmpresa,
+                            include: [
+                                {
+                                    model: models.User,
+                                    attributes: [
+                                        "id",
+                                        "nombres",
+                                        "apellidos",
+                                        "correo"
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 }
             ],
             transaction
         });
-
     },
+
     async findIdsConPostulacionActiva() {
 
         const postulaciones =
@@ -180,17 +221,6 @@ export const postulacionRepository = {
                 postulacion.candidato_id
         );
     },
-     async findByCandidatoAndApertura(
-        candidatoId,
-        aperturaVacanteId
-    ) {
-        return await models.Postulacion.findOne({
-            where: {
-                candidato_id: candidatoId,
-                aperturaVacante_id: aperturaVacanteId
-            }
-        });
-    },
 
     async findPostulacionActivaByCandidato(candidatoId) {
         return await models.Postulacion.findOne({
@@ -203,13 +233,43 @@ export const postulacionRepository = {
         });
     },
 
-    async countByAperturaVacante(aperturaVacanteId) {
-    return await models.Postulacion.count({
-        where: {
-            aperturaVacante_id: aperturaVacanteId,
-            estado: "ACEPTADO"
-        }
-    });
-}
+    async countByAperturaVacanteAceptado(aperturaVacanteId) {
+        return await models.Postulacion.count({
+            where: {
+                aperturaVacante_id: aperturaVacanteId,
+                estado: "ACEPTADO"
+            }
+        });
+    },
+
+    async findAceptadaByCandidatoYPractica(
+        candidatoId,
+        practicaId
+    ) {
+        return await models.Postulacion.findOne({
+            where: {
+                candidato_id: candidatoId,
+                estado: "ACEPTADO"
+            },
+            include: [
+                {
+                    model: models.AperturaVacante,
+                    where: {
+                        practica_id: practicaId
+                    },
+                    include: [
+                        {
+                            model: models.TutorEmpresa,
+                            include: [
+                                {
+                                    model: models.User
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+    }
 
 };

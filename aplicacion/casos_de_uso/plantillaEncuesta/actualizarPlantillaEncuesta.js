@@ -1,6 +1,5 @@
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
-import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 export const actualizarPlantillaEncuesta = async (
     plantillaEncuestaRepository,

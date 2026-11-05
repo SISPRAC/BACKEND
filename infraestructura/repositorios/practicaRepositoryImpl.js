@@ -8,7 +8,13 @@ export const practicaRepository = {
 
     async findById(id) {
         return await models.Practica.findOne({
-            where: { id }
+            where: { id },
+            include: [
+                {
+                    model: models.Archivo,
+                    as: "archivoArl"
+                }
+            ]
         });
     },
 
@@ -29,6 +35,10 @@ export const practicaRepository = {
                         "fecha_inicio",
                         "fecha_fin"
                     ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "archivoArl"
                 }
             ]
         });
@@ -58,5 +68,43 @@ export const practicaRepository = {
             }
         });
     },
+
+
+    async findRequisitosDocumentosEmpresa(practica_id) {
+        const { Op } = await import("sequelize");
+
+        return await models.PracticaRequisitoDocumento.findAll({
+            where: {
+                practica_id,
+                estado: true,
+            },
+            attributes: ["id", "practica_id", "tipo_requisito_documento_id"],
+            include: [
+                {
+                    model: models.TipoRequisitoDocumento,
+                    as: "tipoRequisitoDocumento",
+                    attributes: ["id", "nombre"],
+                    where: {
+                        nombre: {
+                            [Op.notIn]: ["Convenio"],
+                        },
+                    },
+                    required: true,
+                    include: [
+                        {
+                            model: models.Rol,
+                            as: "rol",
+                            attributes: ["id", "nombre"],
+                            where: {
+                                nombre: "Empresa",
+                            },
+                            required: true,
+                        },
+                    ],
+                },
+            ],
+        });
+    },
+
 
 };

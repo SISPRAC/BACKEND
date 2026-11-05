@@ -8,6 +8,7 @@ import { candidatoRepository } from "../../infraestructura/repositorios/candidat
 import { aperturaVacanteRepository } from "../../infraestructura/repositorios/aperturaVacanteRepositoryImpl.js";
 import { obtenerCandidatosEmpresa } from "../../aplicacion/casos_de_uso/postulacion/obtenerCandidatosEmpresa.js";
 import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 
 import { PracticanteRepository } from "../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js";
@@ -118,7 +119,8 @@ export const aceptarPostulacionController = async (
                 postulacionRepository,
                 PracticanteRepository,
                 practicaPracticanteRepository,
-                aperturaVacanteRepository
+                aperturaVacanteRepository,
+                userRepository
             },
             postulacionId
         );

@@ -2,13 +2,14 @@ import { registerEmpresa } from "../../aplicacion/casos_de_uso/empresa/registrar
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
 import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryImpl.js";
-import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 import { actualizarEmpresa } from "../../aplicacion/casos_de_uso/empresa/actualizarEmpresa.js";
 import { obtenerEmpresa } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresa.js";
 import { obtenerGruposEmpresa } from "../../aplicacion/casos_de_uso/empresa/getMisGruposPractica.js";
 import { obtenerDetalleGrupoEmpresa } from "../../aplicacion/casos_de_uso/empresa/getDetalleGrupoPractica.js";
 import { invitarEmpresa } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarEmpresa.js";
+import { obtenerEmpresasParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresasParaReportePorPeriodo.js";
+import { obtenerEmpresasParaSelect } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresasParaSelect.js";
 
 export const registerEmpresaController = async (req, res) => {
 
@@ -195,6 +196,85 @@ export const invitarEmpresaController = async (req, res) => {
             });
         }
 
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+export const obtenerEmpresasParaReportePorPeriodoController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { periodo_id } = req.params;
+
+        const empresas =
+            await obtenerEmpresasParaReportePorPeriodo(
+                empresaRepository,
+                periodo_id
+            );
+
+        return res.status(200).json({
+            success: true,
+            data: empresas
+        });
+
+    } catch (error) {
+
+        console.log(
+            "Error en obtenerEmpresasParaReportePorPeriodoController:",
+            error
+        );
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+export const obtenerEmpresasParaSelectController = async (
+    req,
+    res
+) => {
+ 
+    try {
+ 
+        // ?convenio=activo | todos  (si no viene, el caso de uso usa "activo")
+        const { convenio } = req.query;
+ 
+        const empresas =
+            await obtenerEmpresasParaSelect(
+                empresaRepository,
+                convenio
+            );
+ 
+        return res.status(200).json({
+            success: true,
+            data: empresas
+        });
+ 
+    } catch (error) {
+ 
+        console.log(
+            "Error en obtenerEmpresasParaSelectController:",
+            error
+        );
+ 
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+ 
         return res.status(500).json({
             message: "Error interno del servidor"
         });

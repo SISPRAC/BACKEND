@@ -1,73 +1,64 @@
 import { models } from "../database/dbConnection.js";
 
-
 export const respuestaEncuestaRepository = {
 
-
-    async create(data){
-
+    async create(data) {
         return await models.RespuestaEncuesta.create(data);
-
     },
 
+    async findByUsuarioPracticaEncuesta(
+        usuario_id,
+        practica_encuesta_id,
+        practicante_id
+    ) {
+        return await models.RespuestaEncuesta.findOne({
+            where: {
+                usuario_id,
+                practica_encuesta_id,
+                practicante_id,
+            },
+        });
+    },
 
-    async findAll(){
-
+    async findByPracticante(practicante_id) {
         return await models.RespuestaEncuesta.findAll({
-
-            include:[
-
+            where: {
+                practicante_id,
+            },
+            include: [
                 {
-                    model: models.RespuestaPregunta
-                }
-
-            ]
-
-        });
-
-    },
-
-
-    async findById(id){
-
-        return await models.RespuestaEncuesta.findByPk(id,{
-
-            include:[
-
+                    model: models.PracticaEncuesta,
+                    as: "practicaEncuesta",
+                },
                 {
-                    model: models.RespuestaPregunta
-                }
-
-            ]
-
+                    model: models.Practicante,
+                    as: "practicante",
+                },
+            ],
         });
-
     },
 
-
-    async delete(id){
-
-        return await models.RespuestaEncuesta.destroy({
-
-            where:{
-                id
-            }
-
+    async findDetalleByPracticanteYEncuesta(
+        practicante_id,
+        practica_encuesta_id
+    ) {
+        const resultado = await models.RespuestaEncuesta.findOne({
+            where: {
+                practicante_id,
+                practica_encuesta_id,
+            },
+            include: [
+                {
+                    model: models.RespuestaPregunta,
+                    include: [
+                        {
+                            model: models.Pregunta,
+                        },
+                    ],
+                },
+            ],
         });
-
+        return resultado;
     },
-     
-    async countByPlantilla(id){
-
-    return await models.RespuestaEncuesta.count({
-
-        where:{
-            practica_encuesta_id:id
-        }
-
-    });
-
-}
-
 
 };

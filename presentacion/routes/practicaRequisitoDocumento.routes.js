@@ -2,41 +2,113 @@ import { Router } from "express";
 
 import {
     createPracticaRequisitoDocumento,
-    updatePracticaRequisitoDocumento,
     deletePracticaRequisitoDocumento,
     findPracticaRequisitoDocumento,
     findPracticaRequisitosDocumento,
     findPracticaRequisitosDocumentoByRol,
-    findPracticaRequisitosDocumentoByPractica
+    findRequisitosPracticanteVigentes,
+    findInformesPracticanteVigentes,
+    findRequisitosEmpresaVigentes,
+    updatePracticaRequisitoDocumento
 } from "../controllers/practicaDocumentoRequisitoController.js";
-import { upload } from "../middleware/uploadMulter.js";
+
+import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyRole } from "../middleware/rolMiddleware.js";
 
 const router = Router();
 
-router.post(
-    "/",
-    upload.single("archivo"),
-    createPracticaRequisitoDocumento
-);
-
-router.put(
-    "/:id",
-    upload.single("archivo"),
-    updatePracticaRequisitoDocumento
-);
-
-router.delete("/:id", deletePracticaRequisitoDocumento);
-
-router.get("/detalle/:id", findPracticaRequisitoDocumento);
-
-router.get(
-    "/practica/:practica_id/rol/:rol_id",
-    findPracticaRequisitosDocumentoByRol
-);
+// ============================================================
+// REQUISITOS DE UNA PRÁCTICA
+// ============================================================
 
 router.get(
     "/practica/:practica_id",
-    findPracticaRequisitosDocumentoByPractica
+    verifyToken,
+    findPracticaRequisitosDocumento
+);
+
+// ============================================================
+// REQUISITOS DE UNA PRÁCTICA POR ROL
+// ============================================================
+
+router.get(
+    "/practica/:practica_id/rol/:rol_id",
+    verifyToken,
+    findPracticaRequisitosDocumentoByRol
+);
+
+// ============================================================
+// REQUISITOS VIGENTES DEL PRACTICANTE
+// ============================================================
+
+router.get(
+    "/practicante/vigentes",
+    verifyToken,
+    findRequisitosPracticanteVigentes
+);
+
+// ============================================================
+// INFORMES VIGENTES DEL PRACTICANTE
+// ============================================================
+
+router.get(
+    "/practicante/informes/vigentes",
+    verifyToken,
+    findInformesPracticanteVigentes
+);
+
+// ============================================================
+// REQUISITOS VIGENTES DE LA EMPRESA
+// ============================================================
+
+router.get(
+    "/empresa/vigentes",
+    verifyToken,
+    verifyRole(["Empresa"]),
+    findRequisitosEmpresaVigentes
+);
+
+// ============================================================
+// CREAR
+// ============================================================
+
+router.post(
+    "/crear",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    createPracticaRequisitoDocumento
+);
+
+// ============================================================
+// ELIMINAR
+// ============================================================
+
+router.delete(
+    "/:id",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    deletePracticaRequisitoDocumento
+);
+
+// ============================================================
+// OBTENER UNO
+// ============================================================
+
+router.get(
+    "/:id",
+    verifyToken,
+    findPracticaRequisitoDocumento
+);
+
+// ============================================================
+// ACTUALIZAR
+// ============================================================
+
+router.put(
+    "/:id",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    updatePracticaRequisitoDocumento
 );
 
 export default router;

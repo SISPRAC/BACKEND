@@ -1,4 +1,3 @@
-
 import express from "express";
 
 import {
@@ -7,17 +6,17 @@ import {
     getCandidatosController,
     getCandidatosDisponiblesController,
     getCandidatosPerfilController,
-    invitarCandidatoController
+    invitarCandidatoController,
+    obtenerCandidatosParaReportePorPeriodoController
 } from "../controllers/candidatoController.js";
 
-import { verifyToken } from "../middleware/authMiddleware.js"; 
+import { verifyToken } from "../middleware/authMiddleware.js";
 import { verifyRole } from "../middleware/rolMiddleware.js";
 import { verifyInvitationToken } from "../middleware/invitationMiddleware.js";
 
 import { upload } from "../middleware/uploadMulter.js";
 
 const router = express.Router();
-
 
 router.post(
     "/registrarCandidato",
@@ -26,13 +25,12 @@ router.post(
     registerCandidatoController
 );
 
-
-router.post("/invitacion",
+router.post(
+    "/invitacion",
     verifyToken,
     verifyRole(["Administrador", "Director de programa"]),
     invitarCandidatoController
 );
-
 
 router.put(
     "/:id",
@@ -40,24 +38,29 @@ router.put(
     updateCandidatoController
 );
 
-
 router.get(
     "/all",
+    verifyToken,
     getCandidatosController
 );
 
-
 router.get(
     "/disponibles",
+    verifyToken,
     getCandidatosDisponiblesController
 );
 
-
 router.get(
     "/perfil/:perfilNombre",
+    verifyToken,
     getCandidatosPerfilController
 );
 
+router.get(
+    "/reporte/periodo/:periodo_id",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    obtenerCandidatosParaReportePorPeriodoController
+);
 
 export default router;
-

@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 export const getCandidatosGrupo = async (
@@ -59,6 +60,34 @@ export const getCandidatosGrupo = async (
                     const empresa =
                         convenio?.Empresa;
 
+                    // ==========================================
+                    // ESTADO INDIVIDUAL DEL PRACTICANTE
+                    // ==========================================
+
+                    const practicante =
+                        candidato?.practicante;
+
+                    const practicaPracticante =
+                        practicante?.practicas?.find(
+                            pp =>
+                                pp.practica_id === grupo.practica_id
+                        );
+
+                    let estado = "Disponible";
+
+                    if (practicaPracticante) {
+
+                        // Prevalece el estado individual
+                        estado = practicaPracticante.estado;
+
+                    } else if (
+                        postulacion?.estado === "POSTULADO"
+                    ) {
+
+                        // Tiene una postulación pendiente
+                        estado = "POSTULADO";
+                    }
+
                     return {
                         id: candidato?.id,
                         codigo: candidato?.codigo,
@@ -67,7 +96,9 @@ export const getCandidatosGrupo = async (
                             `${usuario?.nombres || ""} ${usuario?.apellidos || ""}`.trim(),
 
                         empresa:
-                            empresa?.nombre || null
+                            empresa?.nombre || null,
+
+                        estado
                     };
                 }
             ) || []

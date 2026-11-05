@@ -5,13 +5,16 @@ import {
     getGruposController,
     getGrupoController,
     getCandidatosByGrupoController,
+    getGruposByPracticaIdController,
+    getPracticantesDocumentosByGrupoController,
     EditarGrupoController,
-    deleteGrupoController
+    deleteGrupoController,
+    obtenerGruposParaReportePorPeriodoController
 } from "../controllers/grupoController.js";
 
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
 
 // =============================
 // CREAR GRUPO
@@ -19,9 +22,9 @@ const router = express.Router();
 
 router.post(
     "/crear",
+    verifyToken,
     CrearGrupoController
 );
-
 
 // =============================
 // OBTENER TODOS LOS GRUPOS
@@ -29,9 +32,29 @@ router.post(
 
 router.get(
     "/all",
+    verifyToken,
     getGruposController
 );
 
+// =============================
+// OBTENER GRUPOS POR PRÁCTICA
+// =============================
+
+router.get(
+    "/practica/:practica_id",
+    verifyToken,
+    getGruposByPracticaIdController
+);
+
+// =============================
+// OBTENER GRUPOS PARA REPORTE POR PERIODO
+// =============================
+
+router.get(
+    "/reporte/periodo/:periodo_id",
+    verifyToken,
+    obtenerGruposParaReportePorPeriodoController
+);
 
 // =============================
 // OBTENER CANDIDATOS DEL GRUPO
@@ -39,9 +62,19 @@ router.get(
 
 router.get(
     "/:id/candidatos",
+    verifyToken,
     getCandidatosByGrupoController
 );
 
+// =============================
+// OBTENER DOCUMENTOS DE PRACTICANTES POR GRUPO
+// =============================
+
+router.get(
+    "/:id/documentos-practicantes",
+    verifyToken,
+    getPracticantesDocumentosByGrupoController
+);
 
 // =============================
 // OBTENER UN GRUPO
@@ -49,9 +82,9 @@ router.get(
 
 router.get(
     "/:id",
+    verifyToken,
     getGrupoController
 );
-
 
 // =============================
 // EDITAR GRUPO
@@ -59,9 +92,9 @@ router.get(
 
 router.put(
     "/:id",
+    verifyToken,
     EditarGrupoController
 );
-
 
 // =============================
 // ELIMINAR GRUPO
@@ -69,8 +102,8 @@ router.put(
 
 router.delete(
     "/:id",
+    verifyToken,
     deleteGrupoController
 );
-
 
 export default router;

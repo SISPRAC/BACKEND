@@ -1,6 +1,10 @@
+
 import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+
+const ESTADO_RETIRADO = "Retirado";
+const ESTADO_CANCELADO = "Cancelado";
 
 export const retirarPracticante = async (
     retiroPracticanteRepository,
@@ -11,11 +15,18 @@ export const retirarPracticante = async (
 ) => {
 
     const {
-        fecha_retiro,
         motivo,
         usuario_id,
-        practicante_id
+        practicante_id,
+        esAutoRetiro = false
     } = data;
+
+    const fecha_retiro = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).format(new Date());
 
     // 1. Buscar práctica activa del practicante
     const practicaPracticante =
@@ -40,16 +51,17 @@ export const retirarPracticante = async (
     const uploadResult = await uploadArchivo(
         file.buffer,
         `practicantes/${practicante_id}/retiros`,
-        `retiro_${practicante_id}_${Date.now()}`
+        `retiro_${practicante_id}_${Date.now()}`,
+        file.mimetype
     );
 
     // 4. Guardar información del archivo en la BD
-   const archivo = await archivoRepository.create({
-    nombre: file.originalname,
-    url: uploadResult.url,
-    public_id: uploadResult.public_id,
-    resource_type: uploadResult.resource_type
-});
+    const archivo = await archivoRepository.create({
+        nombre: file.originalname,
+        url: uploadResult.url,
+        public_id: uploadResult.public_id,
+        resource_type: uploadResult.resource_type
+    });
 
     // 5. Crear registro del retiro
     const retiro = await retiroPracticanteRepository.create({
@@ -57,13 +69,14 @@ export const retirarPracticante = async (
         motivo,
         usuario_id,
         practicante_id,
+        practica_practicante_id: practicaPracticante.id,
         archivo_id: archivo.id
     });
 
     // 6. Cambiar estado de la práctica del practicante
     await practicaPracticanteRepository.updateEstado(
         practicaPracticante.id,
-        "Retirado"
+        esAutoRetiro ? ESTADO_CANCELADO : ESTADO_RETIRADO
     );
 
     return retiro;

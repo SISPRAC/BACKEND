@@ -27,10 +27,10 @@ const createVacanteModel = (sequelize) => {
         },
 
         descripcion: {
-            type: DataTypes.STRING,
+            type: DataTypes.STRING(1000),
             allowNull: false
         },
-        
+
         estado: {
             type: DataTypes.ENUM(
                 'DISPONIBLE',

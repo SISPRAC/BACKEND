@@ -1,9 +1,11 @@
 import { DataTypes } from "sequelize";
 
 const createVisitaModel = (sequelize) => {
+
     const Visita = sequelize.define(
         "Visita",
         {
+
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
@@ -15,15 +17,26 @@ const createVisitaModel = (sequelize) => {
                 allowNull: false,
             },
 
+            fecha_visita: {
+                type: DataTypes.DATEONLY,
+                allowNull: false,
+            },
+
+            hora_visita: {
+                type: DataTypes.TIME,
+                allowNull: false,
+            },
+
             fecha_realizada: {
                 type: DataTypes.DATE,
-                allowNull: false,
+                allowNull: true,
             },
 
             descripcion: {
                 type: DataTypes.TEXT,
                 allowNull: true,
             },
+
         },
         {
             tableName: "Visita",
@@ -36,3 +49,4 @@ const createVisitaModel = (sequelize) => {
 };
 
 export default createVisitaModel;
+

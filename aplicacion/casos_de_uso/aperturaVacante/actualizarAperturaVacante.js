@@ -101,10 +101,34 @@ export const actualizarAperturaVacante = async (
 
 
     // ============================================================
+    // VALIDAR TUTOR EMPRESARIAL
+    // ============================================================
+
+    if (
+        data.tutorEmpresa_id !== undefined &&
+        !data.tutorEmpresa_id
+    ) {
+
+        throw new BadRequestError(
+            "Debe seleccionar un tutor empresarial."
+        );
+
+    }
+
+
+    // ============================================================
     // PREPARAR DATOS
     // ============================================================
 
     const datosActualizar = {};
+
+
+    if (data.tutorEmpresa_id !== undefined) {
+
+        datosActualizar.tutorEmpresa_id =
+            Number(data.tutorEmpresa_id);
+
+    }
 
 
     if (data.cupos !== undefined) {
@@ -142,3 +166,4 @@ export const actualizarAperturaVacante = async (
     );
 
 };
+

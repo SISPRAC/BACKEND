@@ -1,3 +1,4 @@
+
 import { DataTypes } from "sequelize";
 
 const createRespuestaEncuestaModel = (sequelize) => {
@@ -21,6 +22,19 @@ const createRespuestaEncuestaModel = (sequelize) => {
                 allowNull: false,
             },
 
+            practicante_id: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+
+                references: {
+                    model: "Practicante",
+                    key: "id",
+                },
+
+                onDelete: "CASCADE",
+                onUpdate: "CASCADE",
+            },
+
             fecha: {
                 type: DataTypes.DATE,
                 allowNull: false,
@@ -30,13 +44,7 @@ const createRespuestaEncuestaModel = (sequelize) => {
         {
             tableName: "RespuestaEncuesta",
             freezeTableName: true,
-            timestamps: false,
-            indexes: [
-                {
-                    unique: true,
-                    fields: ["usuario_id", "practica_encuesta_id"],
-                },
-            ],
+            timestamps: false,         
         }
     );
 

@@ -71,5 +71,34 @@ export const practicaPracticanteRepository = {
             );
 
         return filasActualizadas > 0;
+    },
+
+    async findByIdWithPracticaAndCandidato(id) {
+        return await models.PracticaPracticante.findByPk(
+            id,
+            {
+                include: [
+                    {
+                        model: models.Practica,
+                        as: "practica"
+                    },
+                    {
+                        model: models.Practicante,
+                        as: "practicante",
+                        include: [
+                            {
+                                model: models.Candidato,
+                                as: "candidato",
+                                include: [
+                                    {
+                                        model: models.User
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        );
     }
 };

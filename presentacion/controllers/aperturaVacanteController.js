@@ -45,8 +45,7 @@ export const crearAperturaVacanteController = async (
 
 export const getAperturasVacantesController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {
@@ -81,8 +80,7 @@ export const getAperturasVacantesController = async (
 
 export const getAperturaVacanteByIdController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {
@@ -116,8 +114,7 @@ export const getAperturaVacanteByIdController = async (
 
 export const actualizarAperturaVacanteController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {
@@ -152,8 +149,7 @@ export const actualizarAperturaVacanteController = async (
 
 export const eliminarAperturaVacanteController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {

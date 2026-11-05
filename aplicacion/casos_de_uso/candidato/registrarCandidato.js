@@ -12,27 +12,32 @@ export const registerCandidato = async (
     perfilRepository,
     candidatoPerfilRepository,
     archivoRepository,
+    grupoCandidatoRepository,
     data,
     file
 ) => {
 
+    // correo, codigo y grupo_id los pone el controller desde req.invitacion (token ya verificado)
+    const {
+        correo,
+        codigo,
+        grupo_id,
+        password,
+        telefono,
+        cedula,
+        nombres,
+        apellidos,
+        tipo_documento,
+        perfiles
+    } = data;
+
+    if (!grupo_id) {
+        throw new BadRequestError("La invitación no tiene un grupo asociado");
+    }
+
     const transaction = await sequelize.transaction();
 
     try {
-
-        const {
-            correo,
-            password,
-            telefono,
-            codigo,
-            cedula,
-            nombres,
-            apellidos,
-            tipo_documento,
-            perfiles
-        } = data;
-
-        console.log("Datos recibidos:", data, file);
 
         let perfilesParseados = perfiles;
 
@@ -40,6 +45,7 @@ export const registerCandidato = async (
             try {
                 perfilesParseados = JSON.parse(perfiles);
             } catch (error) {
+                console.log("Error al parsear perfiles:", error);
                 throw new BadRequestError(
                     "El formato de los perfiles no es válido."
                 );
@@ -47,9 +53,7 @@ export const registerCandidato = async (
         }
 
         if (!perfilesParseados || perfilesParseados.length === 0) {
-            throw new BadRequestError(
-                "El perfil es requerido"
-            );
+            throw new BadRequestError("El perfil es requerido");
         }
 
         // 1. Validaciones
@@ -59,22 +63,16 @@ export const registerCandidato = async (
             await candidatoRepository.findByCodigo(codigo);
 
         if (exist) {
-            throw new ConflictError(
-                "Ya existe un usuario con esos datos"
-            );
+            throw new ConflictError("Ya existe un usuario con esos datos");
         }
 
         // 2. Validar y subir hoja de vida
         if (!file) {
-            throw new BadRequestError(
-                "La hoja de vida es requerida"
-            );
+            throw new BadRequestError("La hoja de vida es requerida");
         }
 
         if (file.mimetype !== "application/pdf") {
-            throw new BadRequestError(
-                "La hoja de vida debe ser un archivo PDF"
-            );
+            throw new BadRequestError("La hoja de vida debe ser un archivo PDF");
         }
 
         const uploadResult = await uploadArchivo(
@@ -91,8 +89,7 @@ export const registerCandidato = async (
             }, transaction);
 
         // 3. Hash contraseña
-        const hashedpassword =
-            await bcrypt.hash(password, 10);
+        const hashedpassword = await bcrypt.hash(password, 10);
 
         // 4. Crear usuario
         const user =
@@ -107,24 +104,13 @@ export const registerCandidato = async (
             }, transaction);
 
         // 5. Rol
-        const rol =
-            await rolRepository.findByNombre("Candidato");
+        const rol = await rolRepository.findByNombre("Candidato");
 
         if (!rol) {
-            throw new BadRequestError(
-                "No se encontró el rol Candidato"
-            );
+            throw new BadRequestError("No se encontró el rol Candidato");
         }
 
-        await user.addRole(
-            rol,
-            { transaction }
-        );
-
-        console.log(
-            "Usuario creado con ID:",
-            user.id
-        );
+        await user.addRole(rol, { transaction });
 
         // 6. Crear candidato
         const newCandidato =
@@ -134,18 +120,10 @@ export const registerCandidato = async (
                 usuario_id: user.id
             }, transaction);
 
-        console.log(
-            "Candidato creado con ID:",
-            newCandidato.id
-        );
-
         // 7. Registrar perfiles
         for (const perfil of perfilesParseados) {
 
-            const perfilExist =
-                await perfilRepository.findById(
-                    perfil.perfil_id
-                );
+            const perfilExist = await perfilRepository.findById(perfil.perfil_id);
 
             if (!perfilExist) {
                 throw new BadRequestError(
@@ -160,6 +138,12 @@ export const registerCandidato = async (
             }, transaction);
         }
 
+        // 8. Matricular al candidato en el grupo de la invitación
+        await grupoCandidatoRepository.create({
+            grupo_id,
+            candidato_id: newCandidato.id
+        }, transaction);
+
         await transaction.commit();
 
         return {
@@ -173,4 +157,3 @@ export const registerCandidato = async (
         throw error;
     }
 };
-

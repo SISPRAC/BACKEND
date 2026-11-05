@@ -4,16 +4,24 @@ import { models } from "../database/dbConnection.js";
 export const candidatoRepository = {
 
     async create(data, transaction) {
-        return await models.Candidato.create(data, { transaction });
+        return await models.Candidato.create(data, {
+            transaction
+        });
     },
 
-    async findById(id) {
-        return await models.Candidato.findByPk(id);
+    async findById(id, transaction) {
+        return await models.Candidato.findByPk(
+            id,
+            { transaction }
+        );
     },
 
-    async findByUserId(userId) {
+    async findByUserId(userId, transaction) {
         return await models.Candidato.findOne({
-            where: { usuario_id: userId }
+            where: {
+                usuario_id: userId
+            },
+            transaction
         });
     },
 
@@ -28,7 +36,10 @@ export const candidatoRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
+                    attributes: [
+                        "nombres",
+                        "apellidos"
+                    ]
                 }
             ]
         });
@@ -39,7 +50,10 @@ export const candidatoRepository = {
             include: [
                 {
                     model: models.User,
-                    attributes: ["nombres", "apellidos"]
+                    attributes: [
+                        "nombres",
+                        "apellidos"
+                    ]
                 },
                 {
                     model: models.GrupoCandidato,
@@ -89,7 +103,6 @@ export const candidatoRepository = {
 
                 {
                     model: models.User,
-
                     attributes: [
                         "nombres",
                         "apellidos"
@@ -114,5 +127,140 @@ export const candidatoRepository = {
 
         });
 
-    }
+    },
+
+
+    async findAllParaReportePorPeriodo(periodo_id) {
+        return await models.Candidato.findAll({
+            attributes: [
+                "id",
+                "codigo",
+                "usuario_id"
+            ],
+
+            include: [
+                {
+                    model: models.User,
+                    attributes: [
+                        "id",
+                        "nombres",
+                        "apellidos",
+                        "correo",
+                        "cedula"
+                    ],
+                    required: true
+                },
+
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+                    attributes: ["id", "candidato_id"],
+                    required: false,
+                    include: [
+                        {
+                            model: models.PracticaPracticante,
+                            as: "practicas",
+                            attributes: [
+                                "id",
+                                "estado",
+                                "practicante_id",
+                                "practica_id"
+                            ],
+                            required: false,
+                            include: [
+                                {
+                                    model: models.Practica,
+                                    as: "practica",
+                                    attributes: [
+                                        "id",
+                                        "periodo_id",
+                                        "estado"
+                                    ],
+                                    where: { periodo_id },
+                                    required: true
+                                }
+                            ]
+                        }
+                    ]
+                },
+
+                {
+                    model: models.Postulacion,
+                    attributes: [
+                        "id",
+                        "estado",
+                        "candidato_id",
+                        "aperturaVacante_id"
+                    ],
+                    required: false,
+                    include: [
+                        {
+                            model: models.AperturaVacante,
+                            attributes: [
+                                "id",
+                                "practica_id",
+                                "vacante_id",
+                                "estado"
+                            ],
+                            required: true,
+                            include: [
+                                {
+                                    model: models.Practica,
+                                    as: "practica",
+                                    attributes: [
+                                        "id",
+                                        "periodo_id",
+                                        "fecha_inicio",
+                                        "fecha_fin",
+                                        "estado"
+                                    ],
+                                    where: { periodo_id },
+                                    required: true
+                                },
+                                {
+                                    model: models.Vacante,
+                                    attributes: ["id"],
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: models.Convenio,
+                                            attributes: ["id", "estado"],
+                                            required: true,
+                                            include: [
+                                                {
+                                                    model: models.Empresa,
+                                                    attributes: ["id", "nombre"],
+                                                    required: true
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+
+                {
+                    model: models.GrupoCandidato,
+                    as: "gruposAsignados",
+                    attributes: ["id", "grupo_id"],
+                    required: false,
+                    include: [
+                        {
+                            model: models.Grupo,
+                            as: "grupo",
+                            attributes: ["id", "nombre"],
+                            required: false
+                        }
+                    ]
+                }
+            ],
+
+            distinct: true,
+            order: [["id", "ASC"]]
+        });
+    },
+
+
 };
