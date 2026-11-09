@@ -120,6 +120,7 @@ export const aceptarPostulacionController = async (
                 PracticanteRepository,
                 practicaPracticanteRepository,
                 aperturaVacanteRepository,
+                candidatoRepository,
                 userRepository
             },
             postulacionId

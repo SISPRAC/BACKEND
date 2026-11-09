@@ -54,6 +54,20 @@ const createTipoRequisitoDocumentoModel = (sequelize) => {
                 defaultValue: true
             },
 
+            // NUEVO: true = es requisito del convenio
+            es_requisito_convenio: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
+            },
+
+            // NUEVO: null = aplica a las dos, "publica" o "privada" = solo a esa
+            tipo_empresa: {
+                type: DataTypes.STRING(10),
+                allowNull: true,
+                defaultValue: null
+            },
+
             estado: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,

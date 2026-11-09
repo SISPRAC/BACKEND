@@ -11,6 +11,26 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+const esPlanDeTrabajoNombre = (nombre) =>
+    String(nombre || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .includes("plan de trabajo");
+
+// Fecha de hoy (YYYY-MM-DD) en hora de Colombia, sin el desfase de UTC
+const obtenerHoyColombia = () =>
+    new Date().toLocaleDateString("en-CA", {
+        timeZone: "America/Bogota"
+    });
+
+
 export const crearEntregaInforme = async (
     entregaInformeRepository,
     practicaRequisitoDocumentoRepository,
@@ -19,10 +39,6 @@ export const crearEntregaInforme = async (
     data,
     file
 ) => {
-
-    console.log("crearEntregaInforme - user_id:", user_id);
-    console.log("crearEntregaInforme - data:", data);
-    console.log("crearEntregaInforme - file:", file);
 
     const transaction =
         await sequelize.transaction();
@@ -129,10 +145,7 @@ export const crearEntregaInforme = async (
         // VALIDAR FECHAS DEL REQUISITO
         // ============================================================
 
-        const hoy =
-            new Date()
-                .toISOString()
-                .split("T")[0];
+        const hoy = obtenerHoyColombia();
 
         if (
             practicaRequisitoDocumento.fecha_inicio &&
@@ -152,6 +165,25 @@ export const crearEntregaInforme = async (
 
             throw new BadRequestError(
                 "La fecha límite para realizar la entrega ya ha vencido."
+            );
+
+        }
+
+
+        // ============================================================
+        // VALIDAR OBJETIVO (solo plan de trabajo)
+        // ============================================================
+
+        const esPlanDeTrabajo = esPlanDeTrabajoNombre(
+            practicaRequisitoDocumento.tipoRequisitoDocumento?.nombre
+        );
+
+        const objetivo = String(data.objetivo || "").trim();
+
+        if (esPlanDeTrabajo && !objetivo) {
+
+            throw new BadRequestError(
+                "Debe escribir el objetivo de la práctica."
             );
 
         }
@@ -248,6 +280,21 @@ export const crearEntregaInforme = async (
                 },
                 transaction
             );
+
+
+        // ============================================================
+        // GUARDAR OBJETIVO EN PRACTICA_PRACTICANTE
+        // ============================================================
+
+        if (esPlanDeTrabajo) {
+
+            await entregaInformeRepository.updateObjetivoPracticaPracticante(
+                practicaPracticante.id,
+                objetivo,
+                transaction
+            );
+
+        }
 
 
         // ============================================================

@@ -7,17 +7,48 @@ import { eliminarTipoRequisitoDocumento } from "../../aplicacion/casos_de_uso/ti
 import { getTipoRequisitoDocumento } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getTipoRequisitoDocumento.js";
 import { getTiposRequisitoDocumento } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getTiposRequisitoDocumento.js";
 import { getTiposRequisitoDocumentoByRol } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getTiposRequisitoDocumentoByRol.js";
+import { getRequisitosConvenio } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getRequisitosConvenio.js";
 
 
-export const createTipoRequisitoDocumento = async (req, res) => { 
+const normalizarTipoEmpresa = (valor) =>
+    valor === "publica" || valor === "privada" ? valor : null;
+
+
+// Maneja los errores en un solo lugar y deja el error real en la consola
+const handleError = (error, res) => {
+
+    if (error.statusCode) {
+
+        return res.status(error.statusCode).json({
+            message: error.message
+        });
+
+    }
+
+    console.error("Error en tipoRequisitoDocumentoController:", error);
+
+    return res.status(500).json({
+        message: "Error interno del servidor"
+    });
+
+};
+
+
+export const createTipoRequisitoDocumento = async (req, res) => {
 
     try {
+
+        const data = {
+            ...req.body,
+            es_requisito_convenio: req.body.es_requisito_convenio === "true",
+            tipo_empresa: normalizarTipoEmpresa(req.body.tipo_empresa)
+        };
 
         const tipo =
             await crearTipoRequisitoDocumento(
                 tipoRequisitoDocumentoRepository,
                 archivoRepository,
-                req.body,
+                data,
                 req.file
             );
 
@@ -25,17 +56,7 @@ export const createTipoRequisitoDocumento = async (req, res) => {
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 
@@ -46,12 +67,22 @@ export const updateTipoRequisitoDocumento = async (req, res) => {
 
     try {
 
+        const data = { ...req.body };
+
+        if (req.body.es_requisito_convenio !== undefined) {
+            data.es_requisito_convenio = req.body.es_requisito_convenio === "true";
+        }
+
+        if (req.body.tipo_empresa !== undefined) {
+            data.tipo_empresa = normalizarTipoEmpresa(req.body.tipo_empresa);
+        }
+
         const tipo =
             await actualizarTipoRequisitoDocumento(
                 tipoRequisitoDocumentoRepository,
                 archivoRepository,
                 req.params.id,
-                req.body,
+                data,
                 req.file
             );
 
@@ -59,17 +90,7 @@ export const updateTipoRequisitoDocumento = async (req, res) => {
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 
@@ -94,17 +115,7 @@ export const deleteTipoRequisitoDocumento = async (req, res) => {
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 
@@ -127,17 +138,7 @@ export const findTipoRequisitoDocumento = async (req, res) => {
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 
@@ -148,26 +149,23 @@ export const findTiposRequisitoDocumento = async (req, res) => {
 
     try {
 
+        const { es_requisito_convenio, tipo_empresa } = req.query;
+
         const tipos =
-            await getTiposRequisitoDocumento(
-                tipoRequisitoDocumentoRepository
-            );
+            es_requisito_convenio === "true"
+                ? await getRequisitosConvenio(
+                    tipoRequisitoDocumentoRepository,
+                    normalizarTipoEmpresa(tipo_empresa) ?? undefined
+                )
+                : await getTiposRequisitoDocumento(
+                    tipoRequisitoDocumentoRepository
+                );
 
         return res.json(tipos);
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 
@@ -190,17 +188,7 @@ export const findTiposRequisitoDocumentoByRol = async (req, res) => {
 
     } catch (error) {
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-
-        }
-
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
+        return handleError(error, res);
 
     }
 

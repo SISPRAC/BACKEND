@@ -31,6 +31,12 @@ const createUserModel = (sequelize) => {
             allowNull: false
         },
 
+        google_id: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            unique: true
+        },
+
         tipo_documento: {
             type: DataTypes.ENUM('CC', 'CE', 'PEP', 'PA'),
             allowNull: false

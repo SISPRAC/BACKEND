@@ -1,3 +1,4 @@
+
 import { models } from "../database/dbConnection.js";
 
 export const userRepository = {
@@ -6,7 +7,6 @@ export const userRepository = {
 
         return await models.User.findOne({
             where: { correo },
-
             include: [
                 {
                     model: models.Rol,
@@ -17,11 +17,18 @@ export const userRepository = {
                 },
                 {
                     model: models.Empresa,
-                    attributes: ["id", "nombre"]
+                    attributes: ["id", "nombre", "es_publica"]
                 }
             ]
         });
 
+    },
+
+    updateGoogleId: async (id, google_id) => {
+        return await models.User.update(
+            { google_id },
+            { where: { id } }
+        );
     },
 
     create: async (data, transaction) => {
@@ -86,9 +93,15 @@ export const userRepository = {
         );
     },
 
-    updateRoles: async (userId, roles) => {
+    // ==========================================
+    // ACTUALIZAR ROLES
+    // ==========================================
 
-        const user = await models.User.findByPk(userId);
+    updateRoles: async (userId, roles, transaction = null) => {
+
+        const user = await models.User.findByPk(userId, {
+            transaction
+        });
 
         if (!user) {
             throw {
@@ -97,15 +110,19 @@ export const userRepository = {
             };
         }
 
-        await user.setRoles(roles);
+        await user.setRoles(roles, {
+            transaction
+        });
 
         return await models.User.findByPk(userId, {
+            transaction,
             include: [
                 {
                     model: models.Rol,
                     through: {
                         attributes: []
-                    }
+                    },
+                    attributes: ["id", "nombre"]
                 }
             ]
         });
@@ -139,6 +156,13 @@ export const userRepository = {
                 }
             ]
         });
+    },
+
+    async updatePassword(userId, passwordHash) {
+        return models.User.update(
+            { password: passwordHash },
+            { where: { id: userId } }
+        );
     }
 
 };

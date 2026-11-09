@@ -2,46 +2,55 @@ import { DataTypes } from "sequelize";
 
 const createCandidatoPerfilModel = (sequelize) => {
 
-   const CandidatoPerfil = sequelize.define("Candidato_perfil", {
+    const CandidatoPerfil = sequelize.define("Candidato_perfil", {
 
-      candidato_id: {
-         type: DataTypes.INTEGER,
-         allowNull: false,
-         references: {
-            model: "Candidatos",
-            key: "id"
-         }
-      },
+        candidato_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
 
-      perfil_id: {
-         type: DataTypes.INTEGER,
-         allowNull: false,
-         references: {
-            model: "Perfils",
-            key: "id"
-         }
-      },
+            references: {
+                model: "Candidatos",
+                key: "id"
+            },
 
-      calificacion: {
-         type: DataTypes.INTEGER,
-         allowNull: false,
-         validate: {
-            min: 1,
-            max: 5
-         }
-      }
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE"
+        },
 
-   }, {
-      timestamps: false,
-   indexes: [
-      {
-         unique: true,
-         fields: ["candidato_id", "perfil_id"]
-      }
-   ]
-});
+        perfil_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
 
-   return CandidatoPerfil;
-}
+            references: {
+                model: "Perfils",
+                key: "id"
+            },
+
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE"
+        },
+
+        nivel: {
+            type: DataTypes.STRING(2),
+            allowNull: false,
+
+            validate: {
+                isIn: [["R", "B", "MB"]]
+            }
+        }
+
+    }, {
+        timestamps: false,
+
+        indexes: [
+            {
+                unique: true,
+                fields: ["candidato_id", "perfil_id"]
+            }
+        ]
+    });
+
+    return CandidatoPerfil;
+};
 
 export default createCandidatoPerfilModel;

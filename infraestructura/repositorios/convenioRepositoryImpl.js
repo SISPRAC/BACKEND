@@ -29,7 +29,8 @@ export const convenioRepository = {
                     model: models.Empresa,
                     attributes: [
                         "id",
-                        "nombre"
+                        "nombre",
+                        "es_publica"
                     ]
                 },
 

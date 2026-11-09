@@ -31,21 +31,29 @@ const createEmpresaModel = (sequelize) => {
             allowNull: true
         },
 
-        // NUEVO
         logo_public_id: {
             type: DataTypes.STRING(255),
+            allowNull: true
+        },
+
+        es_publica: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+
+        descripcion_perfil: {
+            type: DataTypes.TEXT,
             allowNull: true
         },
 
         usuario_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-
             references: {
                 model: "Usuarios",
                 key: "id"
             },
-
             onDelete: "CASCADE",
             onUpdate: "CASCADE"
         },

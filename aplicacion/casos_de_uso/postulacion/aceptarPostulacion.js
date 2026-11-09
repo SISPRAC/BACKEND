@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
@@ -10,6 +11,7 @@ export const aceptarPostulacion = async (
         PracticanteRepository,
         practicaPracticanteRepository,
         aperturaVacanteRepository,
+        candidatoRepository,
         userRepository
     },
     postulacionId,
@@ -57,6 +59,23 @@ export const aceptarPostulacion = async (
         const cupos = postulacion.AperturaVacante.cupos;
 
         // ==========================================
+        // BUSCAR CANDIDATO Y SU USUARIO
+        // ==========================================
+
+        const candidato = await candidatoRepository.findById(
+            candidatoId,
+            transaction
+        );
+
+        if (!candidato) {
+            throw new ConflictError(
+                "No se encontró el candidato asociado a la postulación"
+            );
+        }
+
+        const usuarioId = candidato.usuario_id;
+
+        // ==========================================
         // BUSCAR PRACTICANTE
         // ==========================================
 
@@ -95,6 +114,16 @@ export const aceptarPostulacion = async (
                     transaction
                 );
         }
+
+        // ==========================================
+        // CAMBIAR ROL A PRACTICANTE
+        // ==========================================
+
+        await userRepository.updateRoles(
+            usuarioId,
+            ["PRACTICANTE"],
+            transaction
+        );
 
         // ==========================================
         // CREAR RELACIÓN PRÁCTICA-PRACTICANTE

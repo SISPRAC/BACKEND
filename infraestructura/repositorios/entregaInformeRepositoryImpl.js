@@ -423,6 +423,13 @@ export const entregaInformeRepository = {
             ]
 
         });
-    }
+    },
+
+    async updateObjetivoPracticaPracticante(practicaPracticanteId, objetivo, transaction) {
+    return models.PracticaPracticante.update(
+        { objetivo },
+        { where: { id: practicaPracticanteId }, transaction }
+    );
+}
 
 };

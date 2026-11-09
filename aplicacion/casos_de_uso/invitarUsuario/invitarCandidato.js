@@ -25,17 +25,14 @@ export const invitarCandidato = async (
         );
     }
 
-    if (!grupo_id) {
-        throw new BadRequestError(
-            "El grupo es obligatorio"
-        );
+    // El grupo es opcional: si viene, debe existir
+    if (grupo_id) {
+        const grupo = await grupoRepository.findById(grupo_id);
+        if (!grupo) {
+            throw new BadRequestError("El grupo no existe");
+        }
     }
 
-
-    const grupo = await grupoRepository.findById(grupo_id);
-    if (!grupo) {
-        throw new BadRequestError("El grupo no existe");
-    }
 
     const token =
         tokenService.generateInvitationCandidatoToken(

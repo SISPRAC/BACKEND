@@ -1,5 +1,5 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { validarRespuestasEncuesta } from "./validarRespuestasEncuesta.js";
 
 export const responderEncuestaPracticante = async (
     {
@@ -77,33 +77,11 @@ export const responderEncuestaPracticante = async (
         );
     }
 
-    // 7. Validar que todas las preguntas pertenezcan a la encuesta asignada
+    // 7. Validar las respuestas según el tipo de cada pregunta
     const preguntasEncuesta =
         encuestaAsignada.plantilla?.preguntas || [];
 
-    for (const respuesta of respuestas) {
-        if (
-            !respuesta.pregunta_id ||
-            respuesta.respuesta === undefined ||
-            respuesta.respuesta === null ||
-            respuesta.respuesta === ""
-        ) {
-            throw new BadRequestError(
-                "Todas las respuestas deben tener una pregunta y un valor"
-            );
-        }
-
-        const preguntaPertenece = preguntasEncuesta.some(
-            (pregunta) =>
-                Number(pregunta.id) === Number(respuesta.pregunta_id)
-        );
-
-        if (!preguntaPertenece) {
-            throw new BadRequestError(
-                `La pregunta ${respuesta.pregunta_id} no pertenece a esta encuesta`
-            );
-        }
-    }
+    const filas = validarRespuestasEncuesta(preguntasEncuesta, respuestas);
 
     // 8. Crear el registro principal de la respuesta
     const respuestaEncuesta = await respuestaEncuestaRepository.create({
@@ -114,11 +92,11 @@ export const responderEncuestaPracticante = async (
     });
 
     // 9. Guardar las respuestas individuales
-    for (const respuesta of respuestas) {
+    for (const fila of filas) {
         await respuestaPreguntaRepository.create({
             respuesta_encuesta_id: respuestaEncuesta.id,
-            pregunta_id: respuesta.pregunta_id,
-            respuesta: respuesta.respuesta,
+            pregunta_id: fila.pregunta_id,
+            respuesta: fila.respuesta,
         });
     }
 

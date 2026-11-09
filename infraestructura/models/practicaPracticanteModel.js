@@ -30,17 +30,22 @@ const createPracticaPracticanteModel = (sequelize) => {
                 allowNull: false,
                 defaultValue: "En curso",
             },
+
+            objetivo: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
         },
         {
             tableName: "PracticaPracticante",
             freezeTableName: true,
             timestamps: false,
-              indexes: [
-        {
-            unique: true,
-            fields: ["practica_id", "practicante_id"],
-        },
-    ],
+            indexes: [
+                {
+                    unique: true,
+                    fields: ["practica_id", "practicante_id"],
+                },
+            ],
         }
     );
 

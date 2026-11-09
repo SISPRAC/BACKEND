@@ -14,7 +14,6 @@ import createPostulacionModel from "../models/postulacionModel.js";
 import createAperturaVacanteModel from "../models/aperturaVacanteModel.js";
 import createTutorEmpresaModel from "../models/tutorEmpresaModel.js";
 import createConvenioModel from "../models/convenioModel.js";
-import createPerfilVacanteModel from "../models/perfilVacanteModel.js";
 import createArchivoModel from "../models/archivoModel.js";
 import createNotificacionModel from "../models/notificacionModel.js";
 import createHistorialConvenioModel from "../models/historialConvenioModel.js";
@@ -45,6 +44,13 @@ import createSolicitudVisitaPracticanteModel from "../models/SolicitudVisitaPrac
 import createSolicitudVisitaFechaModel from "../models/SolicitudVisitaFechaModel.js";
 import createPracticaRequisitoDocumentoSubidoModel from "../models/practicaRequisitoDocumentoSubidoModel.js";
 
+import createHabilidadBlandaModel from "../models/habilidadBlandaModel.js";
+import createCandidatoHabilidadBlandaModel from "../models/candidatoHabilidadBlandaModel.js";
+import createIdiomaModel from "../models/idiomaModel.js";
+import createCandidatoIdiomaModel from "../models/candidatoIdiomaModel.js";
+import createEmpresaRequisitoDocumentoModel from "../models/EmpresaRequisitoDocumentoModel.js"
+import createPasswordResetTokenModel from "../models/PasswordresettokenModel.js";
+
 
 
 let sequelize;
@@ -61,6 +67,7 @@ export const initDB = async (database, username, contraseña) => {
 
         models.User = createUserModel(sequelize);
         models.Rol = createRolModel(sequelize);
+        models.PasswordResetToken = createPasswordResetTokenModel(sequelize);
 
         models.UserRol = createUserRolModel(sequelize);
         models.TutorDocente = createTutorDocenteModel(sequelize);
@@ -72,13 +79,17 @@ export const initDB = async (database, username, contraseña) => {
         models.GrupoCandidato = createGrupoCandidatoModel(sequelize);
         models.Perfil = createPerfilModel(sequelize);
         models.CandidatoPerfil = createCandidatoPerfilModel(sequelize);
+        models.HabilidadBlanda = createHabilidadBlandaModel(sequelize);
+        models.CandidatoHabilidadBlanda = createCandidatoHabilidadBlandaModel(sequelize);
+        models.Idioma = createIdiomaModel(sequelize);
+        models.CandidatoIdioma = createCandidatoIdiomaModel(sequelize);
         models.HistorialAperturaVacante = createHistorialAperturaVacanteModel(sequelize);
         models.Vacante = createVacanteModel(sequelize);
         models.Postulacion = createPostulacionModel(sequelize);
         models.AperturaVacante = createAperturaVacanteModel(sequelize);
         models.TutorEmpresa = createTutorEmpresaModel(sequelize);
         models.Convenio = createConvenioModel(sequelize);
-        models.PerfilVacante = createPerfilVacanteModel(sequelize);
+
         models.Archivo = createArchivoModel(sequelize);
         models.HistorialConvenio = createHistorialConvenioModel(sequelize);
 
@@ -92,6 +103,7 @@ export const initDB = async (database, username, contraseña) => {
 
         models.TipoRequisitoDocumento = createTipoRequisitoDocumentoModel(sequelize);
         models.EntregaInforme = createEntregaInformeModel(sequelize);
+        models.EmpresaRequisitoDocumento = createEmpresaRequisitoDocumentoModel(sequelize);
 
 
         models.Practica = createPracticaModel(sequelize);
@@ -165,6 +177,21 @@ export const initDB = async (database, username, contraseña) => {
         models.Notificacion.belongsTo(models.User, {
             foreignKey: "usuario_id",
             as: "usuario",
+        });
+
+        // =============================
+        // USUARIO -> TOKENS DE RECUPERACIÓN
+        // =============================
+
+        models.User.hasMany(models.PasswordResetToken, {
+            foreignKey: "user_id",
+            as: "passwordResetTokens",
+            onDelete: "CASCADE"
+        });
+
+        models.PasswordResetToken.belongsTo(models.User, {
+            foreignKey: "user_id",
+            as: "usuario"
         });
 
         models.Candidato.belongsToMany(models.Perfil, {
@@ -326,18 +353,8 @@ export const initDB = async (database, username, contraseña) => {
             foreignKey: "aperturaVacante_id"
         });
 
-        models.Vacante.belongsToMany(models.Perfil, {
-            through: models.PerfilVacante,
-            foreignKey: "vacante_id",
-            otherKey: "perfil_id"
-        });
 
-        models.Perfil.belongsToMany(models.Vacante, {
-            through: models.PerfilVacante,
-            foreignKey: "perfil_id",
-            otherKey: "vacante_id"
-        });
-
+        // Candidato <-> Perfil mediante CandidatoPerfil
         models.Candidato.hasMany(models.CandidatoPerfil, {
             foreignKey: "candidato_id"
         });
@@ -351,6 +368,91 @@ export const initDB = async (database, username, contraseña) => {
         models.CandidatoPerfil.belongsTo(models.Perfil, {
             foreignKey: "perfil_id"
         });
+
+
+        // ==========================================
+        // CANDIDATO <-> HABILIDADES BLANDAS
+        // ==========================================
+
+        // Candidato -> Habilidades blandas asignadas
+        models.Candidato.hasMany(models.CandidatoHabilidadBlanda, {
+            foreignKey: "candidato_id",
+            as: "habilidadesBlandasAsignadas"
+        });
+
+        models.CandidatoHabilidadBlanda.belongsTo(models.Candidato, {
+            foreignKey: "candidato_id",
+            as: "candidato"
+        });
+
+        // HabilidadBlanda -> Candidatos asignados
+        models.HabilidadBlanda.hasMany(models.CandidatoHabilidadBlanda, {
+            foreignKey: "habilidad_blanda_id",
+            as: "candidatosAsignados"
+        });
+
+        models.CandidatoHabilidadBlanda.belongsTo(models.HabilidadBlanda, {
+            foreignKey: "habilidad_blanda_id",
+            as: "habilidadBlanda"
+        });
+
+        // Relación muchos a muchos
+        models.Candidato.belongsToMany(models.HabilidadBlanda, {
+            through: models.CandidatoHabilidadBlanda,
+            foreignKey: "candidato_id",
+            otherKey: "habilidad_blanda_id",
+            as: "habilidadesBlandas"
+        });
+
+        models.HabilidadBlanda.belongsToMany(models.Candidato, {
+            through: models.CandidatoHabilidadBlanda,
+            foreignKey: "habilidad_blanda_id",
+            otherKey: "candidato_id",
+            as: "candidatos"
+        });
+
+
+        // ==========================================
+        // CANDIDATO <-> IDIOMAS
+        // ==========================================
+
+        // Candidato -> Idiomas registrados
+        models.Candidato.hasMany(models.CandidatoIdioma, {
+            foreignKey: "candidato_id",
+            as: "idiomasRegistrados"
+        });
+
+        models.CandidatoIdioma.belongsTo(models.Candidato, {
+            foreignKey: "candidato_id",
+            as: "candidato"
+        });
+
+        // Idioma -> Candidatos asignados
+        models.Idioma.hasMany(models.CandidatoIdioma, {
+            foreignKey: "idioma_id",
+            as: "candidatosAsignados"
+        });
+
+        models.CandidatoIdioma.belongsTo(models.Idioma, {
+            foreignKey: "idioma_id",
+            as: "idioma"
+        });
+
+        // Relación muchos a muchos
+        models.Candidato.belongsToMany(models.Idioma, {
+            through: models.CandidatoIdioma,
+            foreignKey: "candidato_id",
+            otherKey: "idioma_id",
+            as: "idiomas"
+        });
+
+        models.Idioma.belongsToMany(models.Candidato, {
+            through: models.CandidatoIdioma,
+            foreignKey: "idioma_id",
+            otherKey: "candidato_id",
+            as: "candidatos"
+        });
+
 
         models.Convenio.belongsTo(models.Archivo, {
             foreignKey: "archivo_id"
@@ -930,6 +1032,10 @@ export const initDB = async (database, username, contraseña) => {
             foreignKey: "archivo_id",
             as: "archivo",
         });
+
+        models.EmpresaRequisitoDocumento.belongsTo(models.Archivo, { foreignKey: "archivo_id", as: "archivo" });
+        models.EmpresaRequisitoDocumento.belongsTo(models.TipoRequisitoDocumento, { foreignKey: "tipo_requisito_documento_id", as: "tipoRequisitoDocumento" });
+        models.EmpresaRequisitoDocumento.belongsTo(models.Empresa, { foreignKey: "empresa_id", as: "empresa" });
 
        //  await sequelize.sync({ alter: true });
 

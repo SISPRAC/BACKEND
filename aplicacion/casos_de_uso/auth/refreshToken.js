@@ -1,51 +1,45 @@
 import jwt from "jsonwebtoken";
-import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { UnauthorizedError } from "../../../shared/errors/UnauthorizedError.js";
+import { buildPayload } from "./buildAuthSession.js";
 
 export const refreshTokenUseCase = async (
     userRepository,
     candidatoRepository,
-    PracticanteRepository,
+    practicanteRepository,
     token
 ) => {
 
     if (!token) {
-        throw new BadRequestError("NO_TOKEN");
+        throw new UnauthorizedError("NO_TOKEN");
     }
 
-    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            throw new UnauthorizedError("TOKEN_EXPIRADO");
+        }
+        throw new UnauthorizedError("TOKEN_INVALIDO");
+    }
 
     const user = await userRepository.findById(decoded.id);
 
-    if (!user) {
-        throw new BadRequestError("Usuario no encontrado");
+    if (!user || user.estado !== "ACTIVO") {
+        throw new UnauthorizedError("USUARIO_NO_VALIDO");
     }
 
-    let practicante_id = null;
+    const payload = await buildPayload(user, candidatoRepository, practicanteRepository);
 
-    const candidato = await candidatoRepository.findByUserId(user.id);
-
-    if (candidato) {
-        const practicante = await PracticanteRepository.findByCandidatoId(candidato.id);
-
-        if (practicante) {
-            practicante_id = practicante.id;
-        }
-    }
-
-    const newAccessToken = jwt.sign(
-        {
-            id: user.id,
-            roles: user.roles,
-            practicante_id
-        },
+    const accessToken = jwt.sign(
+        payload,
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        {expiresIn: "8h" }
     );
 
-    return {
-        accessToken: newAccessToken,
-        user
-    };
+    const { password: _, ...userSinPassword } = user.toJSON();
+
+    return { accessToken, user: userSinPassword };
 };
 
 export default refreshTokenUseCase;

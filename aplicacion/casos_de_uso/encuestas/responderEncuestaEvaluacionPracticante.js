@@ -1,5 +1,5 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { validarRespuestasEncuesta } from "./validarRespuestasEncuesta.js";
 
 export const responderEncuestaEvaluacionPracticante = async (
     {
@@ -57,7 +57,6 @@ export const responderEncuestaEvaluacionPracticante = async (
     }
 
     // Verificar que la encuesta no haya sido respondida previamente
-
     const respuestaExistente =
         await respuestaEncuestaRepository.findByUsuarioPracticaEncuesta(
             usuario_id,
@@ -71,34 +70,10 @@ export const responderEncuestaEvaluacionPracticante = async (
         );
     }
 
-
-    // Validar las respuestas recibidas
+    // Validar las respuestas según el tipo de cada pregunta
     const preguntasEncuesta = encuestaAsignada.plantilla?.preguntas || [];
 
-    for (const respuesta of respuestas) {
-
-        if (
-            !respuesta.pregunta_id ||
-            respuesta.respuesta === undefined ||
-            respuesta.respuesta === null ||
-            respuesta.respuesta === ""
-        ) {
-            throw new BadRequestError(
-                "Todas las respuestas deben tener una pregunta y un valor"
-            );
-        }
-
-        const preguntaPertenece = preguntasEncuesta.some(
-            (pregunta) =>
-                Number(pregunta.id) === Number(respuesta.pregunta_id)
-        );
-
-        if (!preguntaPertenece) {
-            throw new BadRequestError(
-                `La pregunta ${respuesta.pregunta_id} no pertenece a esta encuesta`
-            );
-        }
-    }
+    const filas = validarRespuestasEncuesta(preguntasEncuesta, respuestas);
 
     // Crear la respuesta general de la encuesta
     const respuestaEncuesta =
@@ -110,11 +85,11 @@ export const responderEncuestaEvaluacionPracticante = async (
         });
 
     // Guardar las respuestas individuales
-    for (const respuesta of respuestas) {
+    for (const fila of filas) {
         await respuestaPreguntaRepository.create({
             respuesta_encuesta_id: respuestaEncuesta.id,
-            pregunta_id: respuesta.pregunta_id,
-            respuesta: respuesta.respuesta,
+            pregunta_id: fila.pregunta_id,
+            respuesta: fila.respuesta,
         });
     }
 

@@ -16,6 +16,12 @@ export const cambiarEstadoConvenio = async (
         );
     }
 
+    if (data.estado === "APROBADO") {
+        throw new BadRequestError(
+            "Para aprobar el convenio debes subir el documento firmado."
+        );
+    }
+
     await convenioRepository.update(id, {
         estado: data.estado
     });

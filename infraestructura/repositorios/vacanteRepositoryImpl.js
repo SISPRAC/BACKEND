@@ -18,12 +18,6 @@ export const vacanteRepository = {
                             model: models.Empresa
                         }
                     ]
-                },
-                {
-                    model: models.Perfil,
-                    through: {
-                        attributes: ["nivel_minimo"]
-                    }
                 }
             ]
         });
@@ -61,12 +55,6 @@ export const vacanteRepository = {
                             model: models.Empresa
                         }
                     ]
-                },
-                {
-                    model: models.Perfil,
-                    through: {
-                        attributes: ["nivel_minimo"]
-                    }
                 },
                 {
                     model: models.AperturaVacante,
@@ -115,14 +103,7 @@ export const vacanteRepository = {
                                     model: models.Empresa
                                 }
                             ]
-                        },
-
-                        {
-                            model: models.Perfil,
-                            through: {
-                                attributes: ["nivel_minimo"]
-                            }
-                        }
+                        },                  
                     ]
                 },
 
@@ -168,14 +149,7 @@ export const vacanteRepository = {
                             include: [
                                 {
                                     model: models.User
-                                },
-
-                                {
-                                    model: models.Perfil,
-                                    through: {
-                                        attributes: ["calificacion"]
-                                    }
-                                }
+                                }                            
                             ]
                         }
                     ]
