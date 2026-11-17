@@ -4,150 +4,200 @@ export const sispracEmpresaInvitationTemplate = ({
 
     return `
     <div style="
-        background-color:#f4f6f9;
-        padding:40px 0;
-        font-family:Arial, sans-serif;
+        background-color:#f3f4f6;
+        padding:40px 15px;
+        font-family:Arial, Helvetica, sans-serif;
     ">
 
         <table
             align="center"
             width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
             style="
-                background:white;
+                width:100%;
+                max-width:600px;
+                background:#ffffff;
                 border-radius:12px;
                 overflow:hidden;
-                box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                box-shadow:0 3px 12px rgba(0,0,0,0.08);
             "
         >
 
             <!-- HEADER -->
             <tr>
                 <td style="
-                    background:#2563eb;
-                    padding:35px;
+                    background:#dc2626;
+                    padding:35px 25px;
                     text-align:center;
-                    color:white;
+                    color:#ffffff;
                 ">
 
                     <h1 style="
                         margin:0;
                         font-size:30px;
+                        font-weight:bold;
+                        letter-spacing:1px;
                     ">
-                        Invitación a SISPRAC
+                        SISPRAC
                     </h1>
 
                     <p style="
-                        margin-top:10px;
+                        margin:10px 0 0;
                         font-size:16px;
+                        color:#ffffff;
                     ">
-                        Sistema de Gestión de Prácticas
+                         Invitación a registrar su empresa
                     </p>
+
 
                 </td>
             </tr>
 
-
             <!-- BODY -->
             <tr>
-                <td style="padding:40px;">
+                <td style="padding:35px 40px;">
 
-                    <h2 style="color:#111827;">
-                        Invitación para registrar su empresa
-                    </h2>
+                    <p style="
+                        color:#374151;
+                        line-height:1.8;
+                        font-size:15px;
+                        margin:0;
+                    ">
+                        Estimado representante empresarial:
+                    </p>
 
                     <p style="
                         color:#4b5563;
-                        line-height:1.7;
-                        font-size:16px;
+                        line-height:1.8;
+                        font-size:15px;
+                        margin-top:15px;
                     ">
-
-                        Estimado representante:
-
-                        <br/><br/>
-
-                        Hemos generado una invitación para que su empresa
-                        pueda registrarse en <strong>SISPRAC</strong>,
-                        una plataforma diseñada para facilitar la gestión,
-                        seguimiento y coordinación de los procesos
+                        La <strong>Universidad Francisco de Paula Santander</strong>,
+                        a través del <strong>Programa de Ingeniería de Sistemas</strong>,
+                        le extiende una invitación para vincular su empresa a
+                        <strong>SISPRAC</strong>, el Sistema de Gestión de Prácticas,
+                        desarrollado para optimizar y facilitar los procesos
                         relacionados con las prácticas profesionales.
-
-                        <br/><br/>
-
-                        A través de SISPRAC, las empresas podrán participar
-                        en la gestión de oportunidades de práctica,
-                        realizar el seguimiento de los procesos de
-                        selección y mantener una comunicación organizada
-                        con la institución y los practicantes.
-
-                        <br/><br/>
-
-                        Para aceptar esta invitación y comenzar el proceso
-                        de registro de su empresa, haga clic en el siguiente
-                        botón:
-
                     </p>
 
+                    <p style="
+                        color:#4b5563;
+                        line-height:1.8;
+                        font-size:15px;
+                    ">
+                        A través de esta plataforma, su empresa podrá participar
+                        en la publicación de oportunidades de práctica, gestionar
+                        procesos de selección, realizar seguimiento a los
+                        practicantes y mantener una comunicación organizada
+                        con la institución.
+                    </p>
 
-                    ${
-                        linkRegistro
-                        ? `
+                    <p style="
+                        color:#4b5563;
+                        line-height:1.8;
+                        font-size:15px;
+                    ">
+                        Para aceptar esta invitación y comenzar el proceso
+                        de registro de su empresa, haga clic en el siguiente botón:
+                    </p>
+
+                    <!-- BUTTON -->
+                    ${linkRegistro
+            ? `
                             <div style="
                                 text-align:center;
-                                margin-top:30px;
+                                margin:30px 0;
                             ">
 
                                 <a
                                     href="${linkRegistro}"
+                                    target="_blank"
                                     style="
-                                        background:#2563eb;
-                                        color:white;
-                                        padding:14px 24px;
+                                        background-color:#dc2626;
+                                        color:#ffffff;
+                                        padding:15px 32px;
                                         text-decoration:none;
                                         border-radius:8px;
                                         display:inline-block;
+                                        font-size:15px;
                                         font-weight:bold;
                                     "
                                 >
-                                    Registrar empresa
+                                    Registrar mi empresa
                                 </a>
 
                             </div>
                         `
-                        : `
+            : `
                             <p style="
                                 color:#dc2626;
                                 text-align:center;
-                                margin-top:20px;
+                                margin:25px 0;
+                                font-size:14px;
                             ">
-                                [Espacio para colocar el enlace de registro]
+                                [Enlace de registro no disponible]
                             </p>
                         `
-                    }
+        }
 
+                    <!-- EXPIRATION NOTICE -->
+                    <table
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="
+                            background:#fef2f2;
+                            border:1px solid #fecaca;
+                            border-radius:8px;
+                        "
+                    >
+                        <tr>
+                            <td style="padding:18px;">
+
+                                <p style="
+                                    margin:0 0 8px;
+                                    color:#991b1b;
+                                    font-size:15px;
+                                    font-weight:bold;
+                                ">
+                                    Vigencia de la invitación
+                                </p>
+
+                                <p style="
+                                    margin:0;
+                                    color:#7f1d1d;
+                                    font-size:14px;
+                                    line-height:1.7;
+                                ">
+                                    Esta invitación tiene una vigencia de
+                                    <strong>3 días (72 horas)</strong> a partir
+                                    de su generación. Una vez transcurrido este
+                                    plazo, el enlace de registro expirará y
+                                    el token dejará de ser válido.
+                                </p>
+
+                            </td>
+                        </tr>
+                    </table>
 
                     <p style="
                         color:#6b7280;
-                        line-height:1.6;
+                        line-height:1.7;
                         font-size:14px;
-                        margin-top:35px;
+                        margin-top:25px;
                     ">
-
-                        Esta invitación le permitirá acceder al formulario
-                        de registro y proporcionar la información necesaria
-                        para vincular su empresa a SISPRAC.
-
-                        <br/><br/>
-
-                        Agradecemos su interés en participar y esperamos
-                        que SISPRAC contribuya a fortalecer la gestión de
-                        las prácticas profesionales y la relación entre
-                        la institución, los practicantes y las empresas.
-
+                        Agradecemos su interés en formar parte de este proceso
+                        de articulación entre la universidad y el sector
+                        empresarial. Esperamos que SISPRAC contribuya a
+                        fortalecer la gestión de las prácticas profesionales
+                        y las oportunidades de formación de nuestros estudiantes.
                     </p>
 
                 </td>
             </tr>
-
 
             <!-- FOOTER -->
             <tr>

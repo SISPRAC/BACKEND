@@ -23,7 +23,7 @@ const createEmpresaRequisitoDocumentoModel = (sequelize) => {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 references: { model: "TipoRequisitoDocumento", key: "id" },
-                onDelete: "CASCADE",
+                onDelete: "RESTRICT",
                 onUpdate: "CASCADE"
             },
 

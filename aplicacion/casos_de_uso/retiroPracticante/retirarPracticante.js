@@ -1,7 +1,14 @@
+import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
-import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
+import {
+    uploadArchivo,
+    deleteArchivo
+} from "../../../infraestructura/external/storageService.js";
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+
+import { notificarRetiroPracticante } from "../notificarEmail/notificarRetiroPracticante.js";
 
 const ESTADO_RETIRADO = "Retirado";
 const ESTADO_CANCELADO = "Cancelado";
@@ -11,7 +18,10 @@ export const retirarPracticante = async (
     practicaPracticanteRepository,
     archivoRepository,
     data,
-    file
+    file,
+    postulacionRepository,
+    userRepository,
+    notificacionRepository
 ) => {
 
     const {
@@ -21,6 +31,13 @@ export const retirarPracticante = async (
         esAutoRetiro = false
     } = data;
 
+    // Validar archivo de soporte antes de abrir la transacción
+    if (!file) {
+        throw new BadRequestError(
+            "El archivo de soporte es requerido."
+        );
+    }
+
     const fecha_retiro = new Intl.DateTimeFormat("en-CA", {
         timeZone: "America/Bogota",
         year: "numeric",
@@ -28,56 +45,115 @@ export const retirarPracticante = async (
         day: "2-digit"
     }).format(new Date());
 
-    // 1. Buscar práctica activa del practicante
-    const practicaPracticante =
-        await practicaPracticanteRepository.findActivaByPracticanteId(
-            practicante_id
+    const transaction = await sequelize.transaction();
+
+    let publicId = null;
+    let retiro = null;
+    let practicaPracticanteId = null;
+
+    try {
+
+        // 1. Buscar práctica activa del practicante
+        const practicaPracticante =
+            await practicaPracticanteRepository.findActivaByPracticanteId(
+                practicante_id,
+                transaction
+            );
+
+        if (!practicaPracticante) {
+            throw new NotFoundError(
+                "El practicante no tiene una práctica activa para retirar."
+            );
+        }
+
+        practicaPracticanteId = practicaPracticante.id;
+
+        // 2. Subir archivo a storage
+        const uploadResult = await uploadArchivo(
+            file.buffer,
+            `practicantes/${practicante_id}/retiros`,
+            `retiro_${practicante_id}_${Date.now()}`,
+            file.mimetype
         );
 
-    if (!practicaPracticante) {
-        throw new NotFoundError(
-            "El practicante no tiene una práctica activa para retirar."
+        publicId = uploadResult.public_id;
+
+        // 3. Guardar información del archivo en la BD
+        const archivo = await archivoRepository.create(
+            {
+                nombre: file.originalname,
+                url: uploadResult.url,
+                public_id: uploadResult.public_id,
+                resource_type: uploadResult.resource_type
+            },
+            transaction
         );
+
+        // 4. Crear registro del retiro
+        retiro = await retiroPracticanteRepository.create(
+            {
+                fecha_retiro,
+                motivo,
+                usuario_id,
+                practicante_id,
+                practica_practicante_id: practicaPracticante.id,
+                archivo_id: archivo.id
+            },
+            transaction
+        );
+
+        // 5. Cambiar estado de la práctica del practicante
+        await practicaPracticanteRepository.updateEstado(
+            practicaPracticante.id,
+            esAutoRetiro ? ESTADO_CANCELADO : ESTADO_RETIRADO,
+            transaction
+        );
+
+        // 6. Confirmar
+        await transaction.commit();
+
+    } catch (error) {
+
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
+
+        // Eliminar el archivo subido si falló la operación
+        if (publicId) {
+            try {
+                await deleteArchivo(publicId);
+            } catch (errorStorage) {
+                console.error(
+                    "No se pudo eliminar el archivo del retiro tras el error:",
+                    errorStorage
+                );
+            }
+        }
+
+        throw error;
     }
 
-    // 2. Validar archivo de soporte
-    if (!file) {
-        throw new BadRequestError(
-            "El archivo de soporte es requerido."
+    // 7. Notificar (fuera de la transacción, no afecta el retiro si falla)
+    try {
+
+        await notificarRetiroPracticante({
+            practicaPracticanteId,
+            usuarioRetiroId: usuario_id,
+            esAutoRetiro,
+            motivo,
+            fechaRetiro: fecha_retiro,
+            practicaPracticanteRepository,
+            postulacionRepository,
+            userRepository,
+            notificacionRepository
+        });
+
+    } catch (errorNotificacion) {
+        console.error(
+            "Error notificando el retiro del practicante:",
+            errorNotificacion
         );
     }
-
-    // 3. Subir archivo a Cloudinary
-    const uploadResult = await uploadArchivo(
-        file.buffer,
-        `practicantes/${practicante_id}/retiros`,
-        `retiro_${practicante_id}_${Date.now()}`,
-        file.mimetype
-    );
-
-    // 4. Guardar información del archivo en la BD
-    const archivo = await archivoRepository.create({
-        nombre: file.originalname,
-        url: uploadResult.url,
-        public_id: uploadResult.public_id,
-        resource_type: uploadResult.resource_type
-    });
-
-    // 5. Crear registro del retiro
-    const retiro = await retiroPracticanteRepository.create({
-        fecha_retiro,
-        motivo,
-        usuario_id,
-        practicante_id,
-        practica_practicante_id: practicaPracticante.id,
-        archivo_id: archivo.id
-    });
-
-    // 6. Cambiar estado de la práctica del practicante
-    await practicaPracticanteRepository.updateEstado(
-        practicaPracticante.id,
-        esAutoRetiro ? ESTADO_CANCELADO : ESTADO_RETIRADO
-    );
 
     return retiro;
 };

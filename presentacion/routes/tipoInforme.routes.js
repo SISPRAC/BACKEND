@@ -35,7 +35,7 @@ router.post(
 
     verifyToken,
 
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
 
     createTipoInforme
 
@@ -48,7 +48,7 @@ router.delete(
 
     verifyToken,
 
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa","Tutor Docente"]),
 
     deleteTipoInforme
 
@@ -72,7 +72,7 @@ router.put(
 
     verifyToken,
 
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
 
     updateTipoInforme
 

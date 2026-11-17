@@ -12,6 +12,17 @@ export const empresaRepository = {
         return await models.Empresa.findByPk(id);
     },
 
+    async findByIdConUsuario(id) {
+        return await models.Empresa.findByPk(id, {
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["id", "nombres", "apellidos", "correo"]
+                }
+            ]
+        });
+    },
+
     async findByUserId(userId) {
 
         return await models.Empresa.findOne({

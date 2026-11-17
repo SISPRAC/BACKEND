@@ -28,7 +28,7 @@ export const getCandidatos = async (candidatoRepository) => {
             }
             : null;
 
-        // Nivel global = el más bajo de las tres habilidades (criterio conservador)
+        // Nivel global = el más bajo de las tres habilidades
         const nivelIngles = detalleIngles
             ? Object.values(detalleIngles)
                 .filter(Boolean)
@@ -41,6 +41,15 @@ export const getCandidatos = async (candidatoRepository) => {
             nombre: `${candidato.Usuario?.nombres ?? ""} ${candidato.Usuario?.apellidos ?? ""}`.trim(),
             correo: candidato.Usuario?.correo ?? "",
             telefono: candidato.Usuario?.telefono ?? "",
+
+            // Hoja de vida
+            hojaVida: candidato.hojaVida
+                ? {
+                    id: candidato.hojaVida.id,
+                    nombre: candidato.hojaVida.nombre,
+                    url: candidato.hojaVida.url,
+                }
+                : null,
 
             perfilTecnico: perfiles[0]?.nombre ?? null,
             nivelPerfilTecnico: perfiles[0]?.nivel ?? null,

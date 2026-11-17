@@ -9,11 +9,19 @@ import {
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
+import { notificarDocumentoConvenioEmpresa } from "../notificarEmail/notificarDocumentoConvenioEmpresa.js";
+
 export const subirDocumentoConvenioEmpresa = async (
     empresaRequisitoDocumentoRepository,
     archivoRepository,
     data,
-    file
+    file,
+    {
+        userRepository,
+        notificacionRepository,
+        empresaRepository,
+        tipoRequisitoDocumentoRepository
+    } = {}
 ) => {
 
     const empresa_id = Number(data.empresa_id);
@@ -34,6 +42,7 @@ export const subirDocumentoConvenioEmpresa = async (
     const transaction = await sequelize.transaction();
 
     let newPublicId = null;
+    let registro = null;
 
     try {
 
@@ -79,7 +88,7 @@ export const subirDocumentoConvenioEmpresa = async (
             transaction
         );
 
-        const registro =
+        registro =
             await empresaRequisitoDocumentoRepository.create(
                 {
                     empresa_id,
@@ -93,8 +102,6 @@ export const subirDocumentoConvenioEmpresa = async (
             );
 
         await transaction.commit();
-
-        return registro;
 
     } catch (error) {
 
@@ -122,5 +129,41 @@ export const subirDocumentoConvenioEmpresa = async (
         );
 
     }
+
+    // Notificar al director (fuera de la transacción).
+    if (userRepository && notificacionRepository) {
+
+        try {
+
+            const empresa = empresaRepository
+                ? await empresaRepository.findById(empresa_id)
+                : null;
+
+            const tipoRequisito = tipoRequisitoDocumentoRepository
+                ? await tipoRequisitoDocumentoRepository.findById(tipo_id)
+                : null;
+
+            await notificarDocumentoConvenioEmpresa({
+                empresa,
+                nombreDocumento:
+                    tipoRequisito?.nombre ?? "Documento de convenio",
+                nombreArchivo: file.originalname,
+                fechaSubida: registro?.fecha_subida,
+                userRepository,
+                notificacionRepository
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Error notificando el documento de la empresa:",
+                error
+            );
+
+        }
+
+    }
+
+    return registro;
 
 };

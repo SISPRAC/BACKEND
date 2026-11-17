@@ -499,4 +499,42 @@ export const practicaRequisitoDocumentoRepository = {
 
     },
 
+
+    existsByTipoRequisitoDocumentoId: async (id, transaction) => {
+        const cantidad = await models.PracticaRequisitoDocumento.count({
+            where: {
+                tipo_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+    },
+
+    async tieneEntregas(id, transaction) {
+
+        const cantidad = await models.EntregaInforme.count({
+            where: {
+                practica_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+
+    },
+
+    async tieneDocumentosSubidos(id, transaction) {
+
+        const cantidad = await models.PracticaRequisitoDocumentoSubido.count({
+            where: {
+                practica_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+
+    },
+
 };

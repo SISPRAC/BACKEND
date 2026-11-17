@@ -70,4 +70,17 @@ export const empresaRequisitoDocumentoRepository = {
 
     },
 
+
+    existsByTipoRequisitoDocumentoId: async (id, transaction) => {
+        const cantidad = await models.EmpresaRequisitoDocumento.count({
+            where: {
+                tipo_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+    },
+
+
 };

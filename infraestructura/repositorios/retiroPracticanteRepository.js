@@ -2,8 +2,8 @@ import { models } from "../database/dbConnection.js";
 
 export const retiroPracticanteRepository = {
 
-    async create(data) {
-        return await models.RetiroPracticante.create(data);
+    async create(data, transaction) {
+        return await models.RetiroPracticante.create(data, { transaction });
     },
 
     async findAll() {
@@ -61,6 +61,7 @@ export const retiroPracticanteRepository = {
                 practicante_id: practicanteId
             },
             order: [["fecha_retiro", "DESC"]]
+
         });
     },
 

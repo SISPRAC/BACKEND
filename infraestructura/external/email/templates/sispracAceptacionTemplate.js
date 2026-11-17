@@ -1,5 +1,4 @@
 
-
 export const sispracAceptacionTemplate = ({
     nombreDestinatario,
     nombrePracticante,
@@ -8,6 +7,8 @@ export const sispracAceptacionTemplate = ({
     nombreEmpresa,
     nombreDirector,
     nombreTutor,
+    correoTutor,
+    telefonoTutor,
     destinatarioTipo
 }) => {
 
@@ -15,21 +16,21 @@ export const sispracAceptacionTemplate = ({
         candidato: {
             titulo: "¡Has sido seleccionado para realizar tus prácticas profesionales!",
             mensaje: `
-        Nos complace informarte que has sido seleccionado(a) para
-        realizar tus prácticas profesionales en
-        <strong>${nombreEmpresa}</strong>, en el marco de la vacante
-        <strong>${nombreVacante}</strong>.
+                Nos complace informarte que has sido seleccionado(a) para
+                realizar tus prácticas profesionales en
+                <strong>${nombreEmpresa}</strong>, en el marco de la vacante
+                <strong>${nombreVacante}</strong>.
 
-        <br/><br/>
+                <br/><br/>
 
-        A partir de este momento, iniciarás tu proceso de prácticas
-        profesionales en SISPRAC. Te deseamos muchos éxitos en esta
-        nueva etapa de formación y experiencia profesional.
+                A partir de este momento, iniciarás tu proceso de prácticas
+                profesionales en SISPRAC. Te deseamos muchos éxitos en esta
+                nueva etapa de formación y experiencia profesional.
 
-        <br/><br/>
+                <br/><br/>
 
-        ¡Felicitaciones por este logro!
-    `
+                ¡Felicitaciones por este logro!
+            `
         },
 
         director: {
@@ -38,8 +39,7 @@ export const sispracAceptacionTemplate = ({
                 Se informa que el candidato(a)
                 <strong>${nombrePracticante}</strong>, identificado(a)
                 con el código <strong>${codigo}</strong>, ha sido
-                seleccionado(a) y su postulación ha sido aceptada
-                para realizar sus prácticas profesionales en
+                seleccionado(a) para realizar sus prácticas profesionales en
                 <strong>${nombreEmpresa}</strong>, en la vacante
                 <strong>${nombreVacante}</strong>.
             `
@@ -48,12 +48,14 @@ export const sispracAceptacionTemplate = ({
         empresa: {
             titulo: "Confirmación de practicante seleccionado",
             mensaje: `
-                Nos complace confirmar que el candidato(a)
+                Nos complace confirmar que el practicante
                 <strong>${nombrePracticante}</strong>, identificado(a)
                 con el código <strong>${codigo}</strong>, ha sido
                 aceptado(a) para ocupar la vacante
                 <strong>${nombreVacante}</strong> en su empresa.
+
                 <br/><br/>
+
                 Con esta aceptación se confirma su selección
                 para continuar con el proceso de prácticas profesionales.
             `
@@ -68,7 +70,9 @@ export const sispracAceptacionTemplate = ({
                 aceptado(a) para realizar sus prácticas profesionales
                 en <strong>${nombreEmpresa}</strong>, en la vacante
                 <strong>${nombreVacante}</strong>.
+
                 <br/><br/>
+
                 Usted ha sido registrado(a) como tutor empresarial
                 para acompañar su proceso de prácticas.
             `
@@ -95,20 +99,20 @@ export const sispracAceptacionTemplate = ({
             <!-- HEADER -->
             <tr>
                 <td style="
-                    background:#2563eb;
+                    background:#dc2626;
                     padding:30px;
                     text-align:center;
                     color:white;
                 ">
 
-                    
                     <h1 style="margin-top:20px;">
-                        Mi SISPRAC
+                        SISPRAC
                     </h1>
 
                     <p style="margin-bottom:0;">
                         Confirmación de aceptación
                     </p>
+
                 </td>
             </tr>
 
@@ -132,7 +136,7 @@ export const sispracAceptacionTemplate = ({
                         ${contenido.mensaje}
                     </p>
 
-                    <!-- INFORMACIÓN DE LA POSTULACIÓN -->
+                    <!-- INFORMACIÓN DE LA PRÁCTICA -->
                     <div style="
                         background:#f9fafb;
                         border:1px solid #e5e7eb;
@@ -148,7 +152,12 @@ export const sispracAceptacionTemplate = ({
                             Información de la práctica
                         </h3>
 
-                        <p style="color:#4b5563;line-height:1.8;">
+                        <p style="
+                            color:#4b5563;
+                            line-height:1.8;
+                            margin-bottom:0;
+                        ">
+
                             <strong>Practicante:</strong>
                             ${nombrePracticante}<br/>
 
@@ -169,6 +178,16 @@ export const sispracAceptacionTemplate = ({
                             ${nombreTutor ? `
                                 <strong>Tutor empresarial:</strong>
                                 ${nombreTutor}<br/>
+                            ` : ""}
+
+                            ${correoTutor ? `
+                                <strong>Correo del tutor:</strong>
+                                ${correoTutor}<br/>
+                            ` : ""}
+
+                            ${telefonoTutor ? `
+                                <strong>Teléfono del tutor:</strong>
+                                ${telefonoTutor}<br/>
                             ` : ""}
 
                         </p>

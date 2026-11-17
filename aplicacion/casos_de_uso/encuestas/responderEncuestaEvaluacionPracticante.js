@@ -1,11 +1,17 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { validarRespuestasEncuesta } from "./validarRespuestasEncuesta.js";
 
+import { notificarEncuestaRespondida } from "../notificarEmail/notificarEncuestaRespondida.js";
+
 export const responderEncuestaEvaluacionPracticante = async (
     {
         plantillaEncuestaRepository,
         respuestaEncuestaRepository,
         respuestaPreguntaRepository,
+        practicaPracticanteRepository,   // NUEVO
+        postulacionRepository,           // NUEVO
+        userRepository,                  // NUEVO
+        notificacionRepository           // NUEVO
     },
     usuario_id,
     practicante_id,
@@ -91,6 +97,27 @@ export const responderEncuestaEvaluacionPracticante = async (
             pregunta_id: fila.pregunta_id,
             respuesta: fila.respuesta,
         });
+    }
+
+    // Notificar al tutor docente (no afecta el resultado si falla)
+    try {
+
+        await notificarEncuestaRespondida({
+            tipo: "EVALUACION",
+            practicaPracticanteId: practicaPracticante.id,
+            usuarioRespondienteId: usuario_id,
+            nombreEncuesta: encuestaAsignada.plantilla?.titulo ?? "Encuesta",
+            practicaPracticanteRepository,
+            postulacionRepository,
+            userRepository,
+            notificacionRepository
+        });
+
+    } catch (errorNotificacion) {
+        console.error(
+            "Error notificando la evaluación del practicante:",
+            errorNotificacion
+        );
     }
 
     return {

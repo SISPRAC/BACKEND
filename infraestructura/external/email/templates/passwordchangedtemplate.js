@@ -25,7 +25,7 @@ export const passwordChangedTemplate = ({
             <!-- HEADER -->
             <tr>
                 <td style="
-                    background:#e8192c;
+                    background:#dc2626;
                     padding:30px;
                     text-align:center;
                     color:white;

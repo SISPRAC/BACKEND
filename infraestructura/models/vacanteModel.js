@@ -21,7 +21,7 @@ const createVacanteModel = (sequelize) => {
         },
 
         nombre: {
-            type: DataTypes.STRING(15),
+            type: DataTypes.STRING(80),
             allowNull: false,
             unique: false
         },

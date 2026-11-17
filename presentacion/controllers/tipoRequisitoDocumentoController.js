@@ -8,8 +8,8 @@ import { getTipoRequisitoDocumento } from "../../aplicacion/casos_de_uso/tipoReq
 import { getTiposRequisitoDocumento } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getTiposRequisitoDocumento.js";
 import { getTiposRequisitoDocumentoByRol } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getTiposRequisitoDocumentoByRol.js";
 import { getRequisitosConvenio } from "../../aplicacion/casos_de_uso/tipoRequisitoDocumento/getRequisitosConvenio.js";
-
-
+import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
+import { empresaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/empresaRequisitoDocumentoRepositoryImpl.js"
 const normalizarTipoEmpresa = (valor) =>
     valor === "publica" || valor === "privada" ? valor : null;
 
@@ -105,6 +105,8 @@ export const deleteTipoRequisitoDocumento = async (req, res) => {
 
         await eliminarTipoRequisitoDocumento(
             tipoRequisitoDocumentoRepository,
+            practicaRequisitoDocumentoRepository,
+            empresaRequisitoDocumentoRepository,
             archivoRepository,
             id
         );

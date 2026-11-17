@@ -11,7 +11,9 @@ import { archivoRepository } from "../../infraestructura/repositorios/archivoRep
 import { historialConvenioRepository } from "../../infraestructura/repositorios/historialConvenioRepositoryImpl.js";
 import { empresaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/empresaRequisitoDocumentoRepositoryImpl.js";
 import { tipoRequisitoDocumentoRepository } from "../../infraestructura/repositorios/tipoRequisitoDocumentoRepositoryImpl.js";
-
+import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js"
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js"
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
 
@@ -110,6 +112,9 @@ export const subirConvenioController = async (req, res) => {
             convenioRepository,
             archivoRepository,
             historialConvenioRepository,
+            empresaRepository,
+            userRepository,
+            notificacionRepository,
             {
                 convenio_id: req.body.convenio_id,
                 modo: req.body.modo,
@@ -143,10 +148,13 @@ export const actualizarEstadoConvenioController = async (req, res) => {
 
     try {
 
+        const { id } = req.params;
         const convenioActualizado = await cambiarEstadoConvenio(
             convenioRepository,
             historialConvenioRepository,
-            req.params.id,
+            empresaRepository,
+            notificacionRepository,
+            id,
             req.body
         );
 
@@ -168,11 +176,15 @@ export const aprobarConvenioController = async (req, res) => {
     try {
 
         const convenioAprobado = await aprobarConvenio(
-            convenioRepository,
-            historialConvenioRepository,
-            archivoRepository,
-            empresaRequisitoDocumentoRepository,
-            tipoRequisitoDocumentoRepository,
+            {
+                convenioRepository,
+                historialConvenioRepository,
+                archivoRepository,
+                empresaRequisitoDocumentoRepository,
+                tipoRequisitoDocumentoRepository,
+                empresaRepository,
+                notificacionRepository
+            },
             req.params.id,
             req.body,
             req.file

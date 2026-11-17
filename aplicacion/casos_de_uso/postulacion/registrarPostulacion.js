@@ -1,12 +1,16 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
+
 import { actualizarEstadoAperturaVacante } from "../aperturaVacante/actualizarEstadoAperturaVacante.js";
+
+import { notificarPostulacionesEmpresa } from "../notificarEmail/notificarPostulacionesEmpresa.js";
 
 export const registrarPostulaciones = async (
     {
         postulacionRepository,
         candidatoRepository,
-        aperturaVacanteRepository
+        aperturaVacanteRepository,
+        notificacionRepository
     },
     aperturaVacanteId,
     candidatosIds
@@ -51,6 +55,9 @@ export const registrarPostulaciones = async (
 
     const postulacionesCreadas = [];
 
+    // Guardaremos los candidatos para construir la notificación.
+    const candidatosPostulados = [];
+
     for (const candidatoId of candidatosIds) {
 
         const candidato =
@@ -64,10 +71,7 @@ export const registrarPostulaciones = async (
             );
         }
 
-        // ============================================================
-        // VALIDAR POSTULACIÓN ACTIVA GLOBAL
-        // ============================================================
-
+        // Validar postulación activa global.
         const postulacionActiva =
             await postulacionRepository
                 .findPostulacionActivaByCandidato(
@@ -80,10 +84,7 @@ export const registrarPostulaciones = async (
             );
         }
 
-        // ============================================================
-        // CREAR POSTULACIÓN
-        // ============================================================
-
+        // Crear postulación.
         const postulacion =
             await postulacionRepository.create({
                 candidato_id: candidatoId,
@@ -92,8 +93,12 @@ export const registrarPostulaciones = async (
             });
 
         postulacionesCreadas.push(postulacion);
+
+        // Guardar candidato con sus datos de usuario.
+        candidatosPostulados.push(candidato);
     }
 
+    // Actualizar estado de la apertura.
     await actualizarEstadoAperturaVacante(
         {
             aperturaVacanteRepository,
@@ -101,6 +106,22 @@ export const registrarPostulaciones = async (
         },
         aperturaVacanteId
     );
+
+    // Notificar a la empresa.
+    try {
+
+        await notificarPostulacionesEmpresa({
+            aperturaVacante,
+            candidatos: candidatosPostulados,
+            notificacionRepository
+        });
+
+    } catch (error) {
+        console.error(
+            "Error notificando nuevas postulaciones a la empresa:",
+            error
+        );
+    }
 
     return postulacionesCreadas;
 };

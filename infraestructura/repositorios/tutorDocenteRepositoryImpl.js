@@ -7,8 +7,14 @@ export const TutorDocenteRepository = {
     },
 
     async findByUserId(userId) {
-        return await models.TutorDocente.findOne({
-            where: { usuario_id: userId }
+        return models.TutorDocente.findOne({
+            where: { usuario_id: userId },
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["id", "nombres", "apellidos", "correo"]
+                }
+            ]
         });
     },
     async findById(id) {
@@ -230,7 +236,27 @@ export const TutorDocenteRepository = {
             where: {
                 practicante_id: practicanteId,
                 practica_id: practicaId
-            }
+            },
+
+            include: [
+                {
+                    model: models.RetiroPracticante,
+                    as: "retiro",
+                    required: false,
+                    include: [
+                        {
+                            model: models.Archivo,
+                            as: "archivoSoporte",
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "certificadoArchivo",
+                    required: false
+                }
+            ]
         });
     }
 

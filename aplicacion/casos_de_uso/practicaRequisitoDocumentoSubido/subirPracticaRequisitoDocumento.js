@@ -1,4 +1,3 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 import {
@@ -6,12 +5,15 @@ import {
     deleteArchivo
 } from "../../../infraestructura/external/storageService.js";
 
+import { notificarPracticaRequisitoDocumentoSubido } from "../notificarEmail/notificarPracticaRequisitoDocumentoSubido.js";
+
 
 export const subirPracticaRequisitoDocumento = async (
     sequelize,
     practicaRequisitoDocumentoSubidoRepository,
     archivoRepository,
-    data
+    data,
+    notificacionRepository
 ) => {
 
     const {
@@ -133,6 +135,7 @@ export const subirPracticaRequisitoDocumento = async (
     const transaction = await sequelize.transaction();
 
     let archivoSubido = null;
+    let documento = null;
 
     try {
 
@@ -167,7 +170,7 @@ export const subirPracticaRequisitoDocumento = async (
         // REGISTRAR DOCUMENTO DEL REQUISITO
         // =====================================================
 
-        const documento =
+        documento =
             await practicaRequisitoDocumentoSubidoRepository.create(
                 {
                     usuario_id,
@@ -187,11 +190,11 @@ export const subirPracticaRequisitoDocumento = async (
 
         await transaction.commit();
 
-        return documento;
-
     } catch (error) {
 
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
 
         // =====================================================
@@ -217,4 +220,31 @@ export const subirPracticaRequisitoDocumento = async (
 
         throw error;
     }
+
+
+    // =========================================================
+    // NOTIFICAR AL TUTOR DOCENTE (FUERA DE LA TRANSACCIÓN)
+    // =========================================================
+
+    try {
+
+        const documentoCompleto =
+            await practicaRequisitoDocumentoSubidoRepository
+                .findByIdParaNotificacion(documento.id);
+
+        await notificarPracticaRequisitoDocumentoSubido({
+            documento: documentoCompleto,
+            practicaRequisitoDocumentoSubidoRepository,
+            notificacionRepository
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error notificando la subida del documento del requisito:",
+            error
+        );
+    }
+
+    return documento;
 };

@@ -10,10 +10,21 @@ export const candidatoRepository = {
     },
 
     async findById(id, transaction) {
-        return await models.Candidato.findByPk(
-            id,
-            { transaction }
-        );
+        return await models.Candidato.findByPk(id, {
+            include: [
+                {
+                    model: models.User,
+                    attributes: [
+                        "id",
+                        "nombres",
+                        "apellidos",
+                        "correo"
+                    ],
+                    required: true
+                }
+            ],
+            transaction
+        });
     },
 
     async findByUserId(userId, transaction) {
@@ -274,11 +285,16 @@ export const candidatoRepository = {
                         {
                             model: models.Rol,
                             attributes: [],
-                            where: { nombre: "Candidato" }, // ajusta al nombre real de la columna/valor
+                            where: { nombre: "Candidato" },
                             through: { attributes: [] },
                             required: true
                         }
                     ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "hojaVida",
+                    required: false
                 },
                 {
                     model: models.Perfil,
@@ -295,7 +311,9 @@ export const candidatoRepository = {
                     model: models.Idioma,
                     as: "idiomas",
                     required: false,
-                    through: { attributes: ["lee", "habla", "escucha"] }
+                    through: {
+                        attributes: ["lee", "habla", "escucha"]
+                    }
                 }
             ],
             order: [["id", "ASC"]]

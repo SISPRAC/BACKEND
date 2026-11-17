@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 const createGrupoModel = (sequelize) => {
     const Grupo = sequelize.define("Grupo", {
         nombre: {
-            type: DataTypes.STRING,
+            type: DataTypes.STRING(80),
             allowNull: false
         },
 

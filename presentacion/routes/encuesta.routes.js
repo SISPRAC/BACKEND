@@ -77,7 +77,7 @@ router.get(
 router.get(
     "/practicante/:practicante_id/respuestas",
     verifyToken,
-    verifyRole(["Director de programa"]),
+    verifyRole(["Director de programa", "Empresa", "Tutor Docente"]),
     obtenerRespuestasEncuestasPracticanteController
 );
 

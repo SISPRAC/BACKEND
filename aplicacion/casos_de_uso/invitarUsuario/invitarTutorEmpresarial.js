@@ -1,7 +1,8 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { sendEmail } from "../../../infraestructura/external/email/mailService.js";
 import { tokenService } from "../../../infraestructura/tokenService.js";
-import { sispracTutorInvitationTemplate } from "../../../infraestructura/external/email/templates/sispracTutorInvitationTemplate.js";
+import { sispracTutorEmpresarialInvitationTemplate } from "../../../infraestructura/external/email/templates/sispracTutorInvitationTemplate.js";
+import { empresaRepository } from "../../../infraestructura/repositorios/empresaRepositoryImpl.js"; 
 
 export const invitarTutorEmpresarial = async ({
     correo,
@@ -9,15 +10,17 @@ export const invitarTutorEmpresarial = async ({
 }) => {
 
     if (!correo) {
-        throw new BadRequestError(
-            "El correo es obligatorio"
-        );
+        throw new BadRequestError("El correo es obligatorio");
     }
 
     if (!empresa_id) {
-        throw new BadRequestError(
-            "La empresa es obligatoria"
-        );
+        throw new BadRequestError("La empresa es obligatoria");
+    }
+
+    const empresa = await empresaRepository.findById(empresa_id);
+
+    if (!empresa) {
+        throw new BadRequestError("La empresa no existe");
     }
 
     const token =
@@ -29,14 +32,14 @@ export const invitarTutorEmpresarial = async ({
     const linkRegistro =
         `${process.env.FRONTEND_URL}/registrarStaff?token=${token}`;
 
-    const html =
-        sispracTutorInvitationTemplate({
-            linkRegistro
-        });
+    const html = sispracTutorEmpresarialInvitationTemplate({
+        linkRegistro,
+        nombreEmpresa: empresa.nombre
+    });
 
     await sendEmail({
         to: correo,
-        subject: "Invitación para registrarse en SISPRAC",
+        subject: `${empresa.nombre} te invita a ser tutor empresarial en SISPRAC`,
         html
     });
 
@@ -44,4 +47,3 @@ export const invitarTutorEmpresarial = async ({
         message: "Invitación enviada correctamente"
     };
 };
-

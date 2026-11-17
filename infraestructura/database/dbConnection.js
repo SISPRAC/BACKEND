@@ -680,6 +680,32 @@ export const initDB = async (database, username, contraseña) => {
             as: "practicante",
         });
 
+        // ==========================================
+        // CERTIFICADO DE FINALIZACIÓN DE PRÁCTICAS
+        // ==========================================
+
+        // Archivo -> PracticaPracticante (certificado)
+        models.Archivo.hasOne(models.PracticaPracticante, {
+            foreignKey: "certificado_archivo_id",
+            as: "practicaPracticanteCertificado",
+        });
+
+        models.PracticaPracticante.belongsTo(models.Archivo, {
+            foreignKey: "certificado_archivo_id",
+            as: "certificadoArchivo",
+        });
+
+        // Usuario -> Certificados subidos
+        models.User.hasMany(models.PracticaPracticante, {
+            foreignKey: "certificado_subido_por",
+            as: "certificadosSubidos",
+        });
+
+        models.PracticaPracticante.belongsTo(models.User, {
+            foreignKey: "certificado_subido_por",
+            as: "usuarioCertificado",
+        });
+
 
         // ==========================================
         // SOLICITUDES DE VISITA
@@ -1037,7 +1063,7 @@ export const initDB = async (database, username, contraseña) => {
         models.EmpresaRequisitoDocumento.belongsTo(models.TipoRequisitoDocumento, { foreignKey: "tipo_requisito_documento_id", as: "tipoRequisitoDocumento" });
         models.EmpresaRequisitoDocumento.belongsTo(models.Empresa, { foreignKey: "empresa_id", as: "empresa" });
 
-       //  await sequelize.sync({ alter: true });
+        //await sequelize.sync({ alter: true });
 
         console.log('DB connected');
     } catch (error) {

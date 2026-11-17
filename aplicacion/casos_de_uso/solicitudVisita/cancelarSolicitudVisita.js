@@ -1,6 +1,8 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
+import { notificarCambioSolicitudVisita } from "../notificarEmail/notificarCambioSolicitudVisita.js";
+
 export const cancelarSolicitudVisita = async (
     {
         solicitudVisitaRepository,
@@ -18,34 +20,17 @@ export const cancelarSolicitudVisita = async (
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener solicitud
-    |--------------------------------------------------------------------------
-    */
+    const motivoLimpio = motivo.trim();
 
+    // Obtener solicitud
     const solicitud =
-        await solicitudVisitaRepository.findByIdWithDetails(
-            solicitudId
-        );
-
-    console.log(
-        "SOLICITUD ENCONTRADA:",
-        solicitud
-    );
+        await solicitudVisitaRepository.findByIdWithDetails(solicitudId);
 
     if (!solicitud) {
-        throw new NotFoundError(
-            "No se encontró la solicitud de visita"
-        );
+        throw new NotFoundError("No se encontró la solicitud de visita");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validar estado
-    |--------------------------------------------------------------------------
-    */
-
+    // Validar estado
     if (
         solicitud.estado !== "Pendiente" &&
         solicitud.estado !== "Aceptada"
@@ -55,12 +40,7 @@ export const cancelarSolicitudVisita = async (
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validar si la visita ya fue realizada
-    |--------------------------------------------------------------------------
-    */
-
+    // Validar si la visita ya fue realizada
     const visitas = Array.isArray(solicitud.visita)
         ? solicitud.visita
         : solicitud.visita
@@ -77,133 +57,39 @@ export const cancelarSolicitudVisita = async (
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener nombre del Tutor Docente
-    |--------------------------------------------------------------------------
-    */
-
-    const usuarioTutorDocente =
-        solicitud.tutorDocente?.Usuario;
-
-    console.log(
-        "USUARIO DEL TUTOR DOCENTE:",
-        usuarioTutorDocente
-    );
+    // Nombre del tutor docente
+    const usuarioTutorDocente = solicitud.tutorDocente?.Usuario;
 
     const nombreTutorDocente =
         usuarioTutorDocente
             ? `${usuarioTutorDocente.nombres} ${usuarioTutorDocente.apellidos}`
             : "El Tutor Docente";
 
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener practicantes de la solicitud
-    |--------------------------------------------------------------------------
-    */
-
+    // Practicantes de la solicitud
     const practicantes =
         await solicitudVisitaRepository
-            .findPracticantesWithDetailsBySolicitudId(
-                solicitudId
-            );
+            .findPracticantesWithDetailsBySolicitudId(solicitudId);
 
-    console.log(
-        "PRACTICANTES DE LA SOLICITUD:",
-        practicantes
-    );
+    const transaction = await sequelize.transaction();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Iniciar transacción
-    |--------------------------------------------------------------------------
-    */
-
-    const transaction =
-        await sequelize.transaction();
+    // Se llena dentro de la transacción y se usa después del commit
+    const tutoresNotificados = new Map();
 
     try {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Cancelar solicitud
-        |--------------------------------------------------------------------------
-        */
-
         await solicitudVisitaRepository.cancelar(
             solicitudId,
-            motivo.trim(),
+            motivoLimpio,
             transaction
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Agrupar practicantes por Tutor Empresarial
-        |--------------------------------------------------------------------------
-        */
-
-        const tutoresNotificados =
-            new Map();
-
+        // Agrupar practicantes por tutor empresarial
         for (const item of practicantes) {
 
-            const practicaPracticante =
-                item.practicaPracticante;
+            const practicaPracticante = item.practicaPracticante;
+            const candidato = practicaPracticante?.practicante?.candidato;
 
-            console.log(
-                "PRACTICA PRACTICANTE:",
-                practicaPracticante
-            );
-
-            if (!practicaPracticante) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ PracticaPracticante"
-                );
-
-                continue;
-            }
-
-            const practicante =
-                practicaPracticante.practicante;
-
-            console.log(
-                "PRACTICANTE:",
-                practicante
-            );
-
-            if (!practicante) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ Practicante"
-                );
-
-                continue;
-            }
-
-            const candidato =
-                practicante.candidato;
-
-            console.log(
-                "CANDIDATO:",
-                candidato
-            );
-
-            if (!candidato) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ Candidato"
-                );
-
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Buscar postulación aceptada
-            |--------------------------------------------------------------------------
-            */
+            if (!candidato) continue;
 
             const postulacion =
                 await postulacionRepository
@@ -213,157 +99,30 @@ export const cancelarSolicitudVisita = async (
                         transaction
                     );
 
-            console.log(
-                "POSTULACION ENCONTRADA:",
-                postulacion
-            );
-
-            if (!postulacion) {
-
-                console.log(
-                    "❌ NO HAY POSTULACION ACEPTADA PARA:",
-                    candidato.id,
-                    practicaPracticante.practica_id
-                );
-
-                continue;
-            }
-
-            console.log(
-                "✅ POSTULACION EXISTE:",
-                postulacion.id
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Obtener Tutor Empresarial
-            |--------------------------------------------------------------------------
-            */
-
-            const tutorEmpresarial =
-                postulacion
-                    .AperturaVacante
-                    ?.TutorEmpresa;
-
-            console.log(
-                "TUTOR EMPRESARIAL:",
-                tutorEmpresarial
-            );
-
             const usuarioTutor =
-                tutorEmpresarial?.Usuario;
+                postulacion?.AperturaVacante?.TutorEmpresa?.Usuario;
 
-            console.log(
-                "USUARIO TUTOR EMPRESARIAL:",
-                usuarioTutor
-            );
+            if (!usuarioTutor) continue;
 
-            if (!usuarioTutor) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ USUARIO DEL TUTOR EMPRESARIAL"
-                );
-
-                continue;
+            if (!tutoresNotificados.has(usuarioTutor.id)) {
+                tutoresNotificados.set(usuarioTutor.id, {
+                    usuarioTutor,
+                    nombresPracticantes: []
+                });
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Crear grupo de notificaciones
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !tutoresNotificados.has(
-                    usuarioTutor.id
-                )
-            ) {
-
-                tutoresNotificados.set(
-                    usuarioTutor.id,
-                    []
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Obtener nombre del practicante
-            |--------------------------------------------------------------------------
-            */
-
-            const usuarioPracticante =
-                candidato.Usuario;
+            const usuarioPracticante = candidato.Usuario;
 
             if (usuarioPracticante) {
-
-                const nombreCompleto =
-                    `${usuarioPracticante.nombres} ${usuarioPracticante.apellidos}`;
-
                 tutoresNotificados
                     .get(usuarioTutor.id)
-                    .push(nombreCompleto);
+                    .nombresPracticantes.push(
+                        `${usuarioPracticante.nombres} ${usuarioPracticante.apellidos}`
+                    );
             }
         }
 
-        console.log(
-            "TUTORES A NOTIFICAR:",
-            tutoresNotificados
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Crear las notificaciones
-        |--------------------------------------------------------------------------
-        */
-
-        for (
-            const [
-                usuarioIdTutor,
-                nombresPracticantes
-            ] of tutoresNotificados
-        ) {
-
-            console.log(
-                "CREANDO NOTIFICACIÓN PARA:",
-                usuarioIdTutor
-            );
-
-            await notificacionRepository.create(
-                {
-                    usuario_id:
-                        usuarioIdTutor,
-
-                    titulo:
-                        "Solicitud de visita cancelada",
-
-                    descripcion:
-                        `El Tutor Docente ${nombreTutorDocente} ha cancelado la solicitud de visita para los practicantes: ${nombresPracticantes.join(", ")}. Motivo: ${motivo.trim()}`,
-
-                    estado:
-                        "SIN_LEER"
-                },
-                transaction
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Confirmar transacción
-        |--------------------------------------------------------------------------
-        */
-
         await transaction.commit();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Retornar solicitud actualizada
-        |--------------------------------------------------------------------------
-        */
-
-        return await solicitudVisitaRepository
-            .findByIdWithDetails(
-                solicitudId
-            );
 
     } catch (error) {
 
@@ -373,4 +132,26 @@ export const cancelarSolicitudVisita = async (
 
         throw error;
     }
+
+    // Notificar (interna + correo), fuera de la transacción
+    try {
+
+        await notificarCambioSolicitudVisita({
+            tipo: "CANCELADA",
+            tutores: [...tutoresNotificados.values()]
+                .filter((t) => t.nombresPracticantes.length > 0),
+            nombreTutorDocente,
+            motivo: motivoLimpio,
+            notificacionRepository
+        });
+
+    } catch (errorNotificacion) {
+
+        console.error(
+            "Error notificando la cancelación de la solicitud de visita:",
+            errorNotificacion
+        );
+    }
+
+    return await solicitudVisitaRepository.findByIdWithDetails(solicitudId);
 };

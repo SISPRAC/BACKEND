@@ -1,3 +1,4 @@
+
 import path from "path";
 
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
@@ -12,12 +13,22 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 import { obtenerRevisionRequisitosEmpresa } from "../empresaRequisitoDocumento/obtenerRevisionRequisitosEmpresa.js";
 
+import { crearNotificacion } from "../notificacion/crearNotificacion.js";
+
+import {
+    notificarConvenioAprobado
+} from "../notificarEmail/notificarConvenioAprobado.js";
+
 export const aprobarConvenio = async (
-    convenioRepository,
-    historialConvenioRepository,
-    archivoRepository,
-    empresaRequisitoDocumentoRepository,
-    tipoRequisitoDocumentoRepository,
+    {
+        convenioRepository,
+        historialConvenioRepository,
+        archivoRepository,
+        empresaRequisitoDocumentoRepository,
+        tipoRequisitoDocumentoRepository,
+        empresaRepository,
+        notificacionRepository
+    },
     id,
     data,
     file
@@ -26,18 +37,33 @@ export const aprobarConvenio = async (
     const comentario = data.comentario?.trim();
     const usuario_id = Number(data.usuario_id);
 
+    // ============================================================
+    // VALIDAR ARCHIVO
+    // ============================================================
+
     if (!file) {
-        throw new BadRequestError("Debes adjuntar el convenio firmado.");
+        throw new BadRequestError(
+            "Debes adjuntar el convenio firmado."
+        );
     }
 
     if (file.mimetype !== "application/pdf") {
-        throw new BadRequestError("El convenio firmado debe ser un PDF.");
+        throw new BadRequestError(
+            "El convenio firmado debe ser un PDF."
+        );
     }
 
+    // ============================================================
+    // VALIDAR USUARIO
+    // ============================================================
 
     if (!usuario_id) {
         throw new BadRequestError("Usuario no válido.");
     }
+
+    // ============================================================
+    // BUSCAR CONVENIO
+    // ============================================================
 
     const convenio = await convenioRepository.findById(id);
 
@@ -51,18 +77,25 @@ export const aprobarConvenio = async (
         );
     }
 
-    // Todos los requisitos obligatorios deben estar aprobados
+    // ============================================================
+    // VALIDAR REQUISITOS OBLIGATORIOS
+    // ============================================================
+
     const revision = await obtenerRevisionRequisitosEmpresa(
         empresaRequisitoDocumentoRepository,
         tipoRequisitoDocumentoRepository,
         convenio.empresa_id
     );
 
-    const obligatorios = revision.filter((r) => r.tipo.obligatorio);
+    const obligatorios = revision.filter(
+        (r) => r.tipo.obligatorio
+    );
 
     const completos =
         obligatorios.length > 0 &&
-        obligatorios.every((r) => r.documento?.estado === "APROBADO");
+        obligatorios.every(
+            (r) => r.documento?.estado === "APROBADO"
+        );
 
     if (!completos) {
         throw new BadRequestError(
@@ -70,9 +103,30 @@ export const aprobarConvenio = async (
         );
     }
 
+    // ============================================================
+    // OBTENER EMPRESA
+    // ============================================================
+
+    const empresa = await empresaRepository.findById(
+        convenio.empresa_id
+    );
+
+    if (!empresa) {
+        throw new NotFoundError(
+            "La empresa asociada al convenio no existe."
+        );
+    }
+
+    const usuarioEmpresa = empresa.Usuario;
+
+    // ============================================================
+    // INICIAR TRANSACCIÓN
+    // ============================================================
+
     const transaction = await sequelize.transaction();
 
     let newPublicId = null;
+    let convenioAprobado = null;
 
     try {
 
@@ -123,7 +177,8 @@ export const aprobarConvenio = async (
 
         await transaction.commit();
 
-        return await convenioRepository.findById(id);
+        // Obtener convenio actualizado
+        convenioAprobado = await convenioRepository.findById(id);
 
     } catch (error) {
 
@@ -155,4 +210,71 @@ export const aprobarConvenio = async (
 
     }
 
+    // ============================================================
+    // DATOS DEL REPRESENTANTE
+    // ============================================================
+
+    const nombreRepresentante = [
+        usuarioEmpresa?.nombres,
+        usuarioEmpresa?.apellidos
+    ].filter(Boolean).join(" ");
+
+    // ============================================================
+    // NOTIFICACIÓN INTERNA
+    // ============================================================
+
+    if (usuarioEmpresa?.id) {
+
+        try {
+
+            await crearNotificacion(
+                { notificacionRepository },
+                {
+                    usuario_id: usuarioEmpresa.id,
+
+                    titulo: "Convenio aprobado",
+
+                    descripcion: `El convenio de tu empresa "${empresa.nombre}" ha sido aprobado por el Programa de Ingeniería de Sistemas. Ya puedes ingresar a SISPRAC para consultar el convenio firmado.`
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "No se pudo crear la notificación interna del convenio aprobado:",
+                error.message
+            );
+
+        }
+    }
+
+    // ============================================================
+    // NOTIFICACIÓN POR CORREO
+    // ============================================================
+
+    if (usuarioEmpresa?.correo) {
+
+        try {
+
+            await notificarConvenioAprobado({
+
+                correo: usuarioEmpresa.correo,
+
+                nombreRepresentante,
+
+                nombreEmpresa: empresa.nombre
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "No se pudo enviar el correo de aprobación del convenio:",
+                error.message
+            );
+
+        }
+    }
+
+    return convenioAprobado;
 };

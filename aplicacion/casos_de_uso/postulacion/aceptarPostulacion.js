@@ -12,7 +12,9 @@ export const aceptarPostulacion = async (
         practicaPracticanteRepository,
         aperturaVacanteRepository,
         candidatoRepository,
-        userRepository
+        userRepository,
+        rolRepository,
+        notificacionRepository
     },
     postulacionId,
 ) => {
@@ -119,12 +121,21 @@ export const aceptarPostulacion = async (
         // CAMBIAR ROL A PRACTICANTE
         // ==========================================
 
-        await userRepository.updateRoles(
-            usuarioId,
-            ["PRACTICANTE"],
-            transaction
+        const rolPracticante = await rolRepository.findByNombre(
+            "Practicante"
         );
 
+        if (!rolPracticante) {
+            throw new ConflictError(
+                "No se encontró el rol Practicante"
+            );
+        }
+
+        await userRepository.updateRoles(
+            usuarioId,
+            [rolPracticante.id],
+            transaction
+        );
         // ==========================================
         // CREAR RELACIÓN PRÁCTICA-PRACTICANTE
         // ==========================================
@@ -210,7 +221,8 @@ export const aceptarPostulacion = async (
 
         await notificarAceptacion({
             postulacion,
-            userRepository
+            userRepository,
+            notificacionRepository
         });
 
     } catch (error) {

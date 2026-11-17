@@ -9,6 +9,8 @@ import { getAperturasVacantes } from "../../aplicacion/casos_de_uso/aperturaVaca
 import { getAperturaVacanteById } from "../../aplicacion/casos_de_uso/aperturaVacante/getAperturaVacanteById.js";
 import { actualizarAperturaVacante } from "../../aplicacion/casos_de_uso/aperturaVacante/actualizarAperturaVacante.js";
 import { eliminarAperturaVacante } from "../../aplicacion/casos_de_uso/aperturaVacante/eliminarAperturaVacante.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js";
+import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
 
 
 export const crearAperturaVacanteController = async (
@@ -19,28 +21,37 @@ export const crearAperturaVacanteController = async (
 
     try {
 
-        const apertura =
-            await crearAperturaVacante(
+        const apertura = await crearAperturaVacante(
+            {
                 aperturaVacanteRepository,
                 vacanteRepository,
                 practicaRepository,
                 tutorEmpresaRepository,
                 convenioRepository,
-                req.body
-            );
-
-
-        return res.status(201).json(
-            apertura
+                empresaRepository,
+                notificacionRepository
+            },
+            req.body
         );
+
+        return res.status(201).json(apertura);
 
     } catch (error) {
 
-        next(error);
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
 
     }
 
 };
+
 
 
 export const getAperturasVacantesController = async (
@@ -64,7 +75,7 @@ export const getAperturasVacantesController = async (
 
         console.log("error", error);
 
-        if (error.statusCode) { 
+        if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
             });
@@ -98,7 +109,7 @@ export const getAperturaVacanteByIdController = async (
 
     } catch (error) {
 
-        if (error.statusCode) { 
+        if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
             });
@@ -110,41 +121,40 @@ export const getAperturaVacanteByIdController = async (
     }
 
 };
+
 
 
 export const actualizarAperturaVacanteController = async (
     req,
-    res
+    res,
+    next
 ) => {
 
     try {
 
-        const apertura =
-            await actualizarAperturaVacante(
+        const apertura = await actualizarAperturaVacante(
+            {
                 aperturaVacanteRepository,
-                req.body,
-                req.params.id
-            );
-
-
-        return res.status(200).json(
-            apertura
+                tutorEmpresaRepository,
+                vacanteRepository,
+                practicaRepository,
+                empresaRepository,
+                notificacionRepository
+            },
+            req.body,
+            req.params.id
         );
+
+        return res.status(200).json(apertura);
 
     } catch (error) {
 
-         if (error.statusCode) { 
-            return res.status(error.statusCode).json({
-                message: error.message
-            });
-        }
+        next(error);
 
-        return res.status(500).json({
-            message: "Error interno del servidor"
-        });
     }
 
 };
+
 
 
 export const eliminarAperturaVacanteController = async (
@@ -155,8 +165,13 @@ export const eliminarAperturaVacanteController = async (
     try {
 
         const resultado =
-            await eliminarAperturaVacante(
+            await eliminarAperturaVacante({
                 aperturaVacanteRepository,
+                tutorEmpresaRepository,
+                vacanteRepository,
+                empresaRepository,
+                notificacionRepository
+            },
                 req.params.id
             );
 
@@ -167,7 +182,7 @@ export const eliminarAperturaVacanteController = async (
 
     } catch (error) {
 
-        if (error.statusCode) { 
+        if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
             });

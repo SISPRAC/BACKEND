@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { registrarHistorialConvenio } from "../historialConvenio/registrarHistorial.js";
@@ -7,12 +8,16 @@ import {
     deleteArchivo
 } from "../../../infraestructura/external/storageService.js";
 
+import { notificarDirectorConvenio } from "../notificarEmail/notificarDirectorConvenio.js";
 
 export const subirConvenio = async (
     sequelize,
     convenioRepository,
     archivoRepository,
     historialConvenioRepository,
+    empresaRepository,
+    userRepository,
+    notificacionRepository,
     data
 ) => {
 
@@ -33,18 +38,15 @@ export const subirConvenio = async (
             carpeta
         } = data;
 
-
         // =========================================================
         // VALIDAR USUARIO
         // =========================================================
 
         if (!usuario_id) {
-
             throw new BadRequestError(
                 "El usuario es obligatorio"
             );
         }
-
 
         // =========================================================
         // VALIDAR MODO
@@ -54,22 +56,13 @@ export const subirConvenio = async (
             modo !== "EDITAR" &&
             modo !== "NUEVO"
         ) {
-
             throw new BadRequestError(
                 "El modo de operación es obligatorio"
             );
         }
 
-
         // =========================================================
         // VALIDAR ARCHIVO
-        //
-        // NUEVO:
-        // El archivo siempre es obligatorio.
-        //
-        // EDITAR:
-        // El archivo es opcional porque se pueden modificar
-        // solamente las fechas.
         // =========================================================
 
         if (modo === "NUEVO") {
@@ -79,13 +72,11 @@ export const subirConvenio = async (
                 !nombreArchivo ||
                 !mimeType
             ) {
-
                 throw new BadRequestError(
                     "El archivo es obligatorio para crear un nuevo convenio"
                 );
             }
         }
-
 
         // =========================================================
         // VALIDAR FECHAS
@@ -96,12 +87,10 @@ export const subirConvenio = async (
             fecha_fin &&
             fecha_fin < fecha_inicio
         ) {
-
             throw new BadRequestError(
                 "La fecha de fin no puede ser anterior a la fecha de inicio"
             );
         }
-
 
         // =========================================================
         // FECHA DE ENVÍO
@@ -118,7 +107,6 @@ export const subirConvenio = async (
                 }
             ).format(new Date());
 
-
         // =========================================================
         // VARIABLES
         // =========================================================
@@ -130,7 +118,6 @@ export const subirConvenio = async (
         let accion = null;
         let comentarioHistorial = null;
 
-
         // =========================================================
         // EDITAR
         // =========================================================
@@ -138,26 +125,21 @@ export const subirConvenio = async (
         if (modo === "EDITAR") {
 
             if (!convenio_id) {
-
                 throw new BadRequestError(
                     "El convenio es obligatorio para editar"
                 );
             }
-
 
             convenioExistente =
                 await convenioRepository.findById(
                     convenio_id
                 );
 
-
             if (!convenioExistente) {
-
                 throw new NotFoundError(
                     "El convenio no existe"
                 );
             }
-
 
             // -----------------------------------------------------
             // NO PERMITIR EDITAR APROBADO
@@ -166,12 +148,10 @@ export const subirConvenio = async (
             if (
                 convenioExistente.estado === "APROBADO"
             ) {
-
                 throw new BadRequestError(
                     "No puedes modificar un convenio aprobado"
                 );
             }
-
 
             // -----------------------------------------------------
             // NO PERMITIR EDITAR VENCIDO
@@ -180,12 +160,10 @@ export const subirConvenio = async (
             if (
                 convenioExistente.estado === "VENCIDO"
             ) {
-
                 throw new BadRequestError(
                     "No puedes modificar un convenio vencido. Debes crear un nuevo convenio"
                 );
             }
-
 
             // -----------------------------------------------------
             // ARCHIVO ANTERIOR
@@ -195,7 +173,6 @@ export const subirConvenio = async (
                 await archivoRepository.findById(
                     convenioExistente.archivo_id
                 );
-
 
             // -----------------------------------------------------
             // SUBIR NUEVO ARCHIVO SOLO SI LLEGÓ
@@ -215,7 +192,6 @@ export const subirConvenio = async (
                         mimeType
                     );
 
-
                 nuevoArchivo =
                     await archivoRepository.create(
                         {
@@ -229,7 +205,6 @@ export const subirConvenio = async (
                         transaction
                     );
             }
-
 
             // -----------------------------------------------------
             // DATOS A ACTUALIZAR
@@ -250,18 +225,15 @@ export const subirConvenio = async (
                 })
             };
 
-
             // -----------------------------------------------------
             // SI HAY NUEVO ARCHIVO,
             // REEMPLAZAR ARCHIVO DEL CONVENIO
             // -----------------------------------------------------
 
             if (nuevoArchivo) {
-
                 datosActualizacion.archivo_id =
                     nuevoArchivo.id;
             }
-
 
             await convenioRepository.update(
                 convenio_id,
@@ -269,22 +241,18 @@ export const subirConvenio = async (
                 transaction
             );
 
-
             convenio =
                 await convenioRepository.findById(
                     convenio_id
                 );
 
-
             accion = "ACTUALIZADO";
-
 
             comentarioHistorial =
                 nuevoArchivo
                     ? "Convenio actualizado, archivo reemplazado y reenviado a revisión"
                     : "Convenio actualizado y reenviado a revisión";
         }
-
 
         // =========================================================
         // CREAR NUEVO CONVENIO
@@ -293,23 +261,19 @@ export const subirConvenio = async (
         if (modo === "NUEVO") {
 
             if (!empresa_id) {
-
                 throw new BadRequestError(
                     "La empresa es obligatoria para crear un nuevo convenio"
                 );
             }
 
-
             if (
                 !fecha_inicio ||
                 !fecha_fin
             ) {
-
                 throw new BadRequestError(
                     "La fecha de inicio y la fecha de fin son obligatorias"
                 );
             }
-
 
             // -----------------------------------------------------
             // BUSCAR EL CONVENIO ACTUAL DE LA EMPRESA
@@ -319,7 +283,6 @@ export const subirConvenio = async (
                 await convenioRepository.findAllByEmpresaId(
                     empresa_id
                 );
-
 
             // -----------------------------------------------------
             // BUSCAR CONVENIO APROBADO
@@ -331,7 +294,6 @@ export const subirConvenio = async (
                         convenio.estado === "APROBADO"
                 );
 
-
             // -----------------------------------------------------
             // SI EXISTE UN CONVENIO APROBADO,
             // VALIDAR LOS 7 DÍAS
@@ -342,17 +304,14 @@ export const subirConvenio = async (
                 const ahora =
                     new Date();
 
-
                 const fechaFin =
                     new Date(
                         `${convenioAprobado.fecha_fin}T00:00:00-05:00`
                     );
 
-
                 const diferenciaMs =
                     fechaFin.getTime() -
                     ahora.getTime();
-
 
                 const diasRestantes =
                     Math.ceil(
@@ -360,20 +319,17 @@ export const subirConvenio = async (
                         (1000 * 60 * 60 * 24)
                     );
 
-
                 // -------------------------------------------------
                 // Si faltan más de 7 días,
                 // todavía no puede crear otro.
                 // -------------------------------------------------
 
                 if (diasRestantes > 7) {
-
                     throw new BadRequestError(
                         `No puedes cargar un nuevo convenio todavía. El convenio actual vence en ${diasRestantes} días`
                     );
                 }
             }
-
 
             // -----------------------------------------------------
             // SUBIR ARCHIVO DEL NUEVO CONVENIO
@@ -387,7 +343,6 @@ export const subirConvenio = async (
                     mimeType
                 );
 
-
             nuevoArchivo =
                 await archivoRepository.create(
                     {
@@ -400,7 +355,6 @@ export const subirConvenio = async (
                     },
                     transaction
                 );
-
 
             // -----------------------------------------------------
             // CREAR NUEVO REGISTRO DE CONVENIO
@@ -428,14 +382,11 @@ export const subirConvenio = async (
                     transaction
                 );
 
-
             accion = "CARGADO";
-
 
             comentarioHistorial =
                 "Nuevo convenio cargado y enviado a revisión";
         }
-
 
         // =========================================================
         // HISTORIAL
@@ -464,13 +415,43 @@ export const subirConvenio = async (
             transaction
         );
 
-
         // =========================================================
         // COMMIT
         // =========================================================
 
         await transaction.commit();
 
+        // =========================================================
+        // NOTIFICAR A LOS DIRECTORES DE PROGRAMA
+        // =========================================================
+
+        try {
+
+            const empresa =
+                await empresaRepository.findById(
+                    convenio.empresa_id
+                );
+
+            if (empresa) {
+
+                await notificarDirectorConvenio({
+                    empresa,
+                    convenio,
+                    accion,
+                    userRepository,
+                    notificacionRepository
+                });
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Error notificando a los directores sobre el convenio:",
+                error
+            );
+
+        }
 
         // =========================================================
         // ELIMINAR ARCHIVO ANTERIOR
@@ -494,7 +475,6 @@ export const subirConvenio = async (
                     archivoAnterior.public_id
                 );
 
-
                 await archivoRepository.delete(
                     archivoAnterior.id
                 );
@@ -508,7 +488,6 @@ export const subirConvenio = async (
             }
         }
 
-
         // =========================================================
         // RESPUESTA
         // =========================================================
@@ -516,7 +495,6 @@ export const subirConvenio = async (
         return await convenioRepository.findById(
             convenio.id
         );
-
 
     } catch (error) {
 

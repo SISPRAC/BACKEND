@@ -75,7 +75,7 @@ router.get(
 router.post(
     "/crear",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
     createPracticaRequisitoDocumento
 );
 
@@ -86,7 +86,7 @@ router.post(
 router.delete(
     "/:id",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
     deletePracticaRequisitoDocumento
 );
 
@@ -107,7 +107,7 @@ router.get(
 router.put(
     "/:id",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
     updatePracticaRequisitoDocumento
 );
 

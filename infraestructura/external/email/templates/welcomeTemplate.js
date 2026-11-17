@@ -29,7 +29,7 @@ export const baseTemplate = ({
             <!-- HEADER -->
             <tr>
                 <td style="
-                    background:#2563eb;
+                   background:#dc2626;
                     padding:30px;
                     text-align:center;
                     color:white;
@@ -49,7 +49,7 @@ export const baseTemplate = ({
 />
 
                     <h1 style="margin-top:20px;">
-                        Mi SISPRAC
+                        SISPRAC
                     </h1>
                 </td>
             </tr>

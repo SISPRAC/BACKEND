@@ -7,7 +7,10 @@ import { visitaRepository } from "../../infraestructura/repositorios/visitaRepos
 import { visitaArchivoRepository } from "../../infraestructura/repositorios/visitaArchivoRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
-
+import {solicitudVisitaRepository} from  "../../infraestructura/repositorios/solicitudVisitaRepositoryImpl.js";
+import {postulacionRepository} from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js";
+import {userRepository} from "../../infraestructura/repositorios/userRepositoryImpl.js";
+import {notificacionRepository} from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
 
@@ -54,7 +57,11 @@ export const actualizarVisitaController = async (req, res) => {
                 descripcion: req.body.descripcion,
                 fotos: fotosProcesadas,
                 acta
-            }
+            },
+            solicitudVisitaRepository,
+            postulacionRepository,
+            userRepository,
+            notificacionRepository
         );
 
         return res.status(200).json({

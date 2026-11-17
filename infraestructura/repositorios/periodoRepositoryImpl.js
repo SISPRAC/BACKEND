@@ -32,10 +32,10 @@ export const periodoRepository = {
         });
     },
     async estaEnUso(id) {
-    return await models.Grupo.count({
-        where: {
-            periodo_id: id
-        }
-    });
-}
+        return await models.Practica.count({
+            where: {
+                periodo_id: id
+            }
+        });
+    }
 };

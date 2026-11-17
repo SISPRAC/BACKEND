@@ -10,14 +10,22 @@ import { getGruposByPracticaId } from "../../aplicacion/casos_de_uso/grupo/getGr
 import { getPracticantesDocumentosByGrupo } from "../../aplicacion/casos_de_uso/grupo/getPracticantesDocumentosByGrupo.js";
 import { practicaRequisitoDocumentoSubidoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoSubidoRepositoryImpl.js";
 import { obtenerGruposParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/grupo/obtenerGruposParaReportePorPeriodo.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
+import { practicaRepository } from "../../infraestructura/repositorios/practicaRepositoryImpl.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js";
 
 export const CrearGrupoController = async (req, res) => {
 
     try {
 
         const result = await crearGrupo(
-            grupoRepository,
-            grupoCandidatoRepository,
+            {
+                grupoRepository,
+                grupoCandidatoRepository,
+                TutorDocenteRepository,
+                practicaRepository,
+                notificacionRepository
+            },
             req.body
         );
 
@@ -184,8 +192,13 @@ export const EditarGrupoController = async (req, res) => {
         const grupoId = req.params.id;
 
         const result = await editarGrupo(
-            grupoRepository,
-            grupoCandidatoRepository,
+            {
+                grupoRepository,
+                grupoCandidatoRepository,
+                TutorDocenteRepository,
+                practicaRepository,
+                notificacionRepository
+            },
             req.body,
             grupoId
         );
@@ -211,14 +224,20 @@ export const deleteGrupoController = async (req, res) => {
     try {
 
         const result = await eliminarGrupo(
-            grupoRepository,
-            grupoCandidatoRepository,
+            {
+                grupoRepository,
+                grupoCandidatoRepository,
+                TutorDocenteRepository,
+                practicaRepository,
+                notificacionRepository
+            },
             req.params.id
         );
 
         res.status(200).json(result);
 
     } catch (error) {
+        console.log("Erro de grupo", error);
 
         if (error.statusCode) {
             return res.status(error.statusCode).json({

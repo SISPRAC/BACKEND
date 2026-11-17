@@ -53,6 +53,10 @@ import { responderEncuestaPracticante }
     from "../../aplicacion/casos_de_uso/encuestas/responderEncuestaPracticante.js";
 
 import { obtenerRespuestasEncuestasPracticante } from "../../aplicacion/casos_de_uso/encuestas/obtenerRespuestasEncuestasPracticante.js";
+import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js"
+import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js"
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js"
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
@@ -443,7 +447,7 @@ export const obtenerEncuestasEvaluacionPracticanteController = async (req, res) 
 
         const encuestas =
             await obtenerEncuestasEvaluacionPracticante(
-                { plantillaEncuestaRepository, respuestaEncuestaRepository},
+                { plantillaEncuestaRepository, respuestaEncuestaRepository },
                 req.params.practicante_id,
                 req.params.rolEvaluador
             );
@@ -532,6 +536,10 @@ export const responderEncuestaEvaluacionPracticanteController = async (req, res)
                     plantillaEncuestaRepository,
                     respuestaEncuestaRepository,
                     respuestaPreguntaRepository,
+                    practicaPracticanteRepository,   // NUEVO
+                    postulacionRepository,           // NUEVO
+                    userRepository,                  // NUEVO
+                    notificacionRepository           // NUEVO
                 },
                 req.user.id,
                 req.body.practicante_id,
@@ -580,6 +588,10 @@ export const responderEncuestaPracticanteController = async (req, res) => {
                     plantillaEncuestaRepository,
                     respuestaEncuestaRepository,
                     respuestaPreguntaRepository,
+                    practicaPracticanteRepository,   // NUEVO
+                    postulacionRepository,           // NUEVO
+                    userRepository,                  // NUEVO
+                    notificacionRepository           // NUEVO
                 },
                 req.user.id,
                 req.body.practica_encuesta_id,

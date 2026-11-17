@@ -26,7 +26,55 @@ export const postulacionRepository = {
             where: {
                 candidato_id: candidatoId,
                 aperturaVacante_id: aperturaVacanteId
-            }
+            },
+            include: [
+                {
+                    model: models.Candidato,
+                    attributes: ["id", "codigo"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: [
+                                "id",
+                                "nombres",
+                                "apellidos",
+                                "correo"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: models.AperturaVacante,
+                    include: [
+                        {
+                            model: models.Vacante,
+                            include: [
+                                {
+                                    model: models.Convenio,
+                                    include: [
+                                        {
+                                            model: models.Empresa,
+                                            attributes: [
+                                                "id",
+                                                "nombre"
+                                            ],
+                                            include: [
+                                                {
+                                                    model: models.User,
+                                                    attributes: [
+                                                        "id",
+                                                        "correo"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         });
     },
 
@@ -47,9 +95,57 @@ export const postulacionRepository = {
         });
     },
 
+
     async findById(id) {
-        return await models.Postulacion.findByPk(id);
+        return await models.Postulacion.findByPk(id, {
+            include: [
+                {
+                    model: models.Candidato,
+                    attributes: [
+                        "id",
+                        "codigo"
+                    ],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: [
+                                "id",
+                                "nombres",
+                                "apellidos",
+                                "correo"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: models.AperturaVacante,
+                    required: true,
+                    include: [
+                        {
+                            model: models.Vacante,
+                            required: true,
+                            include: [
+                                {
+                                    model: models.Convenio,
+                                    required: true,
+                                    include: [
+                                        {
+                                            model: models.Empresa,
+                                            attributes: [
+                                                "id",
+                                                "nombre"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
     },
+
 
     async findByEmpresa(empresaId) {
 
@@ -182,7 +278,8 @@ export const postulacionRepository = {
                                         "id",
                                         "nombres",
                                         "apellidos",
-                                        "correo"
+                                        "correo",
+                                        "telefono"
                                     ]
                                 }
                             ]
@@ -243,33 +340,37 @@ export const postulacionRepository = {
     },
 
     async findAceptadaByCandidatoYPractica(
-        candidatoId,
-        practicaId
-    ) {
-        return await models.Postulacion.findOne({
-            where: {
-                candidato_id: candidatoId,
-                estado: "ACEPTADO"
-            },
-            include: [
-                {
-                    model: models.AperturaVacante,
-                    where: {
-                        practica_id: practicaId
-                    },
-                    include: [
-                        {
-                            model: models.TutorEmpresa,
-                            include: [
-                                {
-                                    model: models.User
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        });
-    }
+    candidatoId,
+    practicaId
+) {
+    return await models.Postulacion.findOne({
+        where: {
+            candidato_id: candidatoId,
+            estado: "ACEPTADO"
+        },
+        include: [
+            {
+                model: models.AperturaVacante,
+                where: {
+                    practica_id: practicaId
+                },
+                include: [
+                    {
+                        model: models.TutorEmpresa,
+                        include: [
+                            {
+                                model: models.User
+                            },
+                            {
+                                model: models.Empresa,
+                                attributes: ["id", "nombre","usuario_id" ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    });
+}
 
 };

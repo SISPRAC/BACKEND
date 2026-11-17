@@ -6,14 +6,22 @@ import {
     deleteArchivo
 } from "../../../infraestructura/external/storageService.js";
 
+// NUEVO
+import { notificarVisitaRealizada } from "../notificarEmail/notificarVisitaRealizada.js";
+import { obtenerTutoresEmpresarialesSolicitudVisita } from "../notificarEmail/obtenerTutoresEmpresarialesSolicitudVisita.js";
+
 
 export const actualizarVisita = async (
     sequelize,
     visitaRepository,
     visitaArchivoRepository,
     archivoRepository,
-    tutorDocenteRepository,
-    data
+    TutorDocenteRepository,
+    data,
+    solicitudVisitaRepository,   // NUEVO
+    postulacionRepository,       // NUEVO
+    userRepository,              // NUEVO
+    notificacionRepository       // NUEVO
 ) => {
 
     const transaction =
@@ -23,6 +31,13 @@ export const actualizarVisita = async (
     // Archivos físicos que deben eliminarse
     // solamente después del commit.
     const archivosParaEliminar = [];
+
+
+    // NUEVO: datos para la notificación (se llenan dentro del try)
+    let nombreTutorDocente = "El tutor docente";
+    let esActualizacion = false;
+    let solicitudId = null;
+    const fechaRealizada = new Date();
 
 
     try {
@@ -42,26 +57,20 @@ export const actualizarVisita = async (
         // =========================================================
 
         if (!visita_id) {
-
             throw new BadRequestError(
                 "La visita es obligatoria"
             );
-
         }
-
 
         const visita =
             await visitaRepository.findByIdWithSolicitud(
                 visita_id
             );
 
-
         if (!visita) {
-
             throw new NotFoundError(
                 "La visita no existe"
             );
-
         }
 
 
@@ -70,11 +79,9 @@ export const actualizarVisita = async (
         // =========================================================
 
         if (!usuario_id) {
-
             throw new BadRequestError(
                 "El usuario es obligatorio"
             );
-
         }
 
 
@@ -83,17 +90,14 @@ export const actualizarVisita = async (
         // =========================================================
 
         const tutorDocente =
-            await tutorDocenteRepository.findByUserId(
+            await TutorDocenteRepository.findByUserId(
                 usuario_id
             );
 
-
         if (!tutorDocente) {
-
             throw new NotFoundError(
                 "No se encontró el tutor docente asociado al usuario"
             );
-
         }
 
 
@@ -104,13 +108,10 @@ export const actualizarVisita = async (
         const solicitudVisita =
             visita.solicitud;
 
-
         if (!solicitudVisita) {
-
             throw new NotFoundError(
                 "No se encontró la solicitud asociada a la visita"
             );
-
         }
 
 
@@ -122,12 +123,25 @@ export const actualizarVisita = async (
             solicitudVisita.tutor_docente_id !==
             tutorDocente.id
         ) {
-
             throw new BadRequestError(
                 "No tienes permiso para actualizar esta visita"
             );
-
         }
+
+
+        // =========================================================
+        // NUEVO: DATOS PARA LA NOTIFICACIÓN
+        // =========================================================
+
+        nombreTutorDocente = tutorDocente.Usuario
+            ? `${tutorDocente.Usuario.nombres} ${tutorDocente.Usuario.apellidos}`
+            : nombreTutorDocente;
+
+        // Si ya tenía fecha_realizada, es una actualización
+        esActualizacion = Boolean(visita.fecha_realizada);
+
+        solicitudId =
+            solicitudVisita.id ?? visita.solicitud_visita_id;
 
 
         // =========================================================
@@ -141,19 +155,11 @@ export const actualizarVisita = async (
                     `${fecha_realizada}T00:00:00`
                 );
 
-
-            if (
-                Number.isNaN(
-                    fecha.getTime()
-                )
-            ) {
-
+            if (Number.isNaN(fecha.getTime())) {
                 throw new BadRequestError(
                     "La fecha realizada no es válida"
                 );
-
             }
-
         }
 
 
@@ -166,13 +172,11 @@ export const actualizarVisita = async (
                 visita_id
             );
 
-
         const fotografiasActuales =
             archivosActuales.filter(
                 (archivo) =>
                     archivo.tipo === "Fotografia"
             );
-
 
         const actaActual =
             archivosActuales.find(
@@ -185,14 +189,10 @@ export const actualizarVisita = async (
         // VALIDAR FOTOGRAFÍAS RECIBIDAS
         // =========================================================
 
-        if (
-            !Array.isArray(fotos)
-        ) {
-
+        if (!Array.isArray(fotos)) {
             throw new BadRequestError(
                 "Las fotografías no tienen un formato válido"
             );
-
         }
 
 
@@ -205,7 +205,6 @@ export const actualizarVisita = async (
                 (foto) =>
                     foto.reemplazar_visita_archivo_id
             );
-
 
         const nuevas =
             fotos.filter(
@@ -232,20 +231,12 @@ export const actualizarVisita = async (
         // =========================================================
 
         const idsUnicos =
-            new Set(
-                idsReemplazo
-            );
+            new Set(idsReemplazo);
 
-
-        if (
-            idsUnicos.size !==
-            idsReemplazo.length
-        ) {
-
+        if (idsUnicos.size !== idsReemplazo.length) {
             throw new BadRequestError(
                 "No puedes reemplazar la misma fotografía más de una vez"
             );
-
         }
 
 
@@ -254,10 +245,7 @@ export const actualizarVisita = async (
         // PERTENEZCAN A LA VISITA
         // =========================================================
 
-        for (
-            const id
-            of idsReemplazo
-        ) {
+        for (const id of idsReemplazo) {
 
             const fotografia =
                 fotografiasActuales.find(
@@ -265,15 +253,11 @@ export const actualizarVisita = async (
                         archivo.id === id
                 );
 
-
             if (!fotografia) {
-
                 throw new NotFoundError(
                     "Una de las fotografías a reemplazar no existe o no pertenece a la visita"
                 );
-
             }
-
         }
 
 
@@ -286,15 +270,10 @@ export const actualizarVisita = async (
             reemplazos.length +
             nuevas.length;
 
-
-        if (
-            totalFotografias > 3
-        ) {
-
+        if (totalFotografias > 3) {
             throw new BadRequestError(
                 "La visita no puede tener más de 3 fotografías"
             );
-
         }
 
 
@@ -302,42 +281,28 @@ export const actualizarVisita = async (
         // VALIDAR CADA FOTOGRAFÍA
         // =========================================================
 
-        for (
-            const foto
-            of fotos
-        ) {
+        for (const foto of fotos) {
 
             if (!foto) {
-
                 throw new BadRequestError(
                     "Se recibió una fotografía inválida"
                 );
-
             }
-
 
             if (
                 !foto.mimetype ||
-                !foto.mimetype.startsWith(
-                    "image/"
-                )
+                !foto.mimetype.startsWith("image/")
             ) {
-
                 throw new BadRequestError(
                     "Solo se permiten imágenes para las fotografías"
                 );
-
             }
 
-
             if (!foto.buffer) {
-
                 throw new BadRequestError(
                     "Una de las fotografías no contiene información válida"
                 );
-
             }
-
         }
 
 
@@ -347,26 +312,17 @@ export const actualizarVisita = async (
 
         if (acta) {
 
-            if (
-                acta.mimetype !==
-                "application/pdf"
-            ) {
-
+            if (acta.mimetype !== "application/pdf") {
                 throw new BadRequestError(
                     "El acta debe ser un archivo PDF"
                 );
-
             }
 
-
             if (!acta.buffer) {
-
                 throw new BadRequestError(
                     "El acta no contiene información válida"
                 );
-
             }
-
         }
 
 
@@ -374,9 +330,8 @@ export const actualizarVisita = async (
         // ACTUALIZAR INFORMACIÓN DE LA VISITA
         // =========================================================
 
-
         const datosActualizacion = {
-            fecha_realizada: new Date(),
+            fecha_realizada: fechaRealizada,   // NUEVO: misma fecha que el correo
 
             ...(descripcion !== undefined && {
                 descripcion
@@ -394,75 +349,47 @@ export const actualizarVisita = async (
         // PROCESAR FOTOGRAFÍAS
         // =========================================================
 
-        for (
-            const foto
-            of fotos
-        ) {
+        for (const foto of fotos) {
 
-            // =====================================================
             // DETERMINAR SI ES REEMPLAZO
-            // =====================================================
-
             const reemplazarId =
                 foto.reemplazar_visita_archivo_id
-                    ? Number(
-                        foto.reemplazar_visita_archivo_id
-                    )
+                    ? Number(foto.reemplazar_visita_archivo_id)
                     : null;
 
-
-            let visitaArchivo =
-                null;
-
-
-            let archivoAnterior =
-                null;
+            let visitaArchivo = null;
+            let archivoAnterior = null;
 
 
-            // =====================================================
             // OBTENER FOTOGRAFÍA A REEMPLAZAR
-            // =====================================================
-
             if (reemplazarId) {
 
                 visitaArchivo =
                     fotografiasActuales.find(
                         (archivo) =>
-                            archivo.id ===
-                            reemplazarId
+                            archivo.id === reemplazarId
                     );
 
-
                 if (!visitaArchivo) {
-
                     throw new NotFoundError(
                         "La fotografía que intentas reemplazar no existe o no pertenece a la visita"
                     );
-
                 }
-
 
                 archivoAnterior =
                     await archivoRepository.findById(
                         visitaArchivo.archivo_id
                     );
 
-
                 if (!archivoAnterior) {
-
                     throw new NotFoundError(
                         "No se encontró el archivo asociado a la fotografía"
                     );
-
                 }
-
             }
 
 
-            // =====================================================
             // SUBIR NUEVA FOTOGRAFÍA
-            // =====================================================
-
             const archivoSubido =
                 await uploadArchivo(
                     foto.buffer,
@@ -472,98 +399,58 @@ export const actualizarVisita = async (
                 );
 
 
-            // =====================================================
             // CREAR REGISTRO DEL NUEVO ARCHIVO
-            // =====================================================
-
             const nuevoArchivo =
                 await archivoRepository.create(
                     {
-                        nombre:
-                            foto.originalname,
-
-                        url:
-                            archivoSubido.url,
-
-                        public_id:
-                            archivoSubido.public_id,
-
-                        resource_type:
-                            archivoSubido.resource_type
-
+                        nombre: foto.originalname,
+                        url: archivoSubido.url,
+                        public_id: archivoSubido.public_id,
+                        resource_type: archivoSubido.resource_type
                     },
                     transaction
                 );
 
 
-            // =====================================================
             // REEMPLAZAR FOTOGRAFÍA EXISTENTE
-            // =====================================================
-
             if (visitaArchivo) {
 
                 await visitaArchivoRepository.update(
                     visitaArchivo.id,
                     {
-                        archivo_id:
-                            nuevoArchivo.id
+                        archivo_id: nuevoArchivo.id
                     },
                     transaction
                 );
 
-
-                if (
-                    archivoAnterior?.public_id
-                ) {
+                if (archivoAnterior?.public_id) {
 
                     archivosParaEliminar.push({
-
-                        id:
-                            archivoAnterior.id,
-
-                        public_id:
-                            archivoAnterior.public_id
-
+                        id: archivoAnterior.id,
+                        public_id: archivoAnterior.public_id
                     });
 
-                }
-
-                else if (
-                    archivoAnterior
-                ) {
+                } else if (archivoAnterior) {
 
                     await archivoRepository.delete(
                         archivoAnterior.id,
                         transaction
                     );
-
                 }
-
             }
 
-
-            // =====================================================
             // AGREGAR NUEVA FOTOGRAFÍA
-            // =====================================================
-
             else {
 
                 await visitaArchivoRepository.create(
                     {
                         visita_id,
-
-                        archivo_id:
-                            nuevoArchivo.id,
-
-                        tipo:
-                            "Fotografia"
-
+                        archivo_id: nuevoArchivo.id,
+                        tipo: "Fotografia"
                     },
                     transaction
                 );
-
             }
-
         }
 
 
@@ -573,10 +460,7 @@ export const actualizarVisita = async (
 
         if (acta) {
 
-            // -----------------------------------------------------
             // SUBIR NUEVA ACTA
-            // -----------------------------------------------------
-
             const archivoSubido =
                 await uploadArchivo(
                     acta.buffer,
@@ -586,34 +470,20 @@ export const actualizarVisita = async (
                 );
 
 
-            // -----------------------------------------------------
             // CREAR REGISTRO DEL NUEVO ARCHIVO
-            // -----------------------------------------------------
-
             const nuevoArchivo =
                 await archivoRepository.create(
                     {
-                        nombre:
-                            acta.originalname,
-
-                        url:
-                            archivoSubido.url,
-
-                        public_id:
-                            archivoSubido.public_id,
-
-                        resource_type:
-                            archivoSubido.resource_type
-
+                        nombre: acta.originalname,
+                        url: archivoSubido.url,
+                        public_id: archivoSubido.public_id,
+                        resource_type: archivoSubido.resource_type
                     },
                     transaction
                 );
 
 
-            // -----------------------------------------------------
             // REEMPLAZAR ACTA EXISTENTE
-            // -----------------------------------------------------
-
             if (actaActual) {
 
                 const archivoAnterior =
@@ -621,69 +491,42 @@ export const actualizarVisita = async (
                         actaActual.archivo_id
                     );
 
-
                 await visitaArchivoRepository.update(
                     actaActual.id,
                     {
-                        archivo_id:
-                            nuevoArchivo.id
+                        archivo_id: nuevoArchivo.id
                     },
                     transaction
                 );
 
-
-                if (
-                    archivoAnterior?.public_id
-                ) {
+                if (archivoAnterior?.public_id) {
 
                     archivosParaEliminar.push({
-
-                        id:
-                            archivoAnterior.id,
-
-                        public_id:
-                            archivoAnterior.public_id
-
+                        id: archivoAnterior.id,
+                        public_id: archivoAnterior.public_id
                     });
 
-                }
-
-                else if (
-                    archivoAnterior
-                ) {
+                } else if (archivoAnterior) {
 
                     await archivoRepository.delete(
                         archivoAnterior.id,
                         transaction
                     );
-
                 }
-
             }
 
-
-            // -----------------------------------------------------
             // CREAR ACTA SI NO EXISTE
-            // -----------------------------------------------------
-
             else {
 
                 await visitaArchivoRepository.create(
                     {
                         visita_id,
-
-                        archivo_id:
-                            nuevoArchivo.id,
-
-                        tipo:
-                            "Acta"
-
+                        archivo_id: nuevoArchivo.id,
+                        tipo: "Acta"
                     },
                     transaction
                 );
-
             }
-
         }
 
 
@@ -698,21 +541,13 @@ export const actualizarVisita = async (
         // ELIMINAR ARCHIVOS ANTERIORES DE SUPABASE
         // =========================================================
 
-        for (
-            const archivo
-            of archivosParaEliminar
-        ) {
+        for (const archivo of archivosParaEliminar) {
 
             try {
 
-                await deleteArchivo(
-                    archivo.public_id
-                );
+                await deleteArchivo(archivo.public_id);
 
-
-                await archivoRepository.delete(
-                    archivo.id
-                );
+                await archivoRepository.delete(archivo.id);
 
             } catch (error) {
 
@@ -720,9 +555,42 @@ export const actualizarVisita = async (
                     "No se pudo eliminar el archivo anterior:",
                     error
                 );
-
             }
+        }
 
+
+        // =========================================================
+        // NUEVO: NOTIFICAR (tutor empresarial + director)
+        // Fuera de la transacción y en su propio try/catch:
+        // un fallo aquí no debe afectar la actualización.
+        // =========================================================
+
+        try {
+
+            const { tutores, nombresPracticantes, nombreEmpresa } =
+                await obtenerTutoresEmpresarialesSolicitudVisita(
+                    solicitudVisitaRepository,
+                    postulacionRepository,
+                    solicitudId
+                );
+
+            await notificarVisitaRealizada({
+                tutores,
+                nombresPracticantes,
+                nombreTutorDocente,
+                nombreEmpresa,
+                fechaRealizada,
+                esActualizacion,
+                userRepository,
+                notificacionRepository
+            });
+
+        } catch (errorNotificacion) {
+
+            console.error(
+                "Error notificando la visita realizada:",
+                errorNotificacion
+            );
         }
 
 
@@ -737,10 +605,11 @@ export const actualizarVisita = async (
 
     } catch (error) {
 
-        await transaction.rollback();
+        // NUEVO: evita un segundo error si la transacción ya terminó
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
         throw error;
-
     }
-
 };

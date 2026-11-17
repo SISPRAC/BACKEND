@@ -34,13 +34,16 @@ export const tutorEmpresaRepository = {
         });
 
     },
-
-
-    async findByCodigo(codigo) {
-        return await models.TutorEmpresa.findOne({
+    async findByEmpresaId(empresaId) {
+        return await models.TutorEmpresa.findAll({
             where: {
-                codigo
-            }
+                empresa_id: empresaId
+            },
+            include: [
+                {
+                    model: models.User
+                }
+            ]
         });
     },
 
@@ -157,6 +160,9 @@ export const tutorEmpresaRepository = {
                 {
                     model: models.Postulacion,
                     required: false,
+                    where: {
+                        estado: "ACEPTADO"
+                    },
 
                     include: [
                         {

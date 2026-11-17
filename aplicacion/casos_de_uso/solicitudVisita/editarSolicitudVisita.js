@@ -1,13 +1,14 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
+import { notificarCambioSolicitudVisita } from "../notificarEmail/notificarCambioSolicitudVisita.js";
+
 export const editarSolicitudVisita = async (
     {
         solicitudVisitaRepository,
         solicitudVisitaFechaRepository,
         postulacionRepository,
         notificacionRepository,
-        crearNotificacion,
         sequelize
     },
     solicitudId,
@@ -22,89 +23,49 @@ export const editarSolicitudVisita = async (
 
     const { fechas } = data;
 
-    if (
-        !fechas ||
-        !Array.isArray(fechas) ||
-        fechas.length === 0
-    ) {
+    if (!fechas || !Array.isArray(fechas) || fechas.length === 0) {
         throw new BadRequestError(
             "Debe proponer al menos una fecha para la visita"
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validar fechas nuevas
-    |--------------------------------------------------------------------------
-    */
-
+    // Validar fechas nuevas
     for (const fecha of fechas) {
 
-        if (
-            !fecha.fecha_inicio ||
-            !fecha.fecha_fin
-        ) {
+        if (!fecha.fecha_inicio || !fecha.fecha_fin) {
             throw new BadRequestError(
                 "Todas las fechas propuestas deben tener fecha de inicio y fecha de fin"
             );
         }
 
-        if (
-            new Date(fecha.fecha_inicio) >=
-            new Date(fecha.fecha_fin)
-        ) {
+        if (new Date(fecha.fecha_inicio) >= new Date(fecha.fecha_fin)) {
             throw new BadRequestError(
                 "La fecha de inicio debe ser anterior a la fecha de fin"
             );
         }
 
-        if (
-            !fecha.hora_inicio ||
-            !fecha.hora_fin
-        ) {
+        if (!fecha.hora_inicio || !fecha.hora_fin) {
             throw new BadRequestError(
                 "Todas las disponibilidades deben tener hora de inicio y hora de fin"
             );
         }
 
-        if (
-            fecha.hora_inicio >=
-            fecha.hora_fin
-        ) {
+        if (fecha.hora_inicio >= fecha.hora_fin) {
             throw new BadRequestError(
                 "La hora de inicio debe ser anterior a la hora de fin"
             );
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Buscar solicitud
-    |--------------------------------------------------------------------------
-    */
-
+    // Buscar solicitud
     const solicitud =
-        await solicitudVisitaRepository.findByIdWithDetails(
-            solicitudId
-        );
-
-    console.log(
-        "SOLICITUD ENCONTRADA:",
-        solicitud
-    );
+        await solicitudVisitaRepository.findByIdWithDetails(solicitudId);
 
     if (!solicitud) {
-        throw new NotFoundError(
-            "No se encontró la solicitud de visita"
-        );
+        throw new NotFoundError("No se encontró la solicitud de visita");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validar estado
-    |--------------------------------------------------------------------------
-    */
-
+    // Validar estado
     if (
         solicitud.estado !== "Pendiente" &&
         solicitud.estado !== "Rechazada" &&
@@ -115,14 +76,8 @@ export const editarSolicitudVisita = async (
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener Tutor Docente
-    |--------------------------------------------------------------------------
-    */
-
-    const tutorDocente =
-        solicitud.tutorDocente;
+    // Tutor docente
+    const tutorDocente = solicitud.tutorDocente;
 
     if (!tutorDocente) {
         throw new NotFoundError(
@@ -130,19 +85,7 @@ export const editarSolicitudVisita = async (
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener Usuario del Tutor Docente
-    |--------------------------------------------------------------------------
-    */
-
-    const usuarioTutorDocente =
-        tutorDocente.Usuario;
-
-    console.log(
-        "USUARIO DEL TUTOR DOCENTE:",
-        usuarioTutorDocente
-    );
+    const usuarioTutorDocente = tutorDocente.Usuario;
 
     if (!usuarioTutorDocente) {
         throw new NotFoundError(
@@ -153,63 +96,27 @@ export const editarSolicitudVisita = async (
     const nombreTutorDocente =
         `${usuarioTutorDocente.nombres} ${usuarioTutorDocente.apellidos}`;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener practicantes de la solicitud
-    |--------------------------------------------------------------------------
-    */
-
+    // Practicantes de la solicitud
     const practicantes =
         await solicitudVisitaRepository
-            .findPracticantesWithDetailsBySolicitudId(
-                solicitudId
-            );
+            .findPracticantesWithDetailsBySolicitudId(solicitudId);
 
-    console.log(
-        "PRACTICANTES DE LA SOLICITUD:",
-        practicantes
-    );
+    const transaction = await sequelize.transaction();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Iniciar transacción
-    |--------------------------------------------------------------------------
-    */
-
-    const transaction =
-        await sequelize.transaction();
+    // Se llena dentro de la transacción y se usa después del commit
+    const tutoresNotificados = new Map();
 
     try {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Agregar nuevas fechas
-        |--------------------------------------------------------------------------
-        |
-        | Las fechas anteriores NO se eliminan.
-        | Solamente se agregan las nuevas disponibilidades.
-        |
-        */
-
+        // Las fechas anteriores NO se eliminan; solo se agregan las nuevas.
         const fechasSolicitud =
             fechas.map((fecha) => ({
-                solicitud_visita_id:
-                    solicitudId,
-
-                fecha_inicio:
-                    fecha.fecha_inicio,
-
-                fecha_fin:
-                    fecha.fecha_fin,
-
-                hora_inicio:
-                    fecha.hora_inicio,
-
-                hora_fin:
-                    fecha.hora_fin,
-
-                seleccionada:
-                    false
+                solicitud_visita_id: solicitudId,
+                fecha_inicio: fecha.fecha_inicio,
+                fecha_fin: fecha.fecha_fin,
+                hora_inicio: fecha.hora_inicio,
+                hora_fin: fecha.hora_fin,
+                seleccionada: false
             }));
 
         await solicitudVisitaFechaRepository.createMany(
@@ -217,17 +124,11 @@ export const editarSolicitudVisita = async (
             transaction
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Si estaba Rechazada o Cancelada, vuelve a Pendiente
-        |--------------------------------------------------------------------------
-        */
-
+        // Si estaba Rechazada o Cancelada, vuelve a Pendiente
         if (
             solicitud.estado === "Rechazada" ||
             solicitud.estado === "Cancelada"
         ) {
-
             await solicitudVisitaRepository.actualizarEstado(
                 solicitudId,
                 "Pendiente",
@@ -235,73 +136,13 @@ export const editarSolicitudVisita = async (
             );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Agrupar practicantes por Tutor Empresarial
-        |--------------------------------------------------------------------------
-        */
-
-        const tutoresNotificados =
-            new Map();
-
+        // Agrupar practicantes por tutor empresarial
         for (const item of practicantes) {
 
-            const practicaPracticante =
-                item.practicaPracticante;
+            const practicaPracticante = item.practicaPracticante;
+            const candidato = practicaPracticante?.practicante?.candidato;
 
-            console.log(
-                "PRACTICA PRACTICANTE:",
-                practicaPracticante
-            );
-
-            if (!practicaPracticante) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ PracticaPracticante"
-                );
-
-                continue;
-            }
-
-            const practicante =
-                practicaPracticante.practicante;
-
-            console.log(
-                "PRACTICANTE:",
-                practicante
-            );
-
-            if (!practicante) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ Practicante"
-                );
-
-                continue;
-            }
-
-            const candidato =
-                practicante.candidato;
-
-            console.log(
-                "CANDIDATO:",
-                candidato
-            );
-
-            if (!candidato) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ Candidato"
-                );
-
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Buscar postulación aceptada
-            |--------------------------------------------------------------------------
-            */
+            if (!candidato) continue;
 
             const postulacion =
                 await postulacionRepository
@@ -311,187 +152,30 @@ export const editarSolicitudVisita = async (
                         transaction
                     );
 
-            console.log(
-                "========================================"
-            );
-
-            console.log(
-                "CANDIDATO ID:",
-                candidato.id
-            );
-
-            console.log(
-                "PRACTICA ID:",
-                practicaPracticante.practica_id
-            );
-
-            console.log(
-                "POSTULACION COMPLETA:",
-                postulacion
-            );
-
-            if (!postulacion) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ POSTULACIÓN ACEPTADA"
-                );
-
-                console.log(
-                    "========================================"
-                );
-
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Obtener Tutor Empresarial
-            |--------------------------------------------------------------------------
-            */
-
-            const aperturaVacante =
-                postulacion.AperturaVacante;
-
-            console.log(
-                "APERTURA VACANTE:",
-                aperturaVacante
-            );
-
-            const tutorEmpresarial =
-                aperturaVacante?.TutorEmpresa;
-
-            console.log(
-                "TUTOR EMPRESARIAL:",
-                tutorEmpresarial
-            );
-
             const usuarioTutor =
-                tutorEmpresarial?.Usuario;
+                postulacion?.AperturaVacante?.TutorEmpresa?.Usuario;
 
-            console.log(
-                "USUARIO DEL TUTOR EMPRESARIAL:",
-                usuarioTutor
-            );
+            if (!usuarioTutor) continue;
 
-            if (!usuarioTutor) {
-
-                console.log(
-                    "❌ NO SE ENCONTRÓ Usuario DEL TUTOR EMPRESARIAL"
-                );
-
-                console.log(
-                    "========================================"
-                );
-
-                continue;
+            if (!tutoresNotificados.has(usuarioTutor.id)) {
+                tutoresNotificados.set(usuarioTutor.id, {
+                    usuarioTutor,
+                    nombresPracticantes: []
+                });
             }
 
-            console.log(
-                "✅ TUTOR EMPRESARIAL ENCONTRADO:",
-                usuarioTutor.id
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Crear grupo de notificaciones
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !tutoresNotificados.has(
-                    usuarioTutor.id
-                )
-            ) {
-
-                tutoresNotificados.set(
-                    usuarioTutor.id,
-                    []
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Obtener nombre del practicante
-            |--------------------------------------------------------------------------
-            */
-
-            const usuarioPracticante =
-                candidato.Usuario;
-
-            console.log(
-                "USUARIO DEL PRACTICANTE:",
-                usuarioPracticante
-            );
+            const usuarioPracticante = candidato.Usuario;
 
             if (usuarioPracticante) {
-
-                const nombreCompleto =
-                    `${usuarioPracticante.nombres} ${usuarioPracticante.apellidos}`;
-
                 tutoresNotificados
                     .get(usuarioTutor.id)
-                    .push(nombreCompleto);
+                    .nombresPracticantes.push(
+                        `${usuarioPracticante.nombres} ${usuarioPracticante.apellidos}`
+                    );
             }
-
-            console.log(
-                "MAP ACTUAL:",
-                tutoresNotificados
-            );
-
-            console.log(
-                "========================================"
-            );
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Crear notificaciones
-        |--------------------------------------------------------------------------
-        */
-
-        for (
-            const [
-                usuarioIdTutor,
-                nombresPracticantes
-            ] of tutoresNotificados
-        ) {
-
-            await crearNotificacion(
-                {
-                    notificacionRepository
-                },
-                {
-                    usuario_id:
-                        usuarioIdTutor,
-
-                    titulo:
-                        "Solicitud de visita reprogramada",
-
-                    descripcion:
-                        `El tutor docente ${nombreTutorDocente} ha actualizado las fechas propuestas para la visita de los practicantes: ${nombresPracticantes.join(", ")}. La solicitud se encuentra pendiente de revisión. Por favor, revise nuevamente las disponibilidades propuestas.`
-                },
-                transaction
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Confirmar transacción
-        |--------------------------------------------------------------------------
-        */
 
         await transaction.commit();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Retornar solicitud actualizada
-        |--------------------------------------------------------------------------
-        */
-
-        return await solicitudVisitaRepository
-            .findByIdWithDetails(
-                solicitudId
-            );
 
     } catch (error) {
 
@@ -501,4 +185,26 @@ export const editarSolicitudVisita = async (
 
         throw error;
     }
+
+    // Notificar (interna + correo), fuera de la transacción
+    try {
+
+        await notificarCambioSolicitudVisita({
+            tipo: "REPROGRAMADA",
+            tutores: [...tutoresNotificados.values()]
+                .filter((t) => t.nombresPracticantes.length > 0),
+            nombreTutorDocente,
+            fechas,
+            notificacionRepository
+        });
+
+    } catch (errorNotificacion) {
+
+        console.error(
+            "Error notificando la reprogramación de la solicitud de visita:",
+            errorNotificacion
+        );
+    }
+
+    return await solicitudVisitaRepository.findByIdWithDetails(solicitudId);
 };

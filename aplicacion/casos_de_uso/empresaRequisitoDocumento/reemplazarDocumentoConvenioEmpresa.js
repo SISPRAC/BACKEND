@@ -12,11 +12,19 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 import { eliminarArchivoSiNoTieneReferencias } from "../archivo/eliminarArchivoSiNoTieneReferencias.js";
 
+import { notificarDocumentoConvenioEmpresaReemplazado } from "../notificarEmail/notificarDocumentoConvenioEmpresaReemplazado.js";
+
 export const reemplazarDocumentoConvenioEmpresa = async (
     empresaRequisitoDocumentoRepository,
     archivoRepository,
     data,
-    file
+    file,
+    {
+        userRepository,
+        notificacionRepository,
+        empresaRepository,
+        tipoRequisitoDocumentoRepository
+    } = {}
 ) => {
 
     const empresa_id = Number(data.empresa_id);
@@ -39,6 +47,9 @@ export const reemplazarDocumentoConvenioEmpresa = async (
     let newPublicId = null;
     let archivoAnteriorId = null;
     let nuevoArchivoId = null;
+    let registro = null;
+
+    const fechaSubida = new Date();
 
     try {
 
@@ -89,42 +100,19 @@ export const reemplazarDocumentoConvenioEmpresa = async (
 
         nuevoArchivoId = nuevoArchivo.id;
 
-        const registro =
+        registro =
             await empresaRequisitoDocumentoRepository.update(
                 existente.id,
                 {
                     archivo_id: nuevoArchivo.id,
                     estado: "PENDIENTE",
                     observacion: null,
-                    fecha_subida: new Date()
+                    fecha_subida: fechaSubida
                 },
                 transaction
             );
 
         await transaction.commit();
-
-        // El cambio ya está confirmado: limpiamos el archivo anterior
-        if (archivoAnteriorId && archivoAnteriorId !== nuevoArchivoId) {
-
-            try {
-
-                await eliminarArchivoSiNoTieneReferencias(
-                    archivoRepository,
-                    archivoAnteriorId
-                );
-
-            } catch (e) {
-
-                console.error(
-                    "No se pudo limpiar el archivo anterior:",
-                    e.message
-                );
-
-            }
-
-        }
-
-        return registro;
 
     } catch (error) {
 
@@ -155,5 +143,62 @@ export const reemplazarDocumentoConvenioEmpresa = async (
         );
 
     }
+
+    // El cambio ya está confirmado: limpiamos el archivo anterior
+    if (archivoAnteriorId && archivoAnteriorId !== nuevoArchivoId) {
+
+        try {
+
+            await eliminarArchivoSiNoTieneReferencias(
+                archivoRepository,
+                archivoAnteriorId
+            );
+
+        } catch (e) {
+
+            console.error(
+                "No se pudo limpiar el archivo anterior:",
+                e.message
+            );
+
+        }
+
+    }
+
+    // Notificar al director (fuera de la transacción).
+    if (userRepository && notificacionRepository) {
+
+        try {
+
+            const empresa = empresaRepository
+                ? await empresaRepository.findById(empresa_id)
+                : null;
+
+            const tipoRequisito = tipoRequisitoDocumentoRepository
+                ? await tipoRequisitoDocumentoRepository.findById(tipo_id)
+                : null;
+
+            await notificarDocumentoConvenioEmpresaReemplazado({
+                empresa,
+                nombreDocumento:
+                    tipoRequisito?.nombre ?? "Documento de convenio",
+                nombreArchivo: file.originalname,
+                fechaSubida,
+                userRepository,
+                notificacionRepository
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Error notificando el reemplazo del documento:",
+                error
+            );
+
+        }
+
+    }
+
+    return registro;
 
 };

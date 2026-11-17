@@ -84,6 +84,40 @@ export const getPracticantesGrupo = async (
         }
 
 
+        /*
+         * Retiro
+         */
+        const retiro = practicaPracticante?.retiro
+            ? {
+                id: practicaPracticante.retiro.id,
+                motivo: practicaPracticante.retiro.motivo,
+                fecha_retiro: practicaPracticante.retiro.fecha_retiro,
+                archivo: practicaPracticante.retiro.archivoSoporte
+                    ? {
+                        nombre: practicaPracticante.retiro.archivoSoporte.nombre,
+                        url: practicaPracticante.retiro.archivoSoporte.url
+                    }
+                    : null
+            }
+            : null;
+
+
+        /*
+         * Certificado
+         */
+        const certificado = practicaPracticante?.certificadoArchivo
+            ? {
+                id: practicaPracticante.certificadoArchivo.id,
+                subido_por: practicaPracticante.certificado_subido_por,
+                fecha_subida: practicaPracticante.certificado_fecha_subida,
+                archivo: {
+                    nombre: practicaPracticante.certificadoArchivo.nombre,
+                    url: practicaPracticante.certificadoArchivo.url
+                }
+            }
+            : null;
+
+
         practicantes.push({
 
             id_grupo_candidato: grupoCandidato.id,
@@ -109,7 +143,11 @@ export const getPracticantesGrupo = async (
             empresa:
                 empresa?.nombre || "Sin empresa",
 
-            estado
+            estado,
+
+            retiro,
+
+            certificado
         });
     }
 

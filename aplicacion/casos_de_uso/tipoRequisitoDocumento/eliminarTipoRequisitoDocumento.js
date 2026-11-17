@@ -1,12 +1,16 @@
+
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
 import { eliminarArchivoSiNoTieneReferencias } from "../archivo/eliminarArchivoSiNoTieneReferencias.js";
 
 export const eliminarTipoRequisitoDocumento = async (
     tipoRequisitoDocumentoRepository,
+    practicaRequisitoDocumentoRepository,
+    empresaRequisitoDocumentoRepository,
     archivoRepository,
     id
 ) => {
@@ -22,6 +26,22 @@ export const eliminarTipoRequisitoDocumento = async (
             );
         }
 
+        // Verificar referencias en requisitos de prácticas
+        const tieneReferenciasPracticas =
+            await practicaRequisitoDocumentoRepository
+                .existsByTipoRequisitoDocumentoId(id, transaction);
+
+        // Verificar referencias en requisitos de empresas
+        const tieneReferenciasEmpresas =
+            await empresaRequisitoDocumentoRepository
+                .existsByTipoRequisitoDocumentoId(id, transaction);
+
+        if (tieneReferenciasPracticas || tieneReferenciasEmpresas) {
+            throw new ConflictError(
+                "No se puede eliminar este tipo de requisito documental porque está siendo utilizado por prácticas o empresas."
+            );
+        }
+
         const archivoId = tipo.archivo_id;
 
         await tipoRequisitoDocumentoRepository.delete(
@@ -31,12 +51,7 @@ export const eliminarTipoRequisitoDocumento = async (
 
         await transaction.commit();
 
-        /*
-         * El TipoRequisitoDocumento ya fue eliminado.
-         *
-         * Ahora comprobamos si el archivo todavía
-         * tiene otras referencias.
-         */
+        // Limpiar archivo únicamente si ya no tiene referencias
         if (archivoId) {
             try {
                 await eliminarArchivoSiNoTieneReferencias(
@@ -63,7 +78,8 @@ export const eliminarTipoRequisitoDocumento = async (
 
         if (
             error instanceof NotFoundError ||
-            error instanceof BadRequestError
+            error instanceof BadRequestError ||
+            error instanceof ConflictError
         ) {
             throw error;
         }

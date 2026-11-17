@@ -7,7 +7,9 @@ import { subirDocumentoConvenioEmpresa } from "../../aplicacion/casos_de_uso/emp
 import { reemplazarDocumentoConvenioEmpresa } from "../../aplicacion/casos_de_uso/empresaRequisitoDocumento/reemplazarDocumentoConvenioEmpresa.js";
 import { obtenerRevisionRequisitosEmpresa } from "../../aplicacion/casos_de_uso/empresaRequisitoDocumento/obtenerRevisionRequisitosEmpresa.js";
 import { revisarDocumentoConvenioEmpresa } from "../../aplicacion/casos_de_uso/empresaRequisitoDocumento/revisarDocumentoConvenioEmpresa.js";
-
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js"
+import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 
 const handleError = (error, res) => {
 
@@ -54,7 +56,13 @@ export const uploadDocumentoConvenioEmpresa = async (req, res) => {
             empresaRequisitoDocumentoRepository,
             archivoRepository,
             req.body,
-            req.file
+            req.file,
+            {
+                userRepository,
+                notificacionRepository,
+                empresaRepository,
+                tipoRequisitoDocumentoRepository
+            }
         );
 
         return res.status(201).json(registro);
@@ -75,7 +83,13 @@ export const replaceDocumentoConvenioEmpresa = async (req, res) => {
             empresaRequisitoDocumentoRepository,
             archivoRepository,
             req.body,
-            req.file
+            req.file,
+            {
+                userRepository,
+                notificacionRepository,
+                empresaRepository,
+                tipoRequisitoDocumentoRepository
+            }
         );
 
         return res.status(200).json(registro);
@@ -115,7 +129,12 @@ export const reviewDocumentoConvenioEmpresa = async (req, res) => {
         const registro = await revisarDocumentoConvenioEmpresa(
             empresaRequisitoDocumentoRepository,
             req.params.id,
-            req.body
+            req.body,
+            {
+                notificacionRepository,
+                empresaRepository,
+                tipoRequisitoDocumentoRepository
+            }
         );
 
         return res.status(200).json(registro);

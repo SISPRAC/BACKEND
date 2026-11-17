@@ -38,7 +38,7 @@ router.get(
 router.post(
     "/crear",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa", "Tutor Docente"]),
     upload.single("archivo"),
     createTipoRequisitoDocumento
 );
@@ -47,7 +47,7 @@ router.post(
 router.delete(
     "/:id",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa","Tutor Docente"]),
     deleteTipoRequisitoDocumento
 );
 
@@ -62,7 +62,7 @@ router.get(
 router.put(
     "/:id",
     verifyToken,
-    verifyRole(["Administrador", "Director de programa"]),
+    verifyRole(["Administrador", "Director de programa","Tutor Docente"]),
     upload.single("archivo"),
     updateTipoRequisitoDocumento
 );

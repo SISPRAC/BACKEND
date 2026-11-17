@@ -35,6 +35,21 @@ const createPracticaPracticanteModel = (sequelize) => {
                 type: DataTypes.TEXT,
                 allowNull: true,
             },
+
+            certificado_url: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+
+            certificado_subido_por: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
+
+            certificado_fecha_subida: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
         },
         {
             tableName: "PracticaPracticante",

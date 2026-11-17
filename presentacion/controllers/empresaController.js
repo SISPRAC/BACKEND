@@ -10,6 +10,13 @@ import { obtenerDetalleGrupoEmpresa } from "../../aplicacion/casos_de_uso/empres
 import { invitarEmpresa } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarEmpresa.js";
 import { obtenerEmpresasParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresasParaReportePorPeriodo.js";
 import { obtenerEmpresasParaSelect } from "../../aplicacion/casos_de_uso/empresa/obtenerEmpresasParaSelect.js";
+import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js";
+import { aperturaVacanteRepository } from "../../infraestructura/repositorios/aperturaVacanteRepositoryImpl.js";
+import { practicaRepository } from "../../infraestructura/repositorios/practicaRepositoryImpl.js";
+import { subirCertificadoFinalizacion } from "../../aplicacion/casos_de_uso/empresa/subirCertificadoFinalizacion.js";
+import { obtenerCertificadoFinalizacion } from "../../aplicacion/casos_de_uso/empresa/obtenerCertificadoFinalizacion.js";
+import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js";
 
 export const registerEmpresaController = async (req, res) => {
 
@@ -126,20 +133,25 @@ export const obtenerEmpresaController = async (req, res) => {
 };
 
 export const obtenerGruposEmpresaController = async (req, res, next) => {
+
     try {
 
-        const usuarioId = req.user.id;
+        const grupos = await obtenerGruposEmpresa(
+            empresaRepository,
+            practicaRepository,
+            aperturaVacanteRepository,
+            practicaPracticanteRepository,
+            req.user.id   // ajusta a como guardas el id del usuario autenticado
+        );
 
-        const grupos = await obtenerGruposEmpresa(usuarioId);
-
-        return res.status(200).json({
-            success: true,
-            data: grupos
-        });
+        return res.status(200).json(grupos);
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 export const obtenerDetalleGrupoEmpresaController = async (
@@ -151,14 +163,16 @@ export const obtenerDetalleGrupoEmpresaController = async (
     try {
 
         const usuarioId = req.user.id;
-
         const { practicaId } = req.params;
 
-        const data =
-            await obtenerDetalleGrupoEmpresa(
-                usuarioId,
-                practicaId
-            );
+        const data = await obtenerDetalleGrupoEmpresa(
+            empresaRepository,
+            practicaRepository,
+            aperturaVacanteRepository,
+            practicaPracticanteRepository,
+            usuarioId,
+            practicaId
+        );
 
         res.status(200).json({
             success: true,
@@ -245,38 +259,109 @@ export const obtenerEmpresasParaSelectController = async (
     req,
     res
 ) => {
- 
+
     try {
- 
+
         // ?convenio=activo | todos  (si no viene, el caso de uso usa "activo")
         const { convenio } = req.query;
- 
+
         const empresas =
             await obtenerEmpresasParaSelect(
                 empresaRepository,
                 convenio
             );
- 
+
         return res.status(200).json({
             success: true,
             data: empresas
         });
- 
+
     } catch (error) {
- 
+
         console.log(
             "Error en obtenerEmpresasParaSelectController:",
             error
         );
- 
+
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
             });
         }
- 
+
         return res.status(500).json({
             message: "Error interno del servidor"
         });
     }
+};
+
+export const subirCertificadoFinalizacionController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const { practicanteId } = req.params;
+
+        const resultado = await subirCertificadoFinalizacion(
+            sequelize,
+            practicaPracticanteRepository,
+            archivoRepository,
+            empresaRepository,
+            userRepository,
+            notificacionRepository,
+            {
+                practicante_id: practicanteId,
+                usuario_id: req.user.id,
+                buffer: req.file?.buffer,
+                nombreArchivo: req.file?.originalname,
+                mimeType: req.file?.mimetype,
+                carpeta: "certificados_finalizacion"
+            }
+        );
+
+        return res.status(201).json({
+            success: true,
+            message: "Certificado de finalización cargado correctamente",
+            data: resultado
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+export const obtenerCertificadoFinalizacionController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const { practicanteId } = req.params;
+
+        const certificado = await obtenerCertificadoFinalizacion(
+            practicaPracticanteRepository,
+            {
+                practicante_id: practicanteId
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: certificado
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
 };

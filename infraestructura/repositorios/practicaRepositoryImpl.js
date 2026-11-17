@@ -6,14 +6,24 @@ export const practicaRepository = {
         return await models.Practica.create(data, { transaction });
     },
 
+
     async findById(id) {
         return await models.Practica.findOne({
             where: { id },
             include: [
                 {
-                    model: models.Archivo,
-                    as: "archivoArl"
+                    model: models.Periodo,
+                    attributes: ["id", "nombre"]
                 }
+            ]
+        });
+    },
+
+
+    async findByIdConPeriodo(id) {
+        return await models.Practica.findByPk(id, {
+            include: [
+                { model: models.Periodo, required: true }
             ]
         });
     },
@@ -61,15 +71,6 @@ export const practicaRepository = {
         });
     },
 
-    async tienePracticaPracticantes(practica_id) {
-        return await models.PracticaPracticante.count({
-            where: {
-                practica_id
-            }
-        });
-    },
-
-
     async findRequisitosDocumentosEmpresa(practica_id) {
         const { Op } = await import("sequelize");
 
@@ -106,5 +107,43 @@ export const practicaRepository = {
         });
     },
 
+    // ============================================================
+    // TODAS LAS PRÁCTICAS CON SU PERIODO
+    // ============================================================
+
+    async findAllConPeriodo() {
+
+        return await models.Practica.findAll({
+
+            include: [
+                {
+                    model: models.Periodo,
+                    required: true
+                }
+            ],
+
+            // where: { estado: "ACTIVA" },  // ajusta si solo quieres las vigentes
+
+            order: [[models.Periodo, "nombre", "DESC"]]
+
+        });
+
+    },
+
+    async tienePracticaPracticantes(practica_id) {
+        return await models.PracticaPracticante.count({
+            where: {
+                practica_id
+            }
+        });
+    },
+
+    async tieneGrupos(practica_id) {
+        return await models.Grupo.count({
+            where: {
+                practica_id
+            }
+        });
+    },
 
 };

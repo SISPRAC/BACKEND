@@ -97,20 +97,17 @@ export const userRepository = {
     // ACTUALIZAR ROLES
     // ==========================================
 
-    updateRoles: async (userId, roles, transaction = null) => {
+    updateRoles: async (userId, rolesIds, transaction) => {
 
         const user = await models.User.findByPk(userId, {
             transaction
         });
 
         if (!user) {
-            throw {
-                statusCode: 404,
-                message: "Usuario no encontrado"
-            };
+            throw new Error("Usuario no encontrado");
         }
 
-        await user.setRoles(roles, {
+        await user.setRoles(rolesIds, {
             transaction
         });
 

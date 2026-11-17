@@ -1,10 +1,15 @@
+
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
+
 import { actualizarEstadoAperturaVacante } from "../aperturaVacante/actualizarEstadoAperturaVacante.js";
+
+import { notificarRetiroPostulacionEmpresa } from "../notificarEmail/notificarRetiroPostulacion.js";
 
 export const eliminarPostulacion = async (
     {
         postulacionRepository,
-        aperturaVacanteRepository
+        aperturaVacanteRepository,
+        notificacionRepository
     },
     candidatoId,
     aperturaVacanteId
@@ -22,10 +27,19 @@ export const eliminarPostulacion = async (
         );
     }
 
-    await postulacionRepository.delete(
-        postulacion.id
-    );
+    // Eliminar postulación.
+    const filasEliminadas =
+        await postulacionRepository.delete(
+            postulacion.id
+        );
 
+    if (filasEliminadas === 0) {
+        throw new ConflictError(
+            "No fue posible eliminar la postulación"
+        );
+    }
+
+    // Actualizar estado de la apertura.
     await actualizarEstadoAperturaVacante(
         {
             aperturaVacanteRepository,
@@ -33,6 +47,23 @@ export const eliminarPostulacion = async (
         },
         aperturaVacanteId
     );
+
+    // Notificar únicamente a la empresa.
+    try {
+
+        await notificarRetiroPostulacionEmpresa({
+            postulacion,
+            notificacionRepository
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error notificando el retiro de la postulación a la empresa:",
+            error
+        );
+
+    }
 
     return {
         message: "Postulación eliminada correctamente"

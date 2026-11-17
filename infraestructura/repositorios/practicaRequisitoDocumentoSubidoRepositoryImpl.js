@@ -187,7 +187,6 @@ export const practicaRequisitoDocumentoSubidoRepository = {
         });
     },
 
-
     async findByUsuarioYPractica(usuario_id, practica_id) {
         return await models.PracticaRequisitoDocumentoSubido.findAll({
             where: {
@@ -293,6 +292,62 @@ export const practicaRequisitoDocumentoSubidoRepository = {
             ],
         });
     },
+
+    // Documento -> requisito, practicante, candidato y grupos (sin tutor)
+    async findByIdParaNotificacion(id) {
+        return models.PracticaRequisitoDocumentoSubido.findByPk(id, {
+            include: [
+                {
+                    association: "practicaRequisitoDocumento",
+                    include: [
+                        { association: "tipoRequisitoDocumento" }
+                    ]
+                },
+                {
+                    association: "usuario",
+                    include: [
+                        {
+                            model: models.Candidato,
+                            include: [
+                                {
+                                    association: "gruposAsignados",
+                                    include: [
+                                        { association: "grupo" }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+    },
+
+    // Tutor docente con su usuario
+    async findTutorDocenteConUsuario(tutorDocenteId) {
+        return models.TutorDocente.findByPk(tutorDocenteId, {
+            include: [
+                { model: models.User }
+            ]
+        });
+    },
+
+    async findByIdParaNotificacionRevision(id) {
+        return models.PracticaRequisitoDocumentoSubido.findByPk(id, {
+            include: [
+                {
+                    association: "practicaRequisitoDocumento",
+                    include: [
+                        { association: "tipoRequisitoDocumento" }
+                    ]
+                },
+                {
+                    association: "usuario",
+                    attributes: ["id", "nombres", "apellidos", "correo"]
+                }
+            ]
+        });
+    }
 
 
 };

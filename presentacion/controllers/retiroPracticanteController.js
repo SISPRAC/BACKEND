@@ -16,6 +16,10 @@ import { obtenerRetiroPracticante }
 import { obtenerRetirosPorPracticante }
     from "../../aplicacion/casos_de_uso/retiroPracticante/obtenerRetirosPorPracticante.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
+import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js"
+import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js"
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
+
 
 export const crearRetiroPracticante = async (req, res, next) => {
     try {
@@ -39,7 +43,10 @@ export const crearRetiroPracticante = async (req, res, next) => {
             practicaPracticanteRepository,
             archivoRepository,
             data,
-            req.file
+            req.file,
+            postulacionRepository,      
+            userRepository,             
+            notificacionRepository
         );
 
         res.status(201).json({ data: retiro });
