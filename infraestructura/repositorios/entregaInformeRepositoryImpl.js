@@ -423,6 +423,100 @@ export const entregaInformeRepository = {
             ]
 
         });
+    },
+
+    async updateObjetivoPracticaPracticante(practicaPracticanteId, objetivo, transaction) {
+        return models.PracticaPracticante.update(
+            { objetivo },
+            { where: { id: practicaPracticanteId }, transaction }
+        );
+    },
+
+    async findByIdParaNotificacion(id) {
+
+        const atributosUsuario = ["id", "nombres", "apellidos", "correo"];
+
+        return await models.EntregaInforme.findByPk(id, {
+            include: [
+                // Documento entregado: permite obtener "Informe 1",
+                // "Plan de trabajo", etc.
+                {
+                    model: models.PracticaRequisitoDocumento,
+                    as: "practicaRequisitoDocumento",
+                    include: [
+                        {
+                            model: models.TipoRequisitoDocumento,
+                            as: "tipoRequisitoDocumento",
+                            attributes: ["id", "nombre"]
+                        }
+                    ]
+                },
+                {
+                    model: models.PracticaPracticante,
+                    as: "practicaPracticante",
+                    include: [
+                        {
+                            model: models.Practicante,
+                            as: "practicante",
+                            include: [
+                                {
+                                    model: models.Candidato,
+                                    as: "candidato",
+                                    include: [
+                                        {
+                                            model: models.User,
+                                            attributes: atributosUsuario
+                                        },
+                                        {
+                                            model: models.Postulacion,
+                                            separate: true,
+                                            include: [
+                                                {
+                                                    model: models.AperturaVacante,
+                                                    include: [
+                                                        {
+                                                            model: models.TutorEmpresa,
+                                                            include: [
+                                                                {
+                                                                    model: models.User,
+                                                                    attributes: atributosUsuario
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            model: models.GrupoCandidato,
+                                            as: "gruposAsignados",
+                                            separate: true,
+                                            include: [
+                                                {
+                                                    model: models.Grupo,
+                                                    as: "grupo",
+                                                    include: [
+                                                        {
+                                                            model: models.TutorDocente,
+                                                            include: [
+                                                                {
+                                                                    model: models.User,
+                                                                    attributes: atributosUsuario
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
     }
 
 };

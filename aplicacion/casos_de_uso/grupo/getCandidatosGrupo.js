@@ -1,4 +1,3 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 export const getCandidatosGrupo = async (
@@ -17,6 +16,22 @@ export const getCandidatosGrupo = async (
 
     const tutor = grupo.TutorDocente;
     const usuarioTutor = tutor?.Usuario;
+
+    // Practicantes (retiro + certificado) de los candidatos del grupo
+    const candidatoIds = (grupo.candidatosAsignados || []).map(
+        (gc) => gc.candidato_id
+    );
+
+    const practicaPracticantes = candidatoIds.length
+        ? await grupoRepository.findPracticaPracticantesByPracticaAndCandidatos(
+            grupo.practica_id,
+            candidatoIds
+        )
+        : [];
+
+    const practicaPracticantePorCandidato = new Map(
+        practicaPracticantes.map((pp) => [pp.practicante.candidato_id, pp])
+    );
 
     return {
         id: grupo.id,
@@ -64,14 +79,8 @@ export const getCandidatosGrupo = async (
                     // ESTADO INDIVIDUAL DEL PRACTICANTE
                     // ==========================================
 
-                    const practicante =
-                        candidato?.practicante;
-
                     const practicaPracticante =
-                        practicante?.practicas?.find(
-                            pp =>
-                                pp.practica_id === grupo.practica_id
-                        );
+                        practicaPracticantePorCandidato.get(candidato?.id);
 
                     let estado = "Disponible";
 
@@ -90,7 +99,9 @@ export const getCandidatosGrupo = async (
 
                     return {
                         id: candidato?.id,
+                        practicante_id: candidato?.practicante?.id || null,
                         codigo: candidato?.codigo,
+                        correo: usuario?.correo || null,
 
                         nombre:
                             `${usuario?.nombres || ""} ${usuario?.apellidos || ""}`.trim(),
@@ -98,7 +109,36 @@ export const getCandidatosGrupo = async (
                         empresa:
                             empresa?.nombre || null,
 
-                        estado
+                        estado,
+
+                        practica_practicante_id: practicaPracticante?.id || null,
+
+                        retiro: practicaPracticante?.retiro
+                            ? {
+                                id: practicaPracticante.retiro.id,
+                                archivo_id: practicaPracticante.retiro.archivo_id,
+                                motivo: practicaPracticante.retiro.motivo,
+                                fecha_retiro: practicaPracticante.retiro.fecha_retiro,
+                                archivo: practicaPracticante.retiro.archivoSoporte
+                                    ? {
+                                        nombre: practicaPracticante.retiro.archivoSoporte.nombre,
+                                        url: practicaPracticante.retiro.archivoSoporte.url
+                                    }
+                                    : null
+                            }
+                            : null,
+
+                        certificado: practicaPracticante?.certificadoArchivo
+                            ? {
+                                id: practicaPracticante.certificadoArchivo.id,
+                                subido_por: practicaPracticante.certificado_subido_por,
+                                fecha_subida: practicaPracticante.certificado_fecha_subida,
+                                archivo: {
+                                    nombre: practicaPracticante.certificadoArchivo.nombre,
+                                    url: practicaPracticante.certificadoArchivo.url
+                                }
+                            }
+                            : null
                     };
                 }
             ) || []

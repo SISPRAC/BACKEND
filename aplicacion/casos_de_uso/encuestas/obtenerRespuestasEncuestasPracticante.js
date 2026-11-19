@@ -20,6 +20,8 @@ export const obtenerRespuestasEncuestasPracticante = async (
             practicante_id
         );
 
+    console.log("practicas ", practicas);
+
     if (!practicas || practicas.length === 0) {
         return [];
     }

@@ -2,6 +2,7 @@ import { registrarPostulaciones } from "../../aplicacion/casos_de_uso/postulacio
 import { aceptarPostulacion } from "../../aplicacion/casos_de_uso/postulacion/aceptarPostulacion.js";
 import { rechazarPostulacion } from "../../aplicacion/casos_de_uso/postulacion/rechazarPostulacion.js";
 
+
 import { postulacionRepository } from "../../infraestructura/repositorios/PostulacionRepositoryImpl.js";
 import { eliminarPostulacion } from "../../aplicacion/casos_de_uso/postulacion/eliminarPostulacion.js";
 import { candidatoRepository } from "../../infraestructura/repositorios/candidatoRepositoryImpl.js";
@@ -9,9 +10,10 @@ import { aperturaVacanteRepository } from "../../infraestructura/repositorios/ap
 import { obtenerCandidatosEmpresa } from "../../aplicacion/casos_de_uso/postulacion/obtenerCandidatosEmpresa.js";
 import { empresaRepository } from "../../infraestructura/repositorios/empresaRepositoryImpl.js";
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
-
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 import { PracticanteRepository } from "../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js";
+import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryImpl.js"
 
 export const registrarPostulacionesController = async (req, res) => {
     try {
@@ -22,7 +24,8 @@ export const registrarPostulacionesController = async (req, res) => {
             {
                 postulacionRepository,
                 candidatoRepository,
-                aperturaVacanteRepository
+                aperturaVacanteRepository,
+                notificacionRepository
             },
             aperturaVacanteId,
             candidatosIds
@@ -66,7 +69,8 @@ export const eliminarPostulacionController = async (
             await eliminarPostulacion(
                 {
                     postulacionRepository,
-                    aperturaVacanteRepository
+                    aperturaVacanteRepository,
+                    notificacionRepository
                 },
                 candidatoId,
                 aperturaVacanteId
@@ -120,7 +124,10 @@ export const aceptarPostulacionController = async (
                 PracticanteRepository,
                 practicaPracticanteRepository,
                 aperturaVacanteRepository,
-                userRepository
+                candidatoRepository,
+                userRepository,
+                rolRepository,
+                notificacionRepository
             },
             postulacionId
         );
@@ -148,7 +155,9 @@ export const rechazarPostulacionController = async (
 
         const resultado = await rechazarPostulacion(
             {
-                postulacionRepository
+                postulacionRepository,
+                userRepository,
+                notificacionRepository
             },
             postulacionId,
             comentarioEmpresa

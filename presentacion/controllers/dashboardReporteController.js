@@ -6,11 +6,14 @@ export const getDashboardReporteController = async (req, res) => {
     try {
         const result = await getDashboardReporte(
             { reporteRepository, periodoRepository },
-             req.query.periodoId,
+            req.query.periodoId,
+            req.query.empresaId, // opcional
         );
 
         res.status(200).json(result);
     } catch (error) {
+
+        console.log("Error", error);
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message

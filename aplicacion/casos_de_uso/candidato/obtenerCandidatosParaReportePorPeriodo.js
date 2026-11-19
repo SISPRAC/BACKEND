@@ -89,7 +89,10 @@ export const obtenerCandidatosParaReportePorPeriodo = async (
 
             grupo: grupos.length
                 ? grupos.map((grupo) => grupo.nombre).join(", ")
-                : "Sin grupo"
+                : "Sin grupo",
+
+            // NUEVO
+            objetivo: practicaActual?.objetivo?.trim() || "Sin información"
         };
     });
 };

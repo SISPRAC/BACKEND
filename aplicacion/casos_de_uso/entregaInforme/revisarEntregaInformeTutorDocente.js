@@ -1,19 +1,27 @@
-
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
+import { notificarRevisionInformeTutorDocente } from "../notificarEmail/notificarRevisionInformeTutorDocente.js";
+
 export const revisarEntregaInformeTutorDocente = async (
-    entregaInformeRepository,
-    tutorDocenteRepository,
     id,
     user_id,
     estado_tutor_docente,
-    observacion_tutor_docente
+    observacion_tutor_docente,
+    {
+        entregaInformeRepository,
+        TutorDocenteRepository,
+        notificacionRepository
+    }
 ) => {
 
     const transaction = await sequelize.transaction();
+
+    let actualizado = null;
+    let tutorDocente = null;
+    const observacion = observacion_tutor_docente?.trim() || null;
 
     try {
 
@@ -21,8 +29,8 @@ export const revisarEntregaInformeTutorDocente = async (
         // BUSCAR TUTOR DOCENTE
         // ============================================================
 
-        const tutorDocente =
-            await tutorDocenteRepository.findByUserId(user_id);
+        tutorDocente =
+            await TutorDocenteRepository.findByUserId(user_id);
 
         if (!tutorDocente) {
             throw new NotFoundError(
@@ -85,7 +93,7 @@ export const revisarEntregaInformeTutorDocente = async (
 
         if (
             estado_tutor_docente === "RECHAZADO" &&
-            !observacion_tutor_docente?.trim()
+            !observacion
         ) {
             throw new BadRequestError(
                 "Debe indicar una observación al rechazar el informe."
@@ -96,7 +104,7 @@ export const revisarEntregaInformeTutorDocente = async (
         // ACTUALIZAR ENTREGA
         // ============================================================
 
-        const actualizado =
+        actualizado =
             await entregaInformeRepository.update(
                 id,
                 {
@@ -106,19 +114,18 @@ export const revisarEntregaInformeTutorDocente = async (
 
                     fecha_revision_tutor_docente: new Date(),
 
-                    observacion_tutor_docente:
-                        observacion_tutor_docente?.trim() || null
+                    observacion_tutor_docente: observacion
                 },
                 transaction
             );
 
         await transaction.commit();
 
-        return actualizado;
-
     } catch (error) {
 
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
 
         if (
             error instanceof NotFoundError ||
@@ -133,4 +140,45 @@ export const revisarEntregaInformeTutorDocente = async (
         );
 
     }
+
+    // ============================================================
+    // NOTIFICAR (fuera de la transacción)
+    // ============================================================
+
+    if (!notificacionRepository) {
+
+        console.warn(
+            "[revisionInforme] No se notificó: falta notificacionRepository."
+        );
+
+    } else {
+
+        try {
+
+            const entregaCompleta =
+                await entregaInformeRepository.findByIdParaNotificacion(id);
+
+            const nombreTutorDocente = `${tutorDocente?.Usuario?.nombres ?? ""} ${tutorDocente?.Usuario?.apellidos ?? ""}`.trim();
+
+            await notificarRevisionInformeTutorDocente({
+                entrega: entregaCompleta,
+                nombreTutorDocente,
+                estado: estado_tutor_docente,
+                observacion,
+                notificacionRepository
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Error notificando la revisión del informe:",
+                error
+            );
+
+        }
+
+    }
+
+    return actualizado;
+
 };

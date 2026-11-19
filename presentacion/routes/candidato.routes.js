@@ -7,7 +7,8 @@ import {
     getCandidatosDisponiblesController,
     getCandidatosPerfilController,
     invitarCandidatoController,
-    obtenerCandidatosParaReportePorPeriodoController
+    obtenerCandidatosParaReportePorPeriodoController,
+    verificarCandidatosPdfController
 } from "../controllers/candidatoController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
@@ -30,6 +31,13 @@ router.post(
     verifyToken,
     verifyRole(["Administrador", "Director de programa"]),
     invitarCandidatoController
+);
+
+router.post(
+    "/verificar-pdf",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    verificarCandidatosPdfController
 );
 
 router.put(

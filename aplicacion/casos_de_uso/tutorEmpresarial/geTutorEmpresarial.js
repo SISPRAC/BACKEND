@@ -1,6 +1,14 @@
-export const getTutorEmpresarial = async (tutorEmpresaRepository) => {
+export const getTutorEmpresarial = async (tutorEmpresaRepository,empresaRepository, usuarioId) => {
 
-    const tutorEmpresa = await tutorEmpresaRepository.findByAll();
+    const empresa = await empresaRepository.findByUserId(usuarioId);
+
+    if (!empresa) {
+        const error = new Error("No se encontró la empresa del usuario");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const tutorEmpresa = await tutorEmpresaRepository.findByEmpresaId(empresa.id);
 
     return tutorEmpresa.map(tutor => ({
         id_usuario: tutor.Usuario.id,

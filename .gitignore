@@ -1,0 +1,13 @@
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Dependencias
+node_modules/
+
+# Archivos temporales
+*.log
+
+# Archivos subidos localmente
+uploads/

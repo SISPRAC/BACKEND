@@ -1,11 +1,17 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
+import { validarRespuestasEncuesta } from "./validarRespuestasEncuesta.js";
+
+import { notificarEncuestaRespondida } from "../notificarEmail/notificarEncuestaRespondida.js";
 
 export const responderEncuestaPracticante = async (
     {
         plantillaEncuestaRepository,
         respuestaEncuestaRepository,
         respuestaPreguntaRepository,
+        practicaPracticanteRepository,   // NUEVO
+        postulacionRepository,           // NUEVO
+        userRepository,                  // NUEVO
+        notificacionRepository           // NUEVO
     },
     usuario_id,
     practica_encuesta_id,
@@ -77,33 +83,11 @@ export const responderEncuestaPracticante = async (
         );
     }
 
-    // 7. Validar que todas las preguntas pertenezcan a la encuesta asignada
+    // 7. Validar las respuestas según el tipo de cada pregunta
     const preguntasEncuesta =
         encuestaAsignada.plantilla?.preguntas || [];
 
-    for (const respuesta of respuestas) {
-        if (
-            !respuesta.pregunta_id ||
-            respuesta.respuesta === undefined ||
-            respuesta.respuesta === null ||
-            respuesta.respuesta === ""
-        ) {
-            throw new BadRequestError(
-                "Todas las respuestas deben tener una pregunta y un valor"
-            );
-        }
-
-        const preguntaPertenece = preguntasEncuesta.some(
-            (pregunta) =>
-                Number(pregunta.id) === Number(respuesta.pregunta_id)
-        );
-
-        if (!preguntaPertenece) {
-            throw new BadRequestError(
-                `La pregunta ${respuesta.pregunta_id} no pertenece a esta encuesta`
-            );
-        }
-    }
+    const filas = validarRespuestasEncuesta(preguntasEncuesta, respuestas);
 
     // 8. Crear el registro principal de la respuesta
     const respuestaEncuesta = await respuestaEncuestaRepository.create({
@@ -114,15 +98,36 @@ export const responderEncuestaPracticante = async (
     });
 
     // 9. Guardar las respuestas individuales
-    for (const respuesta of respuestas) {
+    for (const fila of filas) {
         await respuestaPreguntaRepository.create({
             respuesta_encuesta_id: respuestaEncuesta.id,
-            pregunta_id: respuesta.pregunta_id,
-            respuesta: respuesta.respuesta,
+            pregunta_id: fila.pregunta_id,
+            respuesta: fila.respuesta,
         });
     }
 
-    // 10. Retornar el resultado
+    // 10. Notificar al tutor docente (no afecta el resultado si falla)
+    try {
+
+        await notificarEncuestaRespondida({
+            tipo: "PRACTICANTE",
+            practicaPracticanteId: practicaPracticante.id,
+            usuarioRespondienteId: usuario_id,
+            nombreEncuesta: encuestaAsignada.plantilla?.titulo ?? "Encuesta",
+            practicaPracticanteRepository,
+            postulacionRepository,
+            userRepository,
+            notificacionRepository
+        });
+
+    } catch (errorNotificacion) {
+        console.error(
+            "Error notificando la encuesta respondida por el practicante:",
+            errorNotificacion
+        );
+    }
+
+    // 11. Retornar el resultado
     return {
         mensaje: "Encuesta respondida correctamente",
         respuestaEncuesta,

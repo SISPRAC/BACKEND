@@ -18,12 +18,6 @@ export const vacanteRepository = {
                             model: models.Empresa
                         }
                     ]
-                },
-                {
-                    model: models.Perfil,
-                    through: {
-                        attributes: ["nivel_minimo"]
-                    }
                 }
             ]
         });
@@ -61,12 +55,6 @@ export const vacanteRepository = {
                             model: models.Empresa
                         }
                     ]
-                },
-                {
-                    model: models.Perfil,
-                    through: {
-                        attributes: ["nivel_minimo"]
-                    }
                 },
                 {
                     model: models.AperturaVacante,
@@ -116,13 +104,6 @@ export const vacanteRepository = {
                                 }
                             ]
                         },
-
-                        {
-                            model: models.Perfil,
-                            through: {
-                                attributes: ["nivel_minimo"]
-                            }
-                        }
                     ]
                 },
 
@@ -139,7 +120,9 @@ export const vacanteRepository = {
                 {
                     model: models.Practica,
                     as: "practica",
-
+                    where: {
+                        estado: "EN_CURSO"
+                    },
                     include: [
                         {
                             model: models.Periodo,
@@ -168,13 +151,6 @@ export const vacanteRepository = {
                             include: [
                                 {
                                     model: models.User
-                                },
-
-                                {
-                                    model: models.Perfil,
-                                    through: {
-                                        attributes: ["calificacion"]
-                                    }
                                 }
                             ]
                         }
@@ -229,8 +205,8 @@ export const vacanteRepository = {
     },
 
     async delete(id) {
-    return await models.Vacante.destroy({
-        where: { id }
-    });
-},
+        return await models.Vacante.destroy({
+            where: { id }
+        });
+    },
 };

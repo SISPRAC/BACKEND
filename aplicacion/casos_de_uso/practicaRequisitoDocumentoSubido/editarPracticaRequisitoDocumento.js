@@ -1,4 +1,3 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 import {
@@ -6,11 +5,14 @@ import {
     deleteArchivo,
 } from "../../../infraestructura/external/storageService.js";
 
+import { notificarPracticaRequisitoDocumentoSubido } from "../notificarEmail/notificarPracticaRequisitoDocumentoSubido.js";
+
 export const editarPracticaRequisitoDocumento = async (
     sequelize,
     practicaRequisitoDocumentoSubidoRepository,
     archivoRepository,
-    data
+    data,
+    notificacionRepository
 ) => {
     const {
         usuario_id,
@@ -175,12 +177,31 @@ export const editarPracticaRequisitoDocumento = async (
                 }
             } catch (errorStorage) {
                 // La edición ya se confirmó; no se debe revertir.
-                // Se registra el error para poder limpiar el archivo anterior.
                 console.error(
                     "No se pudo eliminar el archivo anterior:",
                     errorStorage
                 );
             }
+        }
+
+        // Notificar al tutor docente (fuera de la transacción).
+        // Va en su propio try/catch: si falla, la edición sigue siendo exitosa.
+        try {
+            const documentoCompleto =
+                await practicaRequisitoDocumentoSubidoRepository
+                    .findByIdParaNotificacion(documentoExistente.id);
+
+            await notificarPracticaRequisitoDocumentoSubido({
+                documento: documentoCompleto,
+                practicaRequisitoDocumentoSubidoRepository,
+                notificacionRepository,
+                esActualizacion: true
+            });
+        } catch (errorNotificacion) {
+            console.error(
+                "Error notificando la edición del documento del requisito:",
+                errorNotificacion
+            );
         }
 
         return await practicaRequisitoDocumentoSubidoRepository.findById(

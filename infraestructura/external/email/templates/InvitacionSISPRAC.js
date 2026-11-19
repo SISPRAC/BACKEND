@@ -48,7 +48,7 @@ export const sispracInvitationTemplate = ({
                     />
 
                     <h1 style="margin-top:20px;">
-                        Mi SISPRAC
+                        SISPRAC
                     </h1>
                 </td>
             </tr>

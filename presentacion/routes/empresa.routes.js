@@ -8,10 +8,12 @@ import {
     obtenerDetalleGrupoEmpresaController,
     invitarEmpresaController,
     obtenerEmpresasParaReportePorPeriodoController,
-    obtenerEmpresasParaSelectController
+    obtenerEmpresasParaSelectController,
+    subirCertificadoFinalizacionController,
+    obtenerCertificadoFinalizacionController
 } from "../controllers/empresaController.js";
 
-import { uploadImage } from "../middleware/uploadMulter.js";
+import { uploadImage, upload } from "../middleware/uploadMulter.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
 import { verifyRole } from "../middleware/rolMiddleware.js";
@@ -72,6 +74,23 @@ router.get(
     verifyToken,
     verifyRole(["Director de programa"]),
     obtenerEmpresasParaReportePorPeriodoController
+);
+
+// Subir certificado de finalización (solo la empresa)
+router.post(
+    "/practicantes/:practicanteId/certificado",
+    verifyToken,
+    verifyRole(["Empresa"]),
+    upload.single("certificado"),
+    subirCertificadoFinalizacionController
+);
+
+// Consultar certificado de finalización
+router.get(
+    "/practicantes/:practicanteId/certificado",
+    verifyToken,
+    verifyRole(["Empresa", "Director de programa", "Tutor docente"]),
+    obtenerCertificadoFinalizacionController
 );
 
 export default router;

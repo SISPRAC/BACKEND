@@ -6,9 +6,30 @@ export const TutorDocenteRepository = {
         return await models.TutorDocente.create(data, { transaction });
     },
 
-    async findByUserId(userId) {
+    async findByUserId(userId, transaction = null) {
         return await models.TutorDocente.findOne({
-            where: { usuario_id: userId }
+            where: {
+                usuario_id: userId
+            },
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["id", "nombres", "apellidos", "correo"]
+                }
+            ],
+            transaction
+        });
+    },
+
+    async update(id, data, transaction) {
+        const tutorDocente = await models.TutorDocente.findByPk(id, {
+            transaction
+        });
+
+        if (!tutorDocente) return null;
+
+        return await tutorDocente.update(data, {
+            transaction
         });
     },
     async findById(id) {
@@ -230,7 +251,27 @@ export const TutorDocenteRepository = {
             where: {
                 practicante_id: practicanteId,
                 practica_id: practicaId
-            }
+            },
+
+            include: [
+                {
+                    model: models.RetiroPracticante,
+                    as: "retiro",
+                    required: false,
+                    include: [
+                        {
+                            model: models.Archivo,
+                            as: "archivoSoporte",
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "certificadoArchivo",
+                    required: false
+                }
+            ]
         });
     }
 

@@ -9,6 +9,7 @@ export const getConvenio = async (convenioRepository, id) => {
         fechaFin: convenio.fecha_fin,
         fechaEnvio: convenio.fecha_envio,
         idEmpresa: convenio.Empresa?.id,
+        empresaId: convenio.Empresa?.id,
         empresa: convenio.Empresa?.nombre,
         idArchivo: convenio.Archivo?.id,
         archivo: convenio.Archivo?.url,

@@ -14,6 +14,11 @@ const createPreguntaModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        tipo: {
+            type: DataTypes.ENUM('opcion_unica', 'opcion_multiple', 'texto_libre'),
+            allowNull: false,
+            defaultValue: 'opcion_unica'
+        },
 
         texto: {
             type: DataTypes.TEXT,

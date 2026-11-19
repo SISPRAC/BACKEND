@@ -10,10 +10,21 @@ export const candidatoRepository = {
     },
 
     async findById(id, transaction) {
-        return await models.Candidato.findByPk(
-            id,
-            { transaction }
-        );
+        return await models.Candidato.findByPk(id, {
+            include: [
+                {
+                    model: models.User,
+                    attributes: [
+                        "id",
+                        "nombres",
+                        "apellidos",
+                        "correo"
+                    ],
+                    required: true
+                }
+            ],
+            transaction
+        });
     },
 
     async findByUserId(userId, transaction) {
@@ -129,7 +140,6 @@ export const candidatoRepository = {
 
     },
 
-
     async findAllParaReportePorPeriodo(periodo_id) {
         return await models.Candidato.findAll({
             attributes: [
@@ -163,6 +173,7 @@ export const candidatoRepository = {
                             attributes: [
                                 "id",
                                 "estado",
+                                "objetivo",
                                 "practicante_id",
                                 "practica_id"
                             ],
@@ -259,6 +270,75 @@ export const candidatoRepository = {
 
             distinct: true,
             order: [["id", "ASC"]]
+        });
+    },
+
+    // Agrégalo dentro de candidatoRepository (backend), junto a findByAll
+    async findAllConPerfiles() {
+        return await models.Candidato.findAll({
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["nombres", "apellidos", "correo", "telefono"],
+                    required: true,
+                    include: [
+                        {
+                            model: models.Rol,
+                            attributes: [],
+                            where: { nombre: "Candidato" },
+                            through: { attributes: [] },
+                            required: true
+                        }
+                    ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "hojaVida",
+                    required: false
+                },
+                {
+                    model: models.Perfil,
+                    required: false,
+                    through: { attributes: ["nivel"] }
+                },
+                {
+                    model: models.HabilidadBlanda,
+                    as: "habilidadesBlandas",
+                    required: false,
+                    through: { attributes: [] }
+                },
+                {
+                    model: models.Idioma,
+                    as: "idiomas",
+                    required: false,
+                    through: {
+                        attributes: ["lee", "habla", "escucha"]
+                    }
+                }
+            ],
+            order: [["id", "ASC"]]
+        });
+    },
+
+    async findByCorreosOCodigos(correos = [], codigos = []) {
+        return await models.Candidato.findAll({
+            attributes: ["id", "codigo"],
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["id", "nombres", "apellidos", "correo"],
+                    required: true
+                }
+            ],
+            where: {
+                [Sequelize.Op.or]: [
+                    { codigo: { [Sequelize.Op.in]: codigos } },
+                    Sequelize.where(
+                        Sequelize.fn("lower", Sequelize.col("Usuario.correo")),
+                        { [Sequelize.Op.in]: correos }
+                    )
+                ]
+            }
         });
     },
 

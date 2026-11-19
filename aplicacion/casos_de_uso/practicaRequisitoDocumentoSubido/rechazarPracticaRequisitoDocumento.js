@@ -3,8 +3,10 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
+import { notificarRevisionPracticaRequisitoDocumento } from "../notificarEmail/notificarRevisionPracticaRequisitoDocumento.js";
+
 export const rechazarPracticaRequisitoDocumento = async (
-    { practicaRequisitoDocumentoSubidoRepository },
+    { practicaRequisitoDocumentoSubidoRepository, notificacionRepository },
     id,
     usuario_revision_id,
     observacion
@@ -58,6 +60,23 @@ export const rechazarPracticaRequisitoDocumento = async (
             observacion: observacion.trim(),
         }
     );
+
+    try {
+        const documentoCompleto =
+            await practicaRequisitoDocumentoSubidoRepository
+                .findByIdParaNotificacionRevision(documentoId);
+
+        await notificarRevisionPracticaRequisitoDocumento({
+            documento: documentoCompleto,
+            notificacionRepository,
+            aprobado: false
+        });
+    } catch (error) {
+        console.error(
+            "Error notificando el rechazo del documento:",
+            error
+        );
+    }
 
     return await practicaRequisitoDocumentoSubidoRepository.findById(
         documentoId

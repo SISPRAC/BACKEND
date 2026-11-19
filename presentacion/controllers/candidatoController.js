@@ -11,12 +11,17 @@ import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryI
 import { perfilRepository } from "../../infraestructura/repositorios/perfilRepositoryImpl.js";
 import { candidatoPerfilRepository } from "../../infraestructura/repositorios/candidatoPerfilRepositoryImpl.js";
 import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
-import { grupoRepository } from "../../infraestructura/repositorios/grupoRepositoryImpl.js"; // ajusta la ruta
+import { grupoRepository } from "../../infraestructura/repositorios/grupoRepositoryImpl.js";
 import { obtenerCandidatosParaReportePorPeriodo } from "../../aplicacion/casos_de_uso/candidato/obtenerCandidatosParaReportePorPeriodo.js";
 
 import { sequelize } from "../../infraestructura/database/dbConnection.js";
 
-import { grupoCandidatoRepository } from "../../infraestructura/repositorios/grupoCandidatoRepository.js"; // ajusta la ruta
+import { grupoCandidatoRepository } from "../../infraestructura/repositorios/grupoCandidatoRepository.js";
+import { habilidadBlandaRepository } from "../../infraestructura/repositorios/habilidadBlandaRepositoryImpl.js";
+import { candidatoHabilidadBlandaRepository } from "../../infraestructura/repositorios/candidatoHabilidadBlandaRepository.js";
+import { idiomaRepository } from "../../infraestructura/repositorios/idiomaRepository.js";
+import { candidatoIdiomaRepository } from "../../infraestructura/repositorios/candidatoIdiomaRepository.js";
+import { verificarCandidatosPdf } from "../../aplicacion/casos_de_uso/candidato/verificarCandidatosPdf.js";
 
 export const registerCandidatoController = async (req, res) => {
 
@@ -31,14 +36,19 @@ export const registerCandidatoController = async (req, res) => {
             rolRepository,
             perfilRepository,
             candidatoPerfilRepository,
+            habilidadBlandaRepository,
+            candidatoHabilidadBlandaRepository,
+            idiomaRepository,
+            candidatoIdiomaRepository,
             archivoRepository,
-            grupoCandidatoRepository,   // 👈 nuevo
+            grupoCandidatoRepository,
             {
                 ...req.body,
-                // van después del spread para que el body nunca los sobrescriba
+
+                // Datos provenientes de la invitación verificada
                 correo: invitacion.correo,
                 codigo: invitacion.codigo,
-                grupo_id: invitacion.grupo_id   // 👈 nuevo
+                grupo_id: invitacion.grupo_id || null
             },
             req.file
         );
@@ -210,5 +220,25 @@ export const obtenerCandidatosParaReportePorPeriodoController = async (req, res)
         return res.status(500).json({
             message: "Error interno del servidor"
         });
+    }
+};
+
+export const verificarCandidatosPdfController = async (req, res) => {
+    try {
+        const result = await verificarCandidatosPdf(
+            candidatoRepository,
+            req.body.alumnos
+        );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+
+        console.log("Error al verificar candidatos del PDF:", error);
+
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
 };

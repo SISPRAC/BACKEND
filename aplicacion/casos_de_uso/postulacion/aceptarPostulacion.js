@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
@@ -10,7 +11,10 @@ export const aceptarPostulacion = async (
         PracticanteRepository,
         practicaPracticanteRepository,
         aperturaVacanteRepository,
-        userRepository
+        candidatoRepository,
+        userRepository,
+        rolRepository,
+        notificacionRepository
     },
     postulacionId,
 ) => {
@@ -57,6 +61,23 @@ export const aceptarPostulacion = async (
         const cupos = postulacion.AperturaVacante.cupos;
 
         // ==========================================
+        // BUSCAR CANDIDATO Y SU USUARIO
+        // ==========================================
+
+        const candidato = await candidatoRepository.findById(
+            candidatoId,
+            transaction
+        );
+
+        if (!candidato) {
+            throw new ConflictError(
+                "No se encontró el candidato asociado a la postulación"
+            );
+        }
+
+        const usuarioId = candidato.usuario_id;
+
+        // ==========================================
         // BUSCAR PRACTICANTE
         // ==========================================
 
@@ -96,6 +117,25 @@ export const aceptarPostulacion = async (
                 );
         }
 
+        // ==========================================
+        // CAMBIAR ROL A PRACTICANTE
+        // ==========================================
+
+        const rolPracticante = await rolRepository.findByNombre(
+            "Practicante"
+        );
+
+        if (!rolPracticante) {
+            throw new ConflictError(
+                "No se encontró el rol Practicante"
+            );
+        }
+
+        await userRepository.updateRoles(
+            usuarioId,
+            [rolPracticante.id],
+            transaction
+        );
         // ==========================================
         // CREAR RELACIÓN PRÁCTICA-PRACTICANTE
         // ==========================================
@@ -181,7 +221,8 @@ export const aceptarPostulacion = async (
 
         await notificarAceptacion({
             postulacion,
-            userRepository
+            userRepository,
+            notificacionRepository
         });
 
     } catch (error) {

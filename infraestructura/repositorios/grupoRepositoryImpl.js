@@ -103,64 +103,35 @@ export const grupoRepository = {
                         {
                             model: models.Periodo,
                             as: "Periodo",
-                            attributes: [
-                                "id",
-                                "nombre",
-                                "fecha_inicio",
-                                "fecha_fin"
-                            ]
+                            attributes: ["id", "nombre", "fecha_inicio", "fecha_fin"]
                         }
                     ]
                 },
 
-                // =============================
                 // TUTOR DOCENTE
-                // =============================
-
                 {
                     model: models.TutorDocente,
-                    attributes: [
-                        "id",
-                        "codigo"
-                    ],
+                    attributes: ["id", "codigo"],
                     include: [
                         {
                             model: models.User,
-                            attributes: [
-                                "id",
-                                "nombres",
-                                "apellidos"
-                            ]
+                            attributes: ["id", "nombres", "apellidos"]
                         }
                     ]
                 },
 
-                // =============================
                 // CANDIDATOS
-                // =============================
-
                 {
                     model: models.GrupoCandidato,
                     as: "candidatosAsignados",
-                    attributes: [
-                        "id",
-                        "grupo_id",
-                        "candidato_id"
-                    ],
+                    attributes: ["id", "grupo_id", "candidato_id"],
                     include: [
                         {
                             model: models.Candidato,
                             as: "candidato",
-                            attributes: [
-                                "id",
-                                "codigo"
-                            ],
+                            attributes: ["id", "codigo"],
                             include: [
-
-                                // =============================
                                 // DATOS PERSONALES
-                                // =============================
-
                                 {
                                     model: models.User,
                                     attributes: [
@@ -173,40 +144,20 @@ export const grupoRepository = {
                                     ]
                                 },
 
-                                // =============================
-                                // PRACTICANTE Y SUS PRÁCTICAS
-                                // =============================
-
+                                // PRACTICANTE
                                 {
                                     model: models.Practicante,
                                     as: "practicante",
-                                    required: false,
-                                    include: [
-                                        {
-                                            model: models.PracticaPracticante,
-                                            as: "practicas",
-                                            required: false,
-                                            attributes: [
-                                                "id",
-                                                "practica_id",
-                                                "practicante_id",
-                                                "estado"
-                                            ]
-                                        }
-                                    ]
+                                    required: true,
+                                    attributes: ["id"]
                                 },
 
-                                // =============================
                                 // POSTULACIÓN
-                                // =============================
-
                                 {
                                     model: models.Postulacion,
                                     required: false,
                                     limit: 1,
-                                    order: [
-                                        ["fecha_postulacion", "DESC"]
-                                    ],
+                                    order: [["fecha_postulacion", "DESC"]],
                                     include: [
                                         {
                                             model: models.AperturaVacante,
@@ -219,10 +170,7 @@ export const grupoRepository = {
                                                             include: [
                                                                 {
                                                                     model: models.Empresa,
-                                                                    attributes: [
-                                                                        "id",
-                                                                        "nombre"
-                                                                    ]
+                                                                    attributes: ["id", "nombre"]
                                                                 }
                                                             ]
                                                         }
@@ -235,6 +183,38 @@ export const grupoRepository = {
                             ]
                         }
                     ]
+                }
+            ]
+        });
+    },
+
+    async findPracticaPracticantesByPracticaAndCandidatos(practicaId, candidatoIds) {
+        return await models.PracticaPracticante.findAll({
+            where: { practica_id: practicaId },
+            include: [
+                {
+                    model: models.RetiroPracticante,
+                    as: "retiro",
+                    required: false,
+                    include: [
+                        {
+                            model: models.Archivo,
+                            as: "archivoSoporte",
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: models.Archivo,
+                    as: "certificadoArchivo",
+                    required: false
+                },
+                {
+                    model: models.Practicante,
+                    as: "practicante",
+                    required: true,
+                    attributes: ["id", "candidato_id"],
+                    where: { candidato_id: candidatoIds }
                 }
             ]
         });
@@ -388,31 +368,25 @@ export const grupoRepository = {
     },
 
     async tienePracticantes(id) {
-        const grupo = await models.Grupo.findByPk(id, {
+        const total = await models.GrupoCandidato.count({
+            where: { grupo_id: id },
             include: [
                 {
-                    model: models.GrupoCandidato,
-                    as: "candidatosAsignados",
+                    model: models.Candidato,
+                    as: "candidato",
                     required: true,
                     include: [
                         {
-                            model: models.Candidato,
-                            as: "candidato",
-                            required: true,
-                            include: [
-                                {
-                                    model: models.Practicante,
-                                    as: "practicante",
-                                    required: true
-                                }
-                            ]
+                            model: models.Practicante,
+                            as: "practicante",
+                            required: true
                         }
                     ]
                 }
             ]
         });
 
-        return !!grupo;
+        return total > 0;
     },
 
     async delete(id) {

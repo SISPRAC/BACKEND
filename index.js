@@ -36,8 +36,13 @@ import solicitudVisitaRouter from "./presentacion/routes/solicitudVisita.routes.
 import visitaRouter from "./presentacion/routes/visita.routes.js";
 import practicaRequisitoDocumentoSubidoRouter from "./presentacion/routes/practicaRequisitoDocumentoSubido.routes.js";
 import reporteRouter from "./presentacion/routes/reportes.routes.js";
+import habilidadBlandaRouter from "./presentacion/routes/habilidadBlanda.routes.js";
+import idiomaRouter from "./presentacion/routes/idioma.routes.js";
+import empresaRequisitoDocumentoRouter from "./presentacion/routes/empresaRequisitoDocumento.routes.js";
+
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
+import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
 
 
 
@@ -91,9 +96,15 @@ app.use("/api/solicitudVisita", solicitudVisitaRouter);
 app.use("/api/visita", visitaRouter);
 app.use("/api/practicaRequisitoDocumentoSubido", practicaRequisitoDocumentoSubidoRouter);
 app.use("/api/reportes", reporteRouter );
-iniciarVencimientoConvenios();
+app.use("/api/habilidadesBlandas", habilidadBlandaRouter);
+app.use("/api/idiomas", idiomaRouter);
+app.use("/api/empresaRequisitoDocumento", empresaRequisitoDocumentoRouter);
 
-await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
+//await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
+await initDB(); 
+iniciarVencimientoConvenios();
+iniciarFinalizacionPracticas();
+
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port", process.env.PORT);
 });

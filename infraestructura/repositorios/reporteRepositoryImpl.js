@@ -1,39 +1,63 @@
 import { fn, col } from "sequelize";
 import { models } from "../database/dbConnection.js";
 
-// Include reutilizable: Postulacion -> AperturaVacante -> Practica (filtrada por período)
-const incluirPeriodo = (periodoId) => [
-  {
-    model: models.AperturaVacante,
-    attributes: [],
-    required: true,
-    include: [
-      {
-        model: models.Practica,
-        as: "practica",
-        attributes: [],
-        required: true,
-        where: { periodo_id: periodoId },
-      },
-    ],
-  },
-];
+// Practica filtrada por período
+const incluirPractica = (periodoId) => ({
+  model: models.Practica,
+  as: "practica",
+  attributes: [],
+  required: true,
+  where: { periodo_id: periodoId },
+});
+
+// AperturaVacante -> Practica (período) y, si viene empresaId,
+// también Vacante -> Convenio filtrado por esa empresa
+const incluirApertura = (periodoId, empresaId, attributes = []) => ({
+  model: models.AperturaVacante,
+  attributes,
+  required: true,
+  include: [
+    incluirPractica(periodoId),
+    ...(empresaId
+      ? [
+          {
+            model: models.Vacante,
+            attributes: [],
+            required: true,
+            include: [
+              {
+                model: models.Convenio,
+                attributes: [],
+                required: true,
+                where: { empresa_id: empresaId },
+              },
+            ],
+          },
+        ]
+      : []),
+  ],
+});
 
 export const reporteRepository = {
   // Postulaciones agrupadas por estado
-  async postulacionesPorEstado(periodoId) {
+  async postulacionesPorEstado(periodoId, empresaId) {
     return await models.Postulacion.findAll({
       attributes: ["estado", [fn("COUNT", col("Postulacion.id")), "total"]],
-      include: incluirPeriodo(periodoId),
+      include: [incluirApertura(periodoId, empresaId)],
       group: ["Postulacion.estado"],
       raw: true,
     });
   },
 
-  // Practicantes del período agrupados por estado (En curso, Finalizada, Retirado, Cancelado)
-  async practicantesPorEstado(periodoId) {
+  // Practicantes del período agrupados por estado
+  // Con empresaId se llega a la empresa por Practica -> AperturaVacante
+  // (alias "aperturasVacante", como está en dbConnection).
+  async practicantesPorEstado(periodoId, empresaId) {
     return await models.PracticaPracticante.findAll({
-      attributes: ["estado", [fn("COUNT", col("PracticaPracticante.id")), "total"]],
+      attributes: [
+        "estado",
+        [fn("COUNT", fn("DISTINCT", col("PracticaPracticante.id"))), "total"],
+      ],
       include: [
         {
           model: models.Practica,
@@ -41,6 +65,31 @@ export const reporteRepository = {
           attributes: [],
           required: true,
           where: { periodo_id: periodoId },
+          include: empresaId
+            ? [
+                {
+                  model: models.AperturaVacante,
+                  as: "aperturasVacante",
+                  attributes: [],
+                  required: true,
+                  include: [
+                    {
+                      model: models.Vacante,
+                      attributes: [],
+                      required: true,
+                      include: [
+                        {
+                          model: models.Convenio,
+                          attributes: [],
+                          required: true,
+                          where: { empresa_id: empresaId },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ]
+            : [],
         },
       ],
       group: ["PracticaPracticante.estado"],
@@ -48,101 +97,58 @@ export const reporteRepository = {
     });
   },
 
-  // Empresas distintas con vacantes abiertas en el período
-  async empresasDelPeriodo(periodoId) {
-    const filas = await models.AperturaVacante.findAll({
-      attributes: [],
-      include: [
-        {
-          model: models.Practica,
-          as: "practica",
-          attributes: [],
-          required: true,
-          where: { periodo_id: periodoId },
-        },
-        {
-          model: models.Vacante,
-          attributes: [],
-          required: true,
-          include: [
-            { model: models.Convenio, attributes: ["empresa_id"], required: true },
-          ],
-        },
-      ],
-      raw: true,
-    });
-
-    return new Set(filas.map((f) => f["Vacante.Convenio.empresa_id"])).size;
-  },
-
-  // Oferta: cupos por cargo (todos y solo los disponibles)
-  async cuposPorVacante(periodoId) {
+  // Una fila por apertura: empresa, cargo, cupos y estado
+  async aperturasDelPeriodo(periodoId, empresaId) {
     const aperturas = await models.AperturaVacante.findAll({
-      attributes: ["cupos", "estado"],
+      attributes: ["id", "cupos", "estado"],
       include: [
-        {
-          model: models.Practica,
-          as: "practica",
-          attributes: [],
-          required: true,
-          where: { periodo_id: periodoId },
-        },
+        incluirPractica(periodoId),
         {
           model: models.Vacante,
           attributes: ["nombre"],
           required: true,
-        },
-      ],
-    });
-
-    const mapa = {};
-    aperturas.forEach((a) => {
-      const cargo = a.Vacante.nombre;
-      if (!mapa[cargo]) mapa[cargo] = { cargo, cupos: 0, disponibles: 0 };
-
-      mapa[cargo].cupos += a.cupos;
-      if (a.estado === "DISPONIBLE") mapa[cargo].disponibles += a.cupos;
-    });
-
-    return Object.values(mapa);
-  },
-
-  // Demanda: postulaciones por cargo
-  async postulacionesPorVacante(periodoId) {
-    const postulaciones = await models.Postulacion.findAll({
-      attributes: ["id"],
-      include: [
-        {
-          model: models.AperturaVacante,
-          attributes: ["id"],
-          required: true,
           include: [
             {
-              model: models.Practica,
-              as: "practica",
-              attributes: [],
+              model: models.Convenio,
+              attributes: ["empresa_id"],
               required: true,
-              where: { periodo_id: periodoId },
-            },
-            {
-              model: models.Vacante,
-              attributes: ["nombre"],
-              required: true,
+              ...(empresaId ? { where: { empresa_id: empresaId } } : {}),
+              include: [
+                // Asume Convenio.belongsTo(Empresa). Si tiene alias, agrégalo aquí.
+                { model: models.Empresa, attributes: ["id", "nombre"], required: true },
+              ],
             },
           ],
         },
       ],
     });
 
-    const mapa = {};
-    postulaciones.forEach((p) => {
-      const cargo = p.AperturaVacante.Vacante.nombre;
-      mapa[cargo] = (mapa[cargo] || 0) + 1;
+    return aperturas.map((a) => ({
+      id: a.id,
+      cupos: a.cupos,
+      estado: a.estado,
+      cargo: a.Vacante.nombre,
+      empresaId: a.Vacante.Convenio.Empresa.id,
+      empresa: a.Vacante.Convenio.Empresa.nombre,
+    }));
+  },
+
+  // Por apertura: total de postulaciones y cuántas fueron aceptadas
+  // (aceptada = cupo ocupado). [{ aperturaId, total, aceptadas }]
+  async postulacionesPorApertura(periodoId, empresaId) {
+    const postulaciones = await models.Postulacion.findAll({
+      attributes: ["id", "estado"],
+      include: [incluirApertura(periodoId, empresaId, ["id"])],
     });
 
-    return Object.entries(mapa).map(([cargo, postulaciones]) => ({
-      cargo,
-      postulaciones,
-    }));
+    const mapa = {};
+    postulaciones.forEach((p) => {
+      const aperturaId = p.AperturaVacante.id;
+      if (!mapa[aperturaId]) mapa[aperturaId] = { aperturaId, total: 0, aceptadas: 0 };
+      mapa[aperturaId].total += 1;
+      if (p.estado === "ACEPTADO") mapa[aperturaId].aceptadas += 1;
+    });
+
+    return Object.values(mapa);
   },
 };

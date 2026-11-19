@@ -33,7 +33,7 @@ const createPracticaRequisitoDocumentoModel = (sequelize) => {
                     key: "id"
                 },
 
-                onDelete: "CASCADE",
+                onDelete: "RESTRICT",
                 onUpdate: "CASCADE"
             },
 

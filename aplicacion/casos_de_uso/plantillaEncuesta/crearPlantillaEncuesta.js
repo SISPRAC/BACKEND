@@ -1,5 +1,6 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+import { validarPregunta } from "./validarPregunta.js";
 
 export const crearPlantillaEncuesta = async (
     sequelize,
@@ -28,25 +29,23 @@ export const crearPlantillaEncuesta = async (
         // =========================
 
         if (!titulo || !rol) {
-
             throw new BadRequestError(
                 "Titulo y rol son obligatorios"
             );
-
         }
-
 
         if (
             !preguntas ||
             !Array.isArray(preguntas) ||
             preguntas.length === 0
         ) {
-
             throw new BadRequestError(
                 "Debe registrar al menos una pregunta"
             );
-
         }
+
+        // Validar todas las preguntas antes de escribir en BD
+        const tipos = preguntas.map(validarPregunta);
 
 
         // =========================
@@ -56,13 +55,10 @@ export const crearPlantillaEncuesta = async (
         const rolEncontrado =
             await rolRepository.findByNombre(rol);
 
-
         if (!rolEncontrado) {
-
             throw new NotFoundError(
                 `El rol "${rol}" no existe`
             );
-
         }
 
 
@@ -72,15 +68,12 @@ export const crearPlantillaEncuesta = async (
 
         const nuevaEncuesta =
             await plantillaEncuestaRepository.create(
-
                 {
                     titulo,
                     descripcion,
                     rol_id: rolEncontrado.id
                 },
-
                 transaction
-
             );
 
 
@@ -88,51 +81,23 @@ export const crearPlantillaEncuesta = async (
         // CREAR PREGUNTAS
         // =========================
 
-        for (const pregunta of preguntas) {
+        for (const [index, pregunta] of preguntas.entries()) {
 
-            if (
-                !pregunta.texto ||
-                !pregunta.texto.trim()
-            ) {
-
-                throw new BadRequestError(
-                    "Todas las preguntas deben tener un enunciado"
-                );
-
-            }
-
-
-            if (
-                !pregunta.opciones ||
-                !Array.isArray(pregunta.opciones) ||
-                pregunta.opciones.length < 2
-            ) {
-
-                throw new BadRequestError(
-                    `La pregunta "${pregunta.texto}" debe tener al menos dos opciones`
-                );
-
-            }
-
+            const tipo = tipos[index];
 
             const nuevaPregunta =
                 await preguntaRepository.create(
-
                     {
-                        plantilla_encuesta_id:
-                            nuevaEncuesta.id,
-
-                        texto:
-                            pregunta.texto,
-
-                        orden:
-                            pregunta.orden
-
+                        plantilla_encuesta_id: nuevaEncuesta.id,
+                        texto: pregunta.texto,
+                        orden: pregunta.orden,
+                        tipo
                     },
-
                     transaction
-
                 );
+
+            // Texto libre: no se crean opciones
+            if (tipo === "texto_libre") continue;
 
 
             // =========================
@@ -140,36 +105,14 @@ export const crearPlantillaEncuesta = async (
             // =========================
 
             for (const opcion of pregunta.opciones) {
-
-                if (
-                    !opcion.texto ||
-                    !opcion.texto.trim()
-                ) {
-
-                    throw new BadRequestError(
-                        `La pregunta "${pregunta.texto}" tiene una opción vacía`
-                    );
-
-                }
-
-
                 await opcionPreguntaRepository.create(
-
                     {
-                        pregunta_id:
-                            nuevaPregunta.id,
-
-                        texto:
-                            opcion.texto
-
+                        pregunta_id: nuevaPregunta.id,
+                        texto: opcion.texto
                     },
-
                     transaction
-
                 );
-
             }
-
         }
 
 
@@ -188,14 +131,10 @@ export const crearPlantillaEncuesta = async (
             nuevaEncuesta.id
         );
 
-
     } catch (error) {
 
         await transaction.rollback();
 
         throw error;
-
     }
-
 };
-

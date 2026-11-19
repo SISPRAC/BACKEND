@@ -1,9 +1,14 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
+import { notificarRechazoPostulacion } from "../notificarEmail/notificarRechazoPostulacion.js";
+
 export const rechazarPostulacion = async (
     {
-        postulacionRepository
+        postulacionRepository,
+        userRepository,
+        notificacionRepository
     },
     postulacionId,
     comentarioEmpresa = null
@@ -42,7 +47,29 @@ export const rechazarPostulacion = async (
         );
     }
 
-    return await postulacionRepository.findById(
-        postulacionId
-    );
+    // Obtener nuevamente la postulación con sus relaciones.
+    const postulacionRechazada =
+        await postulacionRepository.findById(
+            postulacionId
+        );
+
+    // Notificar al director.
+    try {
+
+        await notificarRechazoPostulacion({
+            postulacion: postulacionRechazada,
+            userRepository,
+            notificacionRepository
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error notificando el rechazo de la postulación:",
+            error
+        );
+
+    }
+
+    return postulacionRechazada;
 };

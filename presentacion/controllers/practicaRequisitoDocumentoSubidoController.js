@@ -18,6 +18,7 @@ import { getEmpresasDocumentosByPractica } from "../../aplicacion/casos_de_uso/p
 
 import { aprobarPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumentoSubido/aprobarPracticaRequisitoDocumento.js";
 import { rechazarPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumentoSubido/rechazarPracticaRequisitoDocumento.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 
 export const createPracticaRequisitoDocumentoSubido = async (req, res) => {
 
@@ -40,7 +41,8 @@ export const createPracticaRequisitoDocumentoSubido = async (req, res) => {
                     mimeType: req.file?.mimetype,
 
                     carpeta: "documentos-requisitos"
-                }
+                },
+                notificacionRepository
             );
 
         return res.status(201).json({
@@ -84,7 +86,8 @@ export const updatePracticaRequisitoDocumentoSubido = async (req, res) => {
                 mimeType: req.file?.mimetype,
 
                 carpeta: "documentos-requisitos",
-            }
+            },
+             notificacionRepository
         );
 
         return res.status(200).json({
@@ -215,9 +218,7 @@ export const aprobarDocumentoRequisito = async (req, res) => {
         const { id } = req.params;
 
         const documento = await aprobarPracticaRequisitoDocumento(
-            {
-                practicaRequisitoDocumentoSubidoRepository,
-            },
+            { practicaRequisitoDocumentoSubidoRepository, notificacionRepository },
             id,
             req.user.id
         );
@@ -281,9 +282,7 @@ export const rechazarDocumentoRequisito = async (req, res) => {
         const { observacion } = req.body;
 
         const documento = await rechazarPracticaRequisitoDocumento(
-            {
-                practicaRequisitoDocumentoSubidoRepository,
-            },
+            { practicaRequisitoDocumentoSubidoRepository, notificacionRepository },
             id,
             req.user.id,
             observacion

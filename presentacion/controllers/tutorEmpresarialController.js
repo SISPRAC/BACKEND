@@ -1,6 +1,6 @@
 import { getTutorEmpresarial } from "../../aplicacion/casos_de_uso/tutorEmpresarial/geTutorEmpresarial.js";
 import { getAperturasByTutorEmpresa } from "../../aplicacion/casos_de_uso/tutorEmpresarial/getAperturasByTutorEmpresa.js";
-import { getAperturasByPractica} from "../../aplicacion/casos_de_uso/tutorEmpresarial/getAperturaByPractica.js";
+import { getAperturasByPractica } from "../../aplicacion/casos_de_uso/tutorEmpresarial/getAperturaByPractica.js";
 
 import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
 import { invitarTutorEmpresarial } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarTutorEmpresarial.js";
@@ -12,7 +12,9 @@ export const getTutorEmpresarialController = async (req, res) => {
     try {
 
         const tutorEmpresarial = await getTutorEmpresarial(
-            tutorEmpresaRepository
+            tutorEmpresaRepository,
+            empresaRepository,
+            req.user.id
         );
 
         return res.status(200).json(tutorEmpresarial);

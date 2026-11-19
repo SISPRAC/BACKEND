@@ -30,17 +30,37 @@ const createPracticaPracticanteModel = (sequelize) => {
                 allowNull: false,
                 defaultValue: "En curso",
             },
+
+            objetivo: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
+
+            certificado_url: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+
+            certificado_subido_por: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
+
+            certificado_fecha_subida: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
         },
         {
             tableName: "PracticaPracticante",
             freezeTableName: true,
             timestamps: false,
-              indexes: [
-        {
-            unique: true,
-            fields: ["practica_id", "practicante_id"],
-        },
-    ],
+            indexes: [
+                {
+                    unique: true,
+                    fields: ["practica_id", "practicante_id"],
+                },
+            ],
         }
     );
 

@@ -31,7 +31,7 @@ export const postSolicitudVisita = async (req, res) => {
 
     try {
 
-        const user_id = req.user.id;
+        const userId = req.user.id;
 
         const solicitud =
             await crearSolicitudVisita(
@@ -39,14 +39,13 @@ export const postSolicitudVisita = async (req, res) => {
                     solicitudVisitaRepository,
                     solicitudVisitaPracticanteRepository,
                     solicitudVisitaFechaRepository,
-                    tutorDocenteRepository: TutorDocenteRepository,
+                    TutorDocenteRepository,
                     practicaPracticanteRepository,
                     postulacionRepository,
                     notificacionRepository,
-                    crearNotificacion,
                     sequelize
                 },
-                user_id,
+                userId,
                 req.body
             );
 
@@ -181,7 +180,6 @@ export const putSolicitudVisita = async (
                     solicitudVisitaFechaRepository,
                     postulacionRepository,
                     notificacionRepository,
-                    crearNotificacion,
                     sequelize
                 },
                 id,
@@ -227,7 +225,7 @@ export const cancelarSolicitudVisitaController = async (
         const solicitud =
             await cancelarSolicitudVisita(
                 {
-                    solicitudVisitaRepository, 
+                    solicitudVisitaRepository,
                     postulacionRepository,
                     notificacionRepository,
                     sequelize
@@ -277,7 +275,7 @@ export const postVisita = async (
                     visitaRepository,
                     solicitudVisitaRepository,
                     solicitudVisitaFechaRepository,
-                    tutorDocenteRepository: TutorDocenteRepository,
+                    TutorDocenteRepository,
                     tutorEmpresaRepository,
                     notificacionRepository,
                     sequelize
@@ -325,7 +323,7 @@ export const rechazarSolicitudVisitaController = async (
             await rechazarSolicitudVisita(
                 {
                     solicitudVisitaRepository,
-                    tutorDocenteRepository: TutorDocenteRepository,
+                    TutorDocenteRepository,
                     tutorEmpresaRepository,
                     notificacionRepository,
                     sequelize

@@ -383,7 +383,7 @@ export const practicaRequisitoDocumentoRepository = {
             return [];
         }
 
-        return await models.PracticaRequisitoDocumento.findAll({
+        const requisitos = await models.PracticaRequisitoDocumento.findAll({
 
             where: {
                 practica_id: practicaPracticante.practica_id,
@@ -450,18 +450,10 @@ export const practicaRequisitoDocumentoRepository = {
 
                     include: [
 
-                        // =================================================
-                        // ARCHIVO ENTREGADO
-                        // =================================================
-
                         {
                             model: models.Archivo,
                             as: "archivo"
                         },
-
-                        // =================================================
-                        // TUTOR DOCENTE + USUARIO
-                        // =================================================
 
                         {
                             model: models.TutorDocente,
@@ -473,10 +465,6 @@ export const practicaRequisitoDocumentoRepository = {
                                 }
                             ]
                         },
-
-                        // =================================================
-                        // TUTOR EMPRESARIAL + USUARIO
-                        // =================================================
 
                         {
                             model: models.TutorEmpresa,
@@ -502,6 +490,50 @@ export const practicaRequisitoDocumentoRepository = {
                 ["id", "ASC"]
             ]
         });
+
+        // El objetivo vive en PracticaPracticante: se agrega a cada requisito
+        return requisitos.map((requisito) => ({
+            ...requisito.toJSON(),
+            objetivo: practicaPracticante.objetivo || ""
+        }));
+
+    },
+
+
+    existsByTipoRequisitoDocumentoId: async (id, transaction) => {
+        const cantidad = await models.PracticaRequisitoDocumento.count({
+            where: {
+                tipo_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+    },
+
+    async tieneEntregas(id, transaction) {
+
+        const cantidad = await models.EntregaInforme.count({
+            where: {
+                practica_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
+
+    },
+
+    async tieneDocumentosSubidos(id, transaction) {
+
+        const cantidad = await models.PracticaRequisitoDocumentoSubido.count({
+            where: {
+                practica_requisito_documento_id: id
+            },
+            transaction
+        });
+
+        return cantidad > 0;
 
     },
 

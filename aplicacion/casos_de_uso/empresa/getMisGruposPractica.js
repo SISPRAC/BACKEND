@@ -1,14 +1,15 @@
-import { models } from "../../../infraestructura/database/dbConnection.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
-export const obtenerGruposEmpresa = async (usuarioId) => {
+export const obtenerGruposEmpresa = async (
+    empresaRepository,
+    practicaRepository,
+    aperturaVacanteRepository,
+    practicaPracticanteRepository,
+    usuarioId
+) => {
 
-    // 1. Buscar la empresa asociada al usuario autenticado
-    const empresa = await models.Empresa.findOne({
-        where: {
-            usuario_id: usuarioId
-        }
-    });
+    // 1. Empresa del usuario autenticado
+    const empresa = await empresaRepository.findByUserId(usuarioId);
 
     if (!empresa) {
         throw new NotFoundError(
@@ -16,210 +17,54 @@ export const obtenerGruposEmpresa = async (usuarioId) => {
         );
     }
 
+    // 2. Prácticas disponibles y aperturas que la empresa ya tiene
+    const [practicas, aperturas] = await Promise.all([
+        practicaRepository.findAllConPeriodo(),
+        aperturaVacanteRepository.findByEmpresaId(empresa.id)
+    ]);
 
-    // 2. Buscar las aperturas de vacantes pertenecientes a la empresa
-    const aperturas = await models.AperturaVacante.findAll({
-
-        include: [
-
-            {
-                model: models.Vacante,
-                required: true,
-
-                include: [
-                    {
-                        model: models.Convenio,
-                        required: true,
-
-                        where: {
-                            empresa_id: empresa.id
-                        }
-                    }
-                ]
-            },
-
-            {
-                model: models.Practica,
-                as: "practica",
-                required: true,
-
-                include: [
-                    {
-                        model: models.Periodo,
-                        required: true
-                    }
-                ]
-            }
-
-        ],
-
-        order: [
-            [
-                {
-                    model: models.Practica,
-                    as: "practica"
-                },
-                models.Periodo,
-                "nombre",
-                "DESC"
-            ]
-        ]
-
-    });
-
-
-    // 3. Agrupar las aperturas por práctica
-    const grupos = {};
-
+    // 3. Agrupar las aperturas por practica_id
+    const aperturasPorPractica = {};
 
     for (const apertura of aperturas) {
-
-        const practica = apertura.practica;
-        const periodo = practica.Periodo;
-
-
-        if (!grupos[practica.id]) {
-
-            /*
-             * Buscar los practicantes de esta práctica
-             * que realmente pertenecen a esta empresa.
-             */
-            const practicantes =
-                await models.PracticaPracticante.findAll({
-
-                    where: {
-                        practica_id: practica.id,
-                        estado: [
-                            "En curso",
-                            "Finalizada"
-                        ]
-                    },
-
-                    include: [
-
-                        {
-                            model: models.Practicante,
-                            as: "practicante",
-                            required: true,
-
-                            include: [
-
-                                {
-                                    model: models.Candidato,
-                                    as: "candidato",
-                                    required: true,
-
-                                    include: [
-
-                                        {
-                                            model: models.Postulacion,
-                                            required: true,
-
-                                            where: {
-                                                estado: "ACEPTADO"
-                                            },
-
-                                            include: [
-
-                                                {
-                                                    model: models.AperturaVacante,
-                                                    required: true,
-
-                                                    where: {
-                                                        practica_id: practica.id
-                                                    },
-
-                                                    include: [
-
-                                                        {
-                                                            model: models.Vacante,
-                                                            required: true,
-
-                                                            include: [
-
-                                                                {
-                                                                    model: models.Convenio,
-                                                                    required: true,
-
-                                                                    where: {
-                                                                        empresa_id: empresa.id
-                                                                    }
-                                                                }
-
-                                                            ]
-
-                                                        }
-
-                                                    ]
-
-                                                }
-
-                                            ]
-
-                                        }
-
-                                    ]
-
-                                }
-
-                            ]
-
-                        }
-
-                    ]
-
-                });
-
-
-            grupos[practica.id] = {
-
-                practica_id: practica.id,
-
-                periodo_id: periodo.id,
-
-                periodo: periodo.nombre,
-
-                fecha_inicio: practica.fecha_inicio,
-
-                fecha_fin: practica.fecha_fin,
-
-                estado: practica.estado,
-
-                practicantes: practicantes.length,
-
-                aperturas: []
-
-            };
-
-        }
-
-
-        grupos[practica.id].aperturas.push({
-
+        (aperturasPorPractica[apertura.practica_id] ??= []).push({
             id: apertura.id,
-
             vacante_id: apertura.vacante_id,
-
             cupos: apertura.cupos,
-
             estado: apertura.estado,
-
             vacante: {
-
                 id: apertura.Vacante.id,
-
                 nombre: apertura.Vacante.nombre,
-
                 descripcion: apertura.Vacante.descripcion
-
             }
-
         });
-
     }
 
+    // 4. Armar los grupos (en paralelo)
+    return await Promise.all(
+        practicas.map(async (practica) => {
 
-    // 4. Convertir el objeto agrupado en arreglo
-    return Object.values(grupos);
+            const susAperturas = aperturasPorPractica[practica.id] ?? [];
+
+            // Solo tiene sentido contar si la empresa ya tiene aperturas
+            const practicantes = susAperturas.length > 0
+                ? await practicaPracticanteRepository.countByPracticaAndEmpresa(
+                    practica.id,
+                    empresa.id
+                )
+                : 0;
+
+            return {
+                practica_id: practica.id,
+                periodo_id: practica.Periodo.id,
+                periodo: practica.Periodo.nombre,
+                fecha_inicio: practica.fecha_inicio,
+                fecha_fin: practica.fecha_fin,
+                estado: practica.estado,
+                practicantes,
+                aperturas: susAperturas
+            };
+        })
+    );
 
 };

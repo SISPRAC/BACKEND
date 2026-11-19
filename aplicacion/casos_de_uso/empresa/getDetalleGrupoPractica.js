@@ -1,248 +1,112 @@
-import { models } from "../../../infraestructura/database/dbConnection.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 export const obtenerDetalleGrupoEmpresa = async (
+    empresaRepository,
+    practicaRepository,
+    aperturaVacanteRepository,
+    practicaPracticanteRepository,
     usuarioId,
     practicaId
 ) => {
 
-    // ==========================================
-    // 1. OBTENER EMPRESA DEL USUARIO AUTENTICADO
-    // ==========================================
-
-    const empresa = await models.Empresa.findOne({
-        where: {
-            usuario_id: usuarioId
-        }
-    });
+    // 1. Empresa del usuario autenticado
+    const empresa = await empresaRepository.findByUserId(usuarioId);
 
     if (!empresa) {
-        throw new NotFoundError(
-            "No se encontró una empresa asociada al usuario"
-        );
+        throw new NotFoundError("No se encontró una empresa asociada al usuario");
     }
 
-
-    // ==========================================
-    // 2. OBTENER LA PRÁCTICA
-    // ==========================================
-
-    const practica = await models.Practica.findByPk(
-        practicaId,
-        {
-            include: [
-                {
-                    model: models.Periodo,
-                    required: true
-                }
-            ]
-        }
-    );
+    // 2. Práctica
+    const practica = await practicaRepository.findByIdConPeriodo(practicaId);
 
     if (!practica) {
-        throw new NotFoundError(
-            "No se encontró la práctica"
-        );
+        throw new NotFoundError("No se encontró la práctica");
     }
 
+    // 3. Aperturas de la empresa en esta práctica
+    const aperturas = await aperturaVacanteRepository
+        .findByPracticaAndEmpresa(practicaId, empresa.id);
 
-    // ==========================================
-    // 3. OBTENER APERTURAS DE LA EMPRESA
-    // ==========================================
+    // 4. Postulaciones aceptadas de la empresa (definen sus practicantes)
+    const postulacionesAceptadas = await practicaPracticanteRepository
+        .findPostulacionesAceptadasByPracticaAndEmpresa(practicaId, empresa.id);
 
-    const aperturas =
-        await models.AperturaVacante.findAll({
+    const candidatoIds = postulacionesAceptadas.map((p) => p.candidato_id);
 
-            where: {
-                practica_id: practicaId
-            },
-
-            include: [
-                {
-                    model: models.Vacante,
-                    required: true,
-
-                    include: [
-                        {
-                            model: models.Convenio,
-                            required: true,
-
-                            where: {
-                                empresa_id: empresa.id
-                            }
-                        }
-                    ]
-                },
-                {
-                    model: models.TutorEmpresa,
-                    required: false, // 👈 false por si alguna apertura no tiene tutor asignado aún
-
-                    include: [
-                        {
-                            model: models.User,
-                            required: true,
-
-                            attributes: [
-                                "nombres",
-                                "apellidos"
-                            ]
-                        }
-                    ]
-                }
-            ]
-
-        });
-
-
-    // ==========================================
-    // 4. OBTENER PRACTICANTES DE LA EMPRESA
-    // ==========================================
-
-    const practicaPracticantes =
-        await models.PracticaPracticante.findAll({
-            where: {
-                practica_id: practicaId,
-                estado: ["En curso", "Finalizada", "Retirado","Cancelado"] // 👈 solo practicantes activos o finalizados
-            },
-            include: [
-                {
-                    model: models.Practicante,
-                    as: "practicante",
-                    required: true,
-                    include: [
-                        {
-                            model: models.Candidato,
-                            as: "candidato",
-                            required: true,
-                            include: [
-                                {
-                                    model: models.User,
-                                    required: true,
-                                    attributes: [
-                                        "id", "nombres", "apellidos", "correo",
-                                        "tipo_documento", "cedula", "telefono"
-                                    ]
-                                }
-                                // 👈 ya NO incluimos Postulacion aquí
-                            ]
-                        }
-                    ]
-                }
-            ]
-        });
-
-
-    // ==========================================
-    // 4.5 OBTENER LA POSTULACIÓN ACEPTADA POR SEPARADO
-    // ==========================================
-
-    const candidatoIds = practicaPracticantes.map(
-        (registro) => registro.practicante.candidato.id
-    );
-
-    const postulacionesAceptadas =
-        await models.Postulacion.findAll({
-            where: {
-                candidato_id: candidatoIds,
-                estado: "ACEPTADO"
-            },
-            include: [
-                {
-                    model: models.AperturaVacante,
-                    required: true,
-                    where: { practica_id: practicaId },
-                    include: [
-                        {
-                            model: models.Vacante,
-                            required: true
-                            // ya no hace falta filtrar por Convenio/empresa aquí,
-                            // porque solo consultamos practicantes de esta empresa
-                        }
-                    ]
-                }
-            ]
-        });
-
-    // mapa candidato_id -> postulación aceptada, para acceso O(1) en el .map()
     const postulacionPorCandidato = new Map(
         postulacionesAceptadas.map((p) => [p.candidato_id, p])
     );
 
-
-    // ==========================================
-    // 5. FORMATEAR PRACTICANTES
-    // ==========================================
-
-
-    const practicantes =
-        practicaPracticantes.map((registro) => {
-
-            const practicante = registro.practicante;
-            const candidato = practicante.candidato;
-            const usuario = candidato.Usuario;
-
-            const postulacion =
-                postulacionPorCandidato.get(candidato.id);
-
-            return {
-                practica_practicante_id: registro.id,
-                practicante_id: practicante.id,
-                candidato_id: candidato.id,
-                nombres: usuario.nombres,
-                apellidos: usuario.apellidos,
-                correo: usuario.correo,
-                tipo_documento: usuario.tipo_documento,
-                cedula: usuario.cedula,
-                telefono: usuario.telefono,
-                estado: registro.estado,
-
-                apertura: postulacion
-                    ? {
-                        id: postulacion.AperturaVacante.id,
-                        vacante: postulacion.AperturaVacante.Vacante.nombre // 👈 ahora sí funciona
-                    }
-                    : null
-            };
-
-        });
+    // 5. Practicantes de esos candidatos
+    const practicaPracticantes = candidatoIds.length
+        ? await practicaPracticanteRepository.findByPracticaAndCandidatos(
+            practicaId,
+            candidatoIds,
+            ["En curso", "Finalizada", "Retirado", "Cancelado"]
+        )
+        : [];
 
 
-    // ==========================================
-    // 6. FORMATEAR APERTURAS
-    // ==========================================
+    // 6. Formatear practicantes
+    const practicantes = practicaPracticantes.map((registro) => {
 
-    const aperturasFormateadas =
-        aperturas.map((apertura) => ({
+        const practicante = registro.practicante;
+        const candidato = practicante.candidato;
+        const usuario = candidato.Usuario;
+        const postulacion = postulacionPorCandidato.get(candidato.id);
 
-            id: apertura.id,
+        return {
+            practica_practicante_id: registro.id,
+            practicante_id: practicante.id,
+            candidato_id: candidato.id,
+            nombres: usuario.nombres,
+            apellidos: usuario.apellidos,
+            correo: usuario.correo,
+            tipo_documento: usuario.tipo_documento,
+            cedula: usuario.cedula,
+            telefono: usuario.telefono,
+            estado: registro.estado,
+            retiro: registro.retiro
+                ? {
+                    id: registro.retiro.id,
+                    motivo: registro.retiro.motivo,
+                    fecha_retiro: registro.retiro.fecha_retiro,
+                    archivo: registro.retiro.archivoSoporte
+                        ? {
+                            nombre: registro.retiro.archivoSoporte.nombre,
+                            url: registro.retiro.archivoSoporte.url
+                        }
+                        : null
+                }
+                : null,
 
-            vacante_id: apertura.vacante_id,
 
-            practica_id: apertura.practica_id,
-
-            tutorEmpresa_id: apertura.tutorEmpresa_id,
-
-            vacante: apertura.Vacante.nombre,
-
-            descripcion: apertura.Vacante.descripcion,
-
-            cupos: apertura.cupos,
-
-            estado: apertura.estado,
-
-            tutor_empresarial: apertura.TutorEmpresa?.Usuario
-                ? `${apertura.TutorEmpresa.Usuario.nombres} ${apertura.TutorEmpresa.Usuario.apellidos}`.trim()
+            apertura: postulacion
+                ? {
+                    id: postulacion.AperturaVacante.id,
+                    vacante: postulacion.AperturaVacante.Vacante.nombre
+                }
                 : null
+        };
+    });
 
-        }));
+    // 7. Formatear aperturas
+    const aperturasFormateadas = aperturas.map((apertura) => ({
+        id: apertura.id,
+        vacante_id: apertura.vacante_id,
+        practica_id: apertura.practica_id,
+        tutorEmpresa_id: apertura.tutorEmpresa_id,
+        vacante: apertura.Vacante.nombre,
+        descripcion: apertura.Vacante.descripcion,
+        cupos: apertura.cupos,
+        estado: apertura.estado,
+        tutor_empresarial: apertura.TutorEmpresa?.Usuario
+            ? `${apertura.TutorEmpresa.Usuario.nombres} ${apertura.TutorEmpresa.Usuario.apellidos}`.trim()
+            : null
+    }));
 
-
-    // ==========================================
-    // 7. RESPUESTA FINAL
-    // ==========================================
-
+    // 8. Respuesta final
     return {
-
         practica: {
             id: practica.id,
             periodo_id: practica.periodo_id,
@@ -251,12 +115,8 @@ export const obtenerDetalleGrupoEmpresa = async (
             fecha_fin: practica.fecha_fin,
             estado: practica.estado
         },
-
         practicantes,
-
-        aperturas:
-            aperturasFormateadas
-
+        aperturas: aperturasFormateadas
     };
 
 };

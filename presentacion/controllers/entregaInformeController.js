@@ -12,8 +12,9 @@ import { getTrazabilidadEntregaInforme } from "../../aplicacion/casos_de_uso/ent
 import { revisarEntregaInformeTutorDocente } from "../../aplicacion/casos_de_uso/entregaInforme/revisarEntregaInformeTutorDocente.js";
 
 import { revisarEntregaInformeTutorEmpresarial } from "../../aplicacion/casos_de_uso/entregaInforme/revisarEntregaInformeTutorEmpresarial.js";
+import { notificacionRepository } from "../../infraestructura/repositorios/notificacionRepositoryImpl.js"
 
-
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js";
 // ============================================================
 // CREAR ENTREGA DE INFORME
 // ============================================================
@@ -21,17 +22,15 @@ import { revisarEntregaInformeTutorEmpresarial } from "../../aplicacion/casos_de
 export const createEntregaInforme = async (req, res) => {
 
     try {
-
-        const user_id = req.user.id;
-
         const entrega =
             await crearEntregaInforme(
                 entregaInformeRepository,
                 practicaRequisitoDocumentoRepository,
                 archivoRepository,
-                user_id,
+                req.user.id,
                 req.body,
-                req.file
+                req.file,
+                notificacionRepository
             );
 
         return res.status(201).json(entrega);
@@ -149,23 +148,17 @@ export const reviewEntregaInformeTutorDocente = async (req, res) => {
 
     try {
 
-        const user_id = req.user.id;
-
-        const {
-            estado_tutor_docente,
-            observacion_tutor_docente
-        } = req.body;
-
-        const { id } = req.params;
-
         const entrega =
             await revisarEntregaInformeTutorDocente(
-                entregaInformeRepository,
-                TutorDocenteRepository,
-                id,
-                user_id,
-                estado_tutor_docente,
-                observacion_tutor_docente
+                req.params.id,
+                req.user.id,
+                req.body.estado_tutor_docente,
+                req.body.observacion_tutor_docente,
+                {
+                    entregaInformeRepository,
+                    TutorDocenteRepository,
+                    notificacionRepository
+                }
             );
 
         return res.status(200).json(entrega);
@@ -199,27 +192,25 @@ export const reviewEntregaInformeTutorEmpresarial = async (req, res) => {
 
     try {
 
-        const user_id = req.user.id;
-
-        const {
-            estado_tutor_empresarial,
-            observacion_tutor_empresarial
-        } = req.body;
-
-        const { id } = req.params;
 
         const entrega =
             await revisarEntregaInformeTutorEmpresarial(
-                entregaInformeRepository,
-                id,
-                user_id,
-                estado_tutor_empresarial,
-                observacion_tutor_empresarial
+                req.params.id,
+                req.user.id,
+                req.body.estado_tutor_empresarial,
+                req.body.observacion_tutor_empresarial,
+                {
+                    entregaInformeRepository,
+                    tutorEmpresaRepository,
+                    notificacionRepository
+                }
             );
 
         return res.status(200).json(entrega);
 
     } catch (error) {
+
+        console.log("Error revision", error);
 
         if (error.statusCode) {
 

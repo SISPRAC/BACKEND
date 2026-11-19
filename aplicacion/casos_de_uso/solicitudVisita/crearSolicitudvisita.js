@@ -1,16 +1,17 @@
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
+import { notificarNuevaSolicitudVisita } from "../notificarEmail/notificarNuevaSolicitudVisita.js";
+
 export const crearSolicitudVisita = async (
     {
         solicitudVisitaRepository,
         solicitudVisitaPracticanteRepository,
         solicitudVisitaFechaRepository,
-        tutorDocenteRepository,
+        TutorDocenteRepository,
         practicaPracticanteRepository,
         postulacionRepository,
         notificacionRepository,
-        crearNotificacion,
         sequelize
     },
     userId,
@@ -27,6 +28,8 @@ export const crearSolicitudVisita = async (
         practicantes,
         fechas
     } = data;
+
+    console.log("[crearSolicitudVisita] practicantes recibidos:", practicantes);
 
     if (
         !practicantes ||
@@ -49,7 +52,7 @@ export const crearSolicitudVisita = async (
     }
 
     const tutorDocente =
-        await tutorDocenteRepository.findByUserId(userId);
+        await TutorDocenteRepository.findByUserId(userId);
 
     if (!tutorDocente) {
         throw new NotFoundError(
@@ -123,22 +126,17 @@ export const crearSolicitudVisita = async (
 
     const informacionPracticantes = [];
 
-    for (const practicaPracticanteId of practicantes) {
+    for (const practicanteId of practicantes) {
 
         const practicaPracticante =
             await practicaPracticanteRepository
-                .findByIdWithPracticaAndCandidato(
-                    practicaPracticanteId
+                .findByPracticanteIdWithPracticaAndCandidato(
+                    practicanteId
                 );
 
         if (!practicaPracticante) {
-
-            console.log(
-                "❌ NO SE ENCONTRÓ PRACTICA PRACTICANTE"
-            );
-
             throw new NotFoundError(
-                `No se encontró el practicante de la práctica ${practicaPracticanteId}`
+                `No se encontró una práctica asociada al practicante ${practicanteId}`
             );
         }
 
@@ -244,14 +242,10 @@ export const crearSolicitudVisita = async (
             );
 
         const practicantesSolicitud =
-            practicantes.map(
-                (practica_practicante_id) => ({
-                    solicitud_visita_id:
-                        solicitud.id,
-
-                    practica_practicante_id
-                })
-            );
+            informacionPracticantes.map((item) => ({
+                solicitud_visita_id: solicitud.id,
+                practica_practicante_id: item.practicaPracticante.id
+            }));
 
         await solicitudVisitaPracticanteRepository.createMany(
             practicantesSolicitud,
@@ -294,27 +288,17 @@ export const crearSolicitudVisita = async (
          * para enviar una sola notificación a cada tutor.
          */
 
-        const tutoresNotificados =
-            new Map();
+        const tutoresNotificados = new Map();
 
-        for (
-            const item of informacionPracticantes
-        ) {
+        for (const item of informacionPracticantes) {
 
-            const usuarioTutorId =
-                item.usuarioTutor.id;
+            const usuarioTutorId = item.usuarioTutor.id;
 
-            if (
-                !tutoresNotificados.has(
-                    usuarioTutorId
-                )
-            ) {
-
-                tutoresNotificados.set(
-                    usuarioTutorId,
-                    []
-                );
-
+            if (!tutoresNotificados.has(usuarioTutorId)) {
+                tutoresNotificados.set(usuarioTutorId, {
+                    usuarioTutor: item.usuarioTutor,
+                    nombresPracticantes: []
+                });
             }
 
             const nombreCompleto =
@@ -322,35 +306,30 @@ export const crearSolicitudVisita = async (
 
             tutoresNotificados
                 .get(usuarioTutorId)
-                .push(nombreCompleto);
-
+                .nombresPracticantes.push(nombreCompleto);
         }
 
         /*
-         * Crear las notificaciones.
+         * Notificar (interna + correo).
+         * Va en su propio try/catch: la solicitud ya está confirmada,
+         * un fallo de notificación no debe hacer fallar la petición.
          */
 
-        for (
-            const [
-                usuarioIdTutor,
-                nombresPracticantes
-            ] of tutoresNotificados
-        ) {
+        try {
 
-            await crearNotificacion(
-                { notificacionRepository },
-                {
-                    usuario_id:
-                        usuarioIdTutor,
+            await notificarNuevaSolicitudVisita({
+                tutores: [...tutoresNotificados.values()],
+                nombreTutorDocente,
+                fechas,
+                notificacionRepository
+            });
 
-                    titulo:
-                        "Nueva solicitud de visita",
+        } catch (errorNotificacion) {
 
-                    descripcion:
-                        `El tutor docente ${nombreTutorDocente} ha solicitado una visita para los practicantes: ${nombresPracticantes.join(", ")}. Por favor, revise la solicitud y seleccione una de las disponibilidades propuestas.`
-                }
+            console.error(
+                "Error notificando la nueva solicitud de visita:",
+                errorNotificacion
             );
-
         }
 
         return solicitud;

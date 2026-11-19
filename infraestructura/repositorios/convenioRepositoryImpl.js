@@ -29,7 +29,8 @@ export const convenioRepository = {
                     model: models.Empresa,
                     attributes: [
                         "id",
-                        "nombre"
+                        "nombre",
+                        "es_publica"
                     ]
                 },
 
@@ -115,6 +116,7 @@ export const convenioRepository = {
             }
         );
     },
+
     async findAllByEmpresaId(empresa_id) {
         return await models.Convenio.findAll({
             where: {
@@ -151,21 +153,25 @@ export const convenioRepository = {
             ]
         });
     },
+
     async findConveniosParaVencer() {
-
         return await models.Convenio.findAll({
-            where: {
-                estado: "APROBADO"
-            },
-
-            attributes: [
-                "id",
-                "fecha_fin",
-                "estado",
-                "archivo_id"
+            where: { estado: "APROBADO" }, // conserva tu where actual
+            include: [
+                {
+                    model: models.Empresa,
+                    attributes: ["id", "nombre"],
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "correo", "nombres", "apellidos"]
+                        }
+                    ]
+                }
             ]
         });
     },
+
     async findAprobadoByEmpresaId(empresa_id) {
         return await models.Convenio.findOne({
             where: {
