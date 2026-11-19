@@ -222,6 +222,8 @@ export const registerEmpresa = async (
 
     } catch (error) {
 
+        console.log("Error", error);
+
         // Si el commit ya se ejecutó (o falló), evitar un segundo rollback
         if (!transaction.finished) {
             await transaction.rollback();

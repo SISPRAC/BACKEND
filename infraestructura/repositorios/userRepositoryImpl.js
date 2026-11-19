@@ -160,6 +160,6 @@ export const userRepository = {
             { password: passwordHash },
             { where: { id: userId } }
         );
-    }
+    },
 
 };

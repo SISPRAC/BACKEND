@@ -6,15 +6,30 @@ export const TutorDocenteRepository = {
         return await models.TutorDocente.create(data, { transaction });
     },
 
-    async findByUserId(userId) {
-        return models.TutorDocente.findOne({
-            where: { usuario_id: userId },
+    async findByUserId(userId, transaction = null) {
+        return await models.TutorDocente.findOne({
+            where: {
+                usuario_id: userId
+            },
             include: [
                 {
                     model: models.User,
                     attributes: ["id", "nombres", "apellidos", "correo"]
                 }
-            ]
+            ],
+            transaction
+        });
+    },
+
+    async update(id, data, transaction) {
+        const tutorDocente = await models.TutorDocente.findByPk(id, {
+            transaction
+        });
+
+        if (!tutorDocente) return null;
+
+        return await tutorDocente.update(data, {
+            transaction
         });
     },
     async findById(id) {

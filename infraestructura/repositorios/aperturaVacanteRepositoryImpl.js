@@ -238,5 +238,15 @@ export const aperturaVacanteRepository = {
         });
 
     },
+    async cerrarPorPractica(practicaId, transaction) {
+        const [filas] = await models.AperturaVacante.update(
+            { estado: "CERRADA" },
+            {
+                where: { practica_id: practicaId, estado: { [Op.ne]: "CERRADA" } },
+                transaction
+            }
+        );
+        return filas;
+    }
 
 };

@@ -8,15 +8,28 @@ const aMapa = (filas) =>
 const porcentaje = (n, total) =>
     total ? Math.round((n / total) * 1000) / 10 : 0;
 
+const idValido = (valor) => {
+    const n = Number(valor);
+    return Number.isInteger(n) && n > 0 ? n : null;
+};
+
 export const getDashboardReporte = async (
     { reporteRepository, periodoRepository },
-    periodoId
+    periodoId,
+    empresaId // opcional: si no viene, es la vista global
 ) => {
     // 1. Validaciones
-    const id = Number(periodoId);
-
-    if (!periodoId || !Number.isInteger(id) || id <= 0) {
+    const id = idValido(periodoId);
+    if (!id) {
         throw new BadRequestError("El período es obligatorio y debe ser un número válido.");
+    }
+
+    let idEmpresa = null;
+    if (empresaId !== undefined && empresaId !== null && empresaId !== "") {
+        idEmpresa = idValido(empresaId);
+        if (!idEmpresa) {
+            throw new BadRequestError("La empresa debe ser un número válido.");
+        }
     }
 
     const periodo = await periodoRepository.findById(id);
@@ -24,19 +37,17 @@ export const getDashboardReporte = async (
         throw new NotFoundError("El período seleccionado no existe.");
     }
 
-    // 2. Consultas en paralelo
+    // 2. Consultas en paralelo (todas respetan el filtro de empresa)
     const [
         postulacionesEstado,
         practicantesEstado,
-        empresas,
-        cupos,
-        postulacionesCargo,
+        aperturas,
+        postulacionesApertura,
     ] = await Promise.all([
-        reporteRepository.postulacionesPorEstado(id),
-        reporteRepository.practicantesPorEstado(id),
-        reporteRepository.empresasDelPeriodo(id),
-        reporteRepository.cuposPorVacante(id),
-        reporteRepository.postulacionesPorVacante(id),
+        reporteRepository.postulacionesPorEstado(id, idEmpresa),
+        reporteRepository.practicantesPorEstado(id, idEmpresa),
+        reporteRepository.aperturasDelPeriodo(id, idEmpresa),
+        reporteRepository.postulacionesPorApertura(id, idEmpresa),
     ]);
 
     const post = aMapa(postulacionesEstado); // POSTULADO, ACEPTADO, RECHAZADO, RETIRADO
@@ -44,16 +55,53 @@ export const getDashboardReporte = async (
 
     const totalPostulaciones = Object.values(post).reduce((a, b) => a + b, 0);
 
-    // 3. Tarjetas
+    // 3. Vacantes: una fila por (empresa + cargo), con su empresa a la vista
+    const postPorApertura = Object.fromEntries(
+        postulacionesApertura.map((p) => [p.aperturaId, p])
+    );
+
+    const mapaVacantes = {};
+    aperturas.forEach((a) => {
+        const clave = `${a.empresaId}|${a.cargo}`;
+        if (!mapaVacantes[clave]) {
+            mapaVacantes[clave] = {
+                id: clave,
+                empresaId: a.empresaId,
+                empresa: a.empresa,
+                cargo: a.cargo,
+                cupos: 0,
+                cuposDisponibles: 0,
+                cuposOcupados: 0,
+                cuposLibres: 0,
+                postulaciones: 0,
+            };
+        }
+        const v = mapaVacantes[clave];
+        v.cupos += a.cupos;
+        if (a.estado === "DISPONIBLE") v.cuposDisponibles += a.cupos;
+        v.postulaciones += postPorApertura[a.id]?.total ?? 0;
+        v.cuposOcupados += postPorApertura[a.id]?.aceptadas ?? 0;
+    });
+
+    // Libres = cupos - aceptadas (nunca negativo)
+    Object.values(mapaVacantes).forEach((v) => {
+        v.cuposLibres = Math.max(v.cupos - v.cuposOcupados, 0);
+    });
+
+    const vacantes = Object.values(mapaVacantes).sort(
+        (a, b) => a.empresa.localeCompare(b.empresa) || a.cargo.localeCompare(b.cargo)
+    );
+
+    // 4. Tarjetas
     const kpis = {
-        empresas,
-        cuposDisponibles: cupos.reduce((suma, c) => suma + c.disponibles, 0),
+        empresas: new Set(vacantes.map((v) => v.empresaId)).size,
+        cuposDisponibles: vacantes.reduce((s, v) => s + v.cuposDisponibles, 0),
         postulaciones: totalPostulaciones,
         tasaAceptacion: porcentaje(post.ACEPTADO ?? 0, totalPostulaciones),
         practicantesActivos: prac["En curso"] ?? 0,
     };
 
-    // 4. Practicantes por estado
+    // 5. Practicantes por estado
     const practicantesPorEstado = [
         { estado: "En curso", total: prac["En curso"] ?? 0 },
         { estado: "Finalizada", total: prac.Finalizada ?? 0 },
@@ -61,30 +109,39 @@ export const getDashboardReporte = async (
         { estado: "Cancelado", total: prac.Cancelado ?? 0 },
     ];
 
-    // 5. Oferta vs demanda por cargo (cupos vs postulaciones)
-    const mapaCargos = {};
+    // 6. Oferta vs demanda para la gráfica.
+    // En la vista global el nombre del cargo lleva la empresa ("Cargo · Empresa");
+    // con una empresa seleccionada solo va el cargo.
+    const ofertaDemanda = vacantes
+        .map((v) => ({
+            cargo: idEmpresa ? v.cargo : `${v.cargo} · ${v.empresa}`,
+            empresa: v.empresa,
+            cupos: v.cupos,
+            postulaciones: v.postulaciones,
+        }))
+        .sort((a, b) => b.postulaciones - a.postulaciones);
 
-    cupos.forEach((c) => {
-        mapaCargos[c.cargo] = { cargo: c.cargo, cupos: c.cupos, postulaciones: 0 };
-    });
-
-    postulacionesCargo.forEach((p) => {
-        if (!mapaCargos[p.cargo]) {
-            mapaCargos[p.cargo] = { cargo: p.cargo, cupos: 0, postulaciones: 0 };
+    // 6b. Ocupación de cupos: por empresa en la vista global,
+    // por cargo cuando hay una empresa seleccionada
+    const mapaOcupacion = {};
+    vacantes.forEach((v) => {
+        const nombre = idEmpresa ? v.cargo : v.empresa;
+        if (!mapaOcupacion[nombre]) {
+            mapaOcupacion[nombre] = { nombre, ocupados: 0, libres: 0 };
         }
-        mapaCargos[p.cargo].postulaciones = p.postulaciones;
+        mapaOcupacion[nombre].ocupados += Math.min(v.cuposOcupados, v.cupos);
+        mapaOcupacion[nombre].libres += v.cuposLibres;
     });
-
-    const ofertaDemanda = Object.values(mapaCargos).sort(
-        (a, b) => b.postulaciones - a.postulaciones
+    const ocupacion = Object.values(mapaOcupacion).sort(
+        (a, b) => b.ocupados + b.libres - (a.ocupados + a.libres)
     );
 
-    // 6. Distribución de resultados de selección (%)
+    // 7. Distribución de resultados de selección (%)
     const resultadosSeleccion = [
         { estado: "Pendiente", valor: porcentaje(post.POSTULADO ?? 0, totalPostulaciones) },
         { estado: "Aceptado", valor: porcentaje(post.ACEPTADO ?? 0, totalPostulaciones) },
         { estado: "Rechazado", valor: porcentaje(post.RECHAZADO ?? 0, totalPostulaciones) },
     ];
 
-    return { kpis, practicantesPorEstado, ofertaDemanda, resultadosSeleccion };
+    return { kpis, practicantesPorEstado, ofertaDemanda, vacantes, ocupacion, resultadosSeleccion };
 };

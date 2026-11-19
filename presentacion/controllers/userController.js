@@ -3,6 +3,8 @@ import { candidatoRepository } from "../../infraestructura/repositorios/candidat
 import { PracticanteRepository } from "../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 import { departamentoRepository } from "../../infraestructura/repositorios/departamentoRepositoryImpl.js";
 import { municipioRepository } from "../../infraestructura/repositorios/municipioRepositoryImpl.js";
+import { TutorDocenteRepository } from "../../infraestructura/repositorios/tutorDocenteRepositoryImpl.js";
+import { tutorEmpresaRepository } from "../../infraestructura/repositorios/TutorEmpresaRepositoryImpl.js"
 
 import { cambiarEstadoUsuario } from "../../aplicacion/casos_de_uso/usuario/cambiarEstado.js";
 import { actualizarPerfil } from "../../aplicacion/casos_de_uso/usuario/actualizarPerfil.js";
@@ -36,8 +38,9 @@ export const getUsers = async (req, res) => {
 
 export const getUser = async (req, res) => {
   try {
+    const userId = req.user.id;
 
-    const user = await userRepository.findById(req.user.id);
+    const user = await userRepository.findById(userId);
 
     if (!user) {
       return res.status(404).json({
@@ -45,8 +48,9 @@ export const getUser = async (req, res) => {
       });
     }
 
+    // Candidato
     const candidato =
-      await candidatoRepository.findByUserId(req.user.id);
+      await candidatoRepository.findByUserId(userId);
 
     let practicante = null;
 
@@ -56,6 +60,14 @@ export const getUser = async (req, res) => {
           candidato.id
         );
     }
+
+    // Tutor Docente
+    const tutorDocente =
+      await TutorDocenteRepository.findByUserId(userId);
+
+    // Tutor Empresarial
+    const tutorEmpresa =
+      await tutorEmpresaRepository.findByUserId(userId);
 
     const usuario = user.toJSON();
 
@@ -68,10 +80,17 @@ export const getUser = async (req, res) => {
       }
       : null;
 
-    res.status(200).json(usuario);
+    usuario.tutorDocente = tutorDocente
+      ? tutorDocente.toJSON()
+      : null;
+
+    usuario.tutorEmpresa = tutorEmpresa
+      ? tutorEmpresa.toJSON()
+      : null;
+
+    return res.status(200).json(usuario);
 
   } catch (error) {
-
     if (error.statusCode) {
       return res.status(error.statusCode).json({
         message: error.message
@@ -181,16 +200,21 @@ export const cambiarEstado = async (req, res) => {
 export const actualizarPerfilUsuario = async (req, res) => {
   try {
 
+    const rol = req.user.roles?.[0];
+
     const resultado = await actualizarPerfil(
       {
         userRepository,
         candidatoRepository,
         PracticanteRepository,
+        TutorDocenteRepository,
+        tutorEmpresaRepository,
         departamentoRepository,
         municipioRepository
       },
       req.user.id,
-      req.body
+      req.body,
+      rol
     );
 
     res.status(200).json(resultado);

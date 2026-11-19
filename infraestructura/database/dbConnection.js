@@ -50,20 +50,41 @@ import createIdiomaModel from "../models/idiomaModel.js";
 import createCandidatoIdiomaModel from "../models/candidatoIdiomaModel.js";
 import createEmpresaRequisitoDocumentoModel from "../models/EmpresaRequisitoDocumentoModel.js"
 import createPasswordResetTokenModel from "../models/PasswordresettokenModel.js";
+import createRecordatorioEnviadoModel from "../models/recordatorioEnviadoModel.js";
 
-
+import "dotenv/config";
 
 let sequelize;
 let models = {};
 
-export const initDB = async (database, username, contraseña) => {
-    sequelize = new Sequelize(database, username, contraseña, {
-        host: 'localhost',
-        dialect: 'postgres'
-    });
-
+export const initDB = async () => {
     try {
+        const databaseUrl = process.env.DATABASE_URL;
+
+        if (!databaseUrl) {
+            throw new Error("No se encontró DATABASE_URL en las variables de entorno");
+        }
+
+        sequelize = new Sequelize(databaseUrl, {
+            dialect: "postgres",
+            dialectOptions: {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false
+                }
+            },
+            logging: false,
+            pool: {
+                max: 5,
+                min: 0,
+                acquire: 30000,
+                idle: 10000
+            }
+        });
+
         await sequelize.authenticate();
+
+        console.log("Conexión con Supabase establecida correctamente");
 
         models.User = createUserModel(sequelize);
         models.Rol = createRolModel(sequelize);
@@ -120,6 +141,7 @@ export const initDB = async (database, username, contraseña) => {
         models.Departamento = createDepartamentoModel(sequelize);
         models.Municipio = createMunicipioModel(sequelize);
         models.PracticaRequisitoDocumentoSubido = createPracticaRequisitoDocumentoSubidoModel(sequelize);
+       // models.Envios = createRecordatorioEnviadoModel(sequelize)
 
         models.User.belongsToMany(models.Rol, {
             through: models.UserRol,
@@ -1067,8 +1089,10 @@ export const initDB = async (database, username, contraseña) => {
 
         console.log('DB connected');
     } catch (error) {
-        console.error('DB error:', error);
+        console.error("Error conectando con Supabase:", error);
+        throw error;
     }
+
 };
 
 export { sequelize, models };

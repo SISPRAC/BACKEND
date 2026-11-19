@@ -306,5 +306,13 @@ export const practicaPracticanteRepository = {
                 }
             ]
         });
+    },
+
+    async finalizarActivosPorPractica(practicaId, transaction) {
+        const [filas] = await models.PracticaPracticante.update(
+            { estado: "Finalizada" },
+            { where: { practica_id: practicaId, estado: "En curso" }, transaction }
+        );
+        return filas;
     }
 };

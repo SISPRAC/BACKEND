@@ -42,6 +42,7 @@ import empresaRequisitoDocumentoRouter from "./presentacion/routes/empresaRequis
 
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
+import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
 
 
 
@@ -98,9 +99,12 @@ app.use("/api/reportes", reporteRouter );
 app.use("/api/habilidadesBlandas", habilidadBlandaRouter);
 app.use("/api/idiomas", idiomaRouter);
 app.use("/api/empresaRequisitoDocumento", empresaRequisitoDocumentoRouter);
-iniciarVencimientoConvenios();
 
-await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
+//await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
+await initDB(); 
+iniciarVencimientoConvenios();
+iniciarFinalizacionPracticas();
+
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port", process.env.PORT);
 });

@@ -1,5 +1,9 @@
-import { models } from "../database/dbConnection.js";
+import { models, sequelize } from "../database/dbConnection.js";
+import { Op } from "sequelize";
 
+// Fecha de hoy en Colombia (YYYY-MM-DD), comparable con DATEONLY
+const hoyColombia = () =>
+    new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
 export const practicaRepository = {
 
     async create(data, transaction) {
@@ -145,5 +149,48 @@ export const practicaRepository = {
             }
         });
     },
+
+    async obtenerVencidasActivas() {
+        return models.Practica.findAll({
+            where: {
+                estado: "EN_CURSO",
+                fecha_fin: { [Op.lt]: hoyColombia() }
+            },
+            include: [
+                { model: models.Periodo },
+                {
+                    model: models.AperturaVacante,
+                    as: "aperturasVacante",
+                    required: false,
+                    include: [{
+                        model: models.Vacante,
+                        include: [{
+                            model: models.Convenio,
+                            include: [{
+                                model: models.Empresa,
+                                include: [{
+                                    model: models.User,
+                                    attributes: ["id", "correo", "nombres", "apellidos"]
+                                }]
+                            }]
+                        }]
+                    }]
+                }
+            ]
+        });
+    },
+
+    // Devuelve cuántas filas cambió (0 = otro proceso ya la finalizó)
+    async marcarFinalizada(practicaId, transaction) {
+        const [filas] = await models.Practica.update(
+            { estado: "FINALIZADA" },
+            { where: { id: practicaId, estado: "EN_CURSO" }, transaction }
+        );
+        return filas;
+    },
+
+    async transaccion(callback) {
+        return sequelize.transaction(callback);
+    }
 
 };

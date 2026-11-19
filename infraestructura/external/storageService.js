@@ -37,6 +37,11 @@ export const uploadArchivo = async (
     const ruta =
         `${carpeta}/${nombreUnico}`;
 
+    console.log("Carpeta:", carpeta);
+    console.log("Nombre:", nombre);
+    console.log("Ruta generada:", ruta);
+    console.log("Buffer válido:", Buffer.isBuffer(buffer));
+
     const { error } =
         await supabase.storage
             .from("Documentos")

@@ -7,36 +7,25 @@ export const actualizarPerfil = async (
         userRepository,
         candidatoRepository,
         PracticanteRepository,
+        TutorDocenteRepository,
+        tutorEmpresaRepository,
         departamentoRepository,
         municipioRepository
     },
     userId,
-    datos
+    datos,
+    rol
 ) => {
 
     const transaction = await sequelize.transaction();
 
     try {
 
-        // =========================
-        // 1. BUSCAR USUARIO
-        // =========================
-
-        const usuario = await userRepository.findById(
-            userId,
-            transaction
-        );
+        const usuario = await userRepository.findById(userId, transaction);
 
         if (!usuario) {
-            throw new NotFoundError(
-                "Usuario no encontrado"
-            );
+            throw new NotFoundError("Usuario no encontrado");
         }
-
-
-        // =========================
-        // 2. ACTUALIZAR USUARIO
-        // =========================
 
         const datosUsuario = {
             nombres: datos.nombres,
@@ -46,142 +35,111 @@ export const actualizarPerfil = async (
             telefono: datos.telefono
         };
 
-        await userRepository.update(
-            userId,
-            datosUsuario,
-            transaction
-        );
+        await userRepository.update(userId, datosUsuario, transaction);
 
+        if (rol === "Candidato" || rol === "Practicante") {
 
-        // =========================
-        // 3. BUSCAR CANDIDATO
-        // =========================
-
-        const candidato =
-            await candidatoRepository.findByUserId(
+            const candidato = await candidatoRepository.findByUserId(
                 userId,
                 transaction
             );
 
-        if (!candidato) {
-            throw new NotFoundError(
-                "Candidato no encontrado"
-            );
-        }
+            if (!candidato) {
+                throw new NotFoundError("No se encontró el perfil de candidato");
+            }
 
-
-        // =========================
-        // 4. ACTUALIZAR CANDIDATO
-        // =========================
-
-        await candidatoRepository.update(
-            candidato.id,
-            {
-                codigo: datos.codigo
-            },
-            transaction
-        );
-
-
-        // =========================
-        // 5. BUSCAR PRACTICANTE
-        // =========================
-
-        const practicante =
-            await PracticanteRepository.findByCandidatoId(
+            await candidatoRepository.update(
                 candidato.id,
+                { codigo: datos.codigo },
                 transaction
             );
 
+            if (rol === "Practicante") {
 
-        // =========================
-        // 6. SI ES PRACTICANTE
-        // =========================
+                const practicante =
+                    await PracticanteRepository.findByCandidatoId(
+                        candidato.id,
+                        transaction
+                    );
 
-        if (practicante) {
+                if (!practicante) {
+                    throw new NotFoundError("No se encontró el perfil de practicante");
+                }
 
-            // =========================
-            // 6.1 BUSCAR DEPARTAMENTO
-            // =========================
+                const departamento =
+                    await departamentoRepository.findById(
+                        datos.departamentoId,
+                        transaction
+                    );
 
-            const departamento =
-                await departamentoRepository.findById(
-                    datos.departamentoId,
+                if (!departamento) {
+                    throw new NotFoundError("Departamento no encontrado");
+                }
+
+                const municipio =
+                    await municipioRepository.findById(
+                        datos.municipioId,
+                        transaction
+                    );
+
+                if (!municipio) {
+                    throw new NotFoundError("Municipio no encontrado");
+                }
+
+                if (municipio.departamento_id !== departamento.id) {
+                    throw new BadRequestError(
+                        "El municipio no pertenece al departamento seleccionado"
+                    );
+                }
+
+                await PracticanteRepository.update(
+                    practicante.id,
+                    {
+                        eps: datos.eps,
+                        codigoDepResidencia: departamento.codigo,
+                        codigoMunResidencia: municipio.codigo,
+                        fecha_nacimiento: datos.fecha_nacimiento,
+                        genero: datos.genero,
+                        direccion: datos.direccion,
+                        perfil_completado: true
+                    },
+                    transaction
+                );
+            }
+
+        } else if (rol === "Tutor Docente") {
+
+            const tutorDocente =
+                await TutorDocenteRepository.findByUserId(
+                    userId,
                     transaction
                 );
 
-            if (!departamento) {
-                throw new NotFoundError(
-                    "Departamento no encontrado"
-                );
+            if (!tutorDocente) {
+                throw new NotFoundError("No se encontró el perfil de tutor docente");
             }
 
+        } else if (rol === "Tutor Empresarial") {
 
-            // =========================
-            // 6.2 BUSCAR MUNICIPIO
-            // =========================
-
-            const municipio =
-                await municipioRepository.findById(
-                    datos.municipioId,
+            const tutorEmpresa =
+                await tutorEmpresaRepository.findByUserId(
+                    userId,
                     transaction
                 );
 
-            if (!municipio) {
-                throw new NotFoundError(
-                    "Municipio no encontrado"
-                );
+            if (!tutorEmpresa) {
+                throw new NotFoundError("No se encontró el perfil de tutor empresarial");
             }
 
-
-            // =========================
-            // 6.3 VALIDAR MUNICIPIO
-            // =========================
-
-            if (
-                municipio.departamento_id !==
-                departamento.id
-            ) {
-                throw new BadRequestError(
-                    "El municipio no pertenece al departamento seleccionado"
-                );
-            }
-
-
-            // =========================
-            // 6.4 ACTUALIZAR PRACTICANTE
-            // =========================
-
-            await PracticanteRepository.update(
-                practicante.id,
-                {
-                    eps: datos.eps,
-
-                    codigoDepResidencia:
-                        departamento.codigo,
-
-                    codigoMunResidencia:
-                        municipio.codigo,
-
-                    fecha_nacimiento:
-                        datos.fecha_nacimiento,
-
-                    genero:
-                        datos.genero,
-
-                    direccion:
-                        datos.direccion,
-
-                    perfil_completado: true
-                },
+            await tutorEmpresaRepository.update(
+                tutorEmpresa.id,
+                { cargo: datos.cargo },
                 transaction
             );
+
+        } else {
+            throw new BadRequestError("Rol no válido para actualizar el perfil");
         }
-
-
-        // =========================
-        // 7. CONFIRMAR CAMBIOS
-        // =========================
 
         await transaction.commit();
 
@@ -190,9 +148,7 @@ export const actualizarPerfil = async (
         };
 
     } catch (error) {
-
         await transaction.rollback();
-
         throw error;
     }
 };

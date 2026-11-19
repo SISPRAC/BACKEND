@@ -20,8 +20,7 @@ export const tutorEmpresaRepository = {
 
     },
 
-    async findByUserId(usuarioId) {
-
+    async findByUserId(usuarioId, transaction = null) {
         return await models.TutorEmpresa.findOne({
             where: {
                 usuario_id: usuarioId
@@ -30,9 +29,21 @@ export const tutorEmpresaRepository = {
                 {
                     model: models.User
                 }
-            ]
+            ],
+            transaction
+        });
+    },
+
+    async update(id, data, transaction) {
+        const tutorEmpresa = await models.TutorEmpresa.findByPk(id, {
+            transaction
         });
 
+        if (!tutorEmpresa) return null;
+
+        return await tutorEmpresa.update(data, {
+            transaction
+        });
     },
     async findByEmpresaId(empresaId) {
         return await models.TutorEmpresa.findAll({
