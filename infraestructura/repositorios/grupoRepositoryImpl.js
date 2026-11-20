@@ -1,5 +1,6 @@
+import { Op } from "../database/sequelizeOperators.js";
 import { models } from "../database/dbConnection.js";
-import { Op } from "sequelize";
+import SequelizePackage from "sequelize";
 
 export const grupoRepository = {
 

@@ -1,4 +1,5 @@
-import { fn, col } from "sequelize";
+import SequelizePackage from "sequelize";
+const { fn, col } = SequelizePackage;
 import { models } from "../database/dbConnection.js";
 
 // Practica filtrada por período

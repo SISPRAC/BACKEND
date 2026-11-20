@@ -1,4 +1,6 @@
-import { Sequelize } from "sequelize";
+import { Op } from "../database/sequelizeOperators.js";
+import SequelizePackage from "sequelize";
+const { Sequelize } = SequelizePackage;
 import { models } from "../database/dbConnection.js";
 
 export const candidatoRepository = {
@@ -102,7 +104,7 @@ export const candidatoRepository = {
 
             where: {
                 id: {
-                    [Sequelize.Op.notIn]: Sequelize.literal(`(
+                    [Op.notIn]: Sequelize.literal(`(
                         SELECT DISTINCT candidato_id
                         FROM "Postulacions"
                         WHERE estado IN ('POSTULADO', 'ACEPTADO')
@@ -331,11 +333,11 @@ export const candidatoRepository = {
                 }
             ],
             where: {
-                [Sequelize.Op.or]: [
-                    { codigo: { [Sequelize.Op.in]: codigos } },
+                [Op.or]: [
+                    { codigo: { [Op.in]: codigos } },
                     Sequelize.where(
                         Sequelize.fn("lower", Sequelize.col("Usuario.correo")),
-                        { [Sequelize.Op.in]: correos }
+                        { [Op.in]: correos }
                     )
                 ]
             }

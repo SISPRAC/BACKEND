@@ -1,5 +1,6 @@
+import { Op } from "../database/sequelizeOperators.js";
 import { models, sequelize } from "../database/dbConnection.js";
-import { Op } from "sequelize";
+import SequelizePackage from "sequelize";
 
 // Fecha de hoy en Colombia (YYYY-MM-DD), comparable con DATEONLY
 const hoyColombia = () =>
@@ -76,8 +77,6 @@ export const practicaRepository = {
     },
 
     async findRequisitosDocumentosEmpresa(practica_id) {
-        const { Op } = await import("sequelize");
-
         return await models.PracticaRequisitoDocumento.findAll({
             where: {
                 practica_id,

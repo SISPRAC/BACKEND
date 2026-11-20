@@ -1,3 +1,4 @@
+import { Op } from "../database/sequelizeOperators.js";
 import { models } from "../database/dbConnection.js";
 
 export const empresaRepository = {
@@ -71,8 +72,6 @@ export const empresaRepository = {
     },
 
     async findAllConDocumentosPorPractica(practica_id) {
-        const { Op } = await import("sequelize");
-
         const empresas = await models.Empresa.findAll({
             attributes: ["id", "nombre", "nit", "usuario_id"],
             order: [["nombre", "ASC"]],
