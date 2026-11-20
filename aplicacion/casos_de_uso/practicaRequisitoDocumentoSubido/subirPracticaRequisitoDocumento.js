@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 import {
@@ -135,7 +136,7 @@ export const subirPracticaRequisitoDocumento = async (
     const transaction = await sequelize.transaction();
 
     let archivoSubido = null;
-    let documento = null;
+    let documento;
 
     try {
 

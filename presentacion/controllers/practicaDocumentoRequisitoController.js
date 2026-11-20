@@ -1,5 +1,4 @@
 import { practicaRequisitoDocumentoRepository } from "../../infraestructura/repositorios/practicaRequisitoDocumentoRepositoryImpl.js";
-import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
 
 import { crearPracticaRequisitoDocumento } from "../../aplicacion/casos_de_uso/practicaRequisitoDocumento/crearPracticaRequisitoDocumento.js";

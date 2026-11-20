@@ -44,9 +44,9 @@ export const crearVisita = async (
 
     const transaction = await sequelize.transaction();
 
-    let visita = null;
-    let tutorDocente = null;
-    let nombreTutorEmpresa = "";
+    let visita;
+    let tutorDocente;
+    let nombreTutorEmpresa;
 
     try {
 

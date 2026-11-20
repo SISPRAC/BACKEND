@@ -123,92 +123,93 @@ export const aprobarConvenio = async (
     // INICIAR TRANSACCIÓN
     // ============================================================
 
-    const transaction = await sequelize.transaction();
+    const convenioAprobado = await (async () => {
 
-    let newPublicId = null;
-    let convenioAprobado = null;
+        const transaction = await sequelize.transaction();
 
-    try {
+        let newPublicId = null;
 
-        const extension = path.extname(file.originalname);
+        try {
 
-        const nombreArchivo =
-            `CONVENIO_FIRMADO_${convenio.empresa_id}_${Date.now()}${extension}`;
+            const extension = path.extname(file.originalname);
 
-        const resultado = await uploadArchivo(
-            file.buffer,
-            "SISPRAC/Convenios",
-            nombreArchivo,
-            file.mimetype
-        );
+            const nombreArchivo =
+                `CONVENIO_FIRMADO_${convenio.empresa_id}_${Date.now()}${extension}`;
 
-        newPublicId = resultado.public_id;
+            const resultado = await uploadArchivo(
+                file.buffer,
+                "SISPRAC/Convenios",
+                nombreArchivo,
+                file.mimetype
+            );
 
-        const archivo = await archivoRepository.create(
-            {
-                nombre: file.originalname,
-                url: resultado.url,
-                public_id: resultado.public_id,
-                resource_type: resultado.resource_type
-            },
-            transaction
-        );
+            newPublicId = resultado.public_id;
 
-        await convenioRepository.update(
-            id,
-            {
-                estado: "APROBADO",
-                archivo_id: archivo.id
-            },
-            transaction
-        );
+            const archivo = await archivoRepository.create(
+                {
+                    nombre: file.originalname,
+                    url: resultado.url,
+                    public_id: resultado.public_id,
+                    resource_type: resultado.resource_type
+                },
+                transaction
+            );
 
-        await historialConvenioRepository.create(
-            {
-                convenio_id: id,
-                archivo_id: archivo.id,
-                accion: "APROBADO",
-                fecha: new Date(),
-                comentario,
-                usuario_id
-            },
-            transaction
-        );
+            await convenioRepository.update(
+                id,
+                {
+                    estado: "APROBADO",
+                    archivo_id: archivo.id
+                },
+                transaction
+            );
 
-        await transaction.commit();
+            await historialConvenioRepository.create(
+                {
+                    convenio_id: id,
+                    archivo_id: archivo.id,
+                    accion: "APROBADO",
+                    fecha: new Date(),
+                    comentario,
+                    usuario_id
+                },
+                transaction
+            );
 
-        // Obtener convenio actualizado
-        convenioAprobado = await convenioRepository.findById(id);
+            await transaction.commit();
 
-    } catch (error) {
+            return await convenioRepository.findById(id);
 
-        if (!transaction.finished) {
-            await transaction.rollback();
-        }
+        } catch (error) {
 
-        if (newPublicId) {
-            try {
-                await deleteArchivo(newPublicId);
-            } catch (e) {
-                console.error(
-                    "No se pudo eliminar el archivo firmado de Supabase:",
-                    e.message
-                );
+            if (!transaction.finished) {
+                await transaction.rollback();
             }
+
+            if (newPublicId) {
+                try {
+                    await deleteArchivo(newPublicId);
+                } catch (e) {
+                    console.error(
+                        "No se pudo eliminar el archivo firmado de Supabase:",
+                        e.message
+                    );
+                }
+            }
+
+            if (
+                error instanceof BadRequestError ||
+                error instanceof NotFoundError
+            ) {
+                throw error;
+            }
+
+            throw new BadRequestError(
+                error.message || "No se pudo aprobar el convenio."
+            );
         }
 
-        if (
-            error instanceof BadRequestError ||
-            error instanceof NotFoundError
-        ) {
-            throw error;
-        }
-
-        throw new BadRequestError(
-            error.message || "No se pudo aprobar el convenio."
-        );
-
-    }
+    })();
 
     // ============================================================
     // DATOS DEL REPRESENTANTE
@@ -275,6 +276,10 @@ export const aprobarConvenio = async (
 
         }
     }
+
+    // ============================================================
+    // RETORNAR CONVENIO ACTUALIZADO
+    // ============================================================
 
     return convenioAprobado;
 };

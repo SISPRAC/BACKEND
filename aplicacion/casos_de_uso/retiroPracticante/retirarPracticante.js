@@ -48,8 +48,8 @@ export const retirarPracticante = async (
     const transaction = await sequelize.transaction();
 
     let publicId = null;
-    let retiro = null;
-    let practicaPracticanteId = null;
+    let retiro;
+    let practicaPracticanteId;
 
     try {
 

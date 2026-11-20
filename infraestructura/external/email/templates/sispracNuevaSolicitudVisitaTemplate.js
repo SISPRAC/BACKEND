@@ -15,6 +15,17 @@ const formatearHora = (hora) => {
     return `${horas % 12 || 12}:${m} ${horas >= 12 ? "p. m." : "a. m."}`;
 };
 
+const formatearFecha = (fecha) => {
+    return new Intl.DateTimeFormat("es-CO", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    }).format(fecha);
+};
+
 export const sispracNuevaSolicitudVisitaTemplate = ({
     nombreDestinatario,
     nombreTutorDocente,

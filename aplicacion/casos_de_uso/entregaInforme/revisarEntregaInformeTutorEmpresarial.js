@@ -20,7 +20,7 @@ export const revisarEntregaInformeTutorEmpresarial = async (
 
     const transaction = await sequelize.transaction();
 
-    let actualizado = null;
+    let actualizado ;
 
     const observacion =
         observacion_tutor_empresarial?.trim() || null;

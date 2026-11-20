@@ -36,8 +36,8 @@ export const rechazarSolicitudVisita = async (
 
     const transaction = await sequelize.transaction();
 
-    let tutorDocente = null;
-    let nombreTutorEmpresa = "";
+    let tutorDocente;
+    let nombreTutorEmpresa;
 
     try {
 

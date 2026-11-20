@@ -137,7 +137,6 @@ export const actualizarAperturaVacanteController = async (
                 aperturaVacanteRepository,
                 tutorEmpresaRepository,
                 vacanteRepository,
-                practicaRepository,
                 empresaRepository,
                 notificacionRepository
             },

@@ -50,7 +50,6 @@ import createIdiomaModel from "../models/idiomaModel.js";
 import createCandidatoIdiomaModel from "../models/candidatoIdiomaModel.js";
 import createEmpresaRequisitoDocumentoModel from "../models/EmpresaRequisitoDocumentoModel.js"
 import createPasswordResetTokenModel from "../models/PasswordresettokenModel.js";
-import createRecordatorioEnviadoModel from "../models/recordatorioEnviadoModel.js";
 
 import "dotenv/config";
 
@@ -141,7 +140,6 @@ export const initDB = async () => {
         models.Departamento = createDepartamentoModel(sequelize);
         models.Municipio = createMunicipioModel(sequelize);
         models.PracticaRequisitoDocumentoSubido = createPracticaRequisitoDocumentoSubidoModel(sequelize);
-       // models.Envios = createRecordatorioEnviadoModel(sequelize)
 
         models.User.belongsToMany(models.Rol, {
             through: models.UserRol,

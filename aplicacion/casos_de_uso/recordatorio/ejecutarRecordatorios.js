@@ -1,19 +1,18 @@
 // aplicacion/casos_de_uso/recordatorio/ejecutarRecordatorios.js
-export const ejecutarRecordatorios = async ({ reglas, recordatorioRepository, notificacionRepository }) => {
+export const ejecutarRecordatorios = async ({ reglas }) => {
     for (const regla of reglas) {
         try {
-            const pendientes = await regla.buscarPendientes();
-            // pendientes: [{ referencia_id, usuario, datos }]
+            const pendientes = await regla.buscarPendientes(); // [{ usuario, items }]
 
-            for (const p of pendientes) {
-                const yaEnviado = await recordatorioRepository.existe(regla.tipo, p.referencia_id, p.usuario.id);
-                if (yaEnviado) continue;
+            const resultados = await Promise.allSettled(
+                pendientes.map((p) => regla.notificar(p))
+            );
+            resultados.forEach((r) => r.status === "rejected" &&
+                console.error(`Error notificando ${regla.tipo}:`, r.reason));
 
-                await regla.notificar(p);                       // interna + correo
-                await recordatorioRepository.registrar(regla.tipo, p.referencia_id, p.usuario.id);
-            }
+            console.log(`Recordatorio ${regla.tipo}: ${pendientes.length} destinatarios`);
         } catch (error) {
-            console.error(`Error en recordatorio ${regla.tipo}:`, error); // una regla no tumba las otras
+            console.error(`Error en recordatorio ${regla.tipo}:`, error);
         }
     }
 };
