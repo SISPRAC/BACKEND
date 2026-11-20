@@ -24,13 +24,15 @@ export const loginController = async (req, res) => {
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "Strict",
+            sameSite: "None",
             maxAge: 8 * 60 * 60 * 1000
         });
 
         res.status(200).json({ user, accessToken });
 
     } catch (error) {
+
+        console.log("Error mi perro", error);
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 message: error.message
@@ -62,7 +64,7 @@ export const refreshToken = async (req, res) => {
                 res.clearCookie("refreshToken", {
                     httpOnly: true,
                     secure: true,
-                    sameSite: "Strict"
+                    sameSite: "None"
                 });
             }
 
@@ -82,7 +84,7 @@ export const logout = async (req, res) => {
         res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: true,
-            sameSite: "Strict"
+            sameSite: "None"
         });
 
         res.status(200).json({
@@ -140,7 +142,7 @@ export const resetPasswordController = async (req, res) => {
         res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: true,
-            sameSite: "Strict"
+            sameSite: "None"
         });
 
         res.status(200).json(result);
@@ -170,7 +172,7 @@ export const googleLoginController = async (req, res) => {
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "Strict",
+            sameSite: "None",
             maxAge: 8 * 60 * 60 * 1000
         });
 
