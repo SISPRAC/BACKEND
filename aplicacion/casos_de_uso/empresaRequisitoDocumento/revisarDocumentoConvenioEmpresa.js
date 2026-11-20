@@ -1,3 +1,4 @@
+
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -31,9 +32,9 @@ export const revisarDocumentoConvenioEmpresa = async (
 
     const transaction = await sequelize.transaction();
 
-    let actualizado = null;
-    let empresaId = null;
-    let tipoId = null;
+    let actualizado;
+    let empresaId;
+    let tipoId;
 
     try {
 

@@ -10,7 +10,6 @@ export const actualizarAperturaVacante = async (
         aperturaVacanteRepository,
         tutorEmpresaRepository,
         vacanteRepository,
-        practicaRepository,
         empresaRepository,
         notificacionRepository
     },

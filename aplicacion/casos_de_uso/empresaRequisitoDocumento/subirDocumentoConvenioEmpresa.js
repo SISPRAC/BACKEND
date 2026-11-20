@@ -1,3 +1,4 @@
+
 import path from "path";
 
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
@@ -42,7 +43,7 @@ export const subirDocumentoConvenioEmpresa = async (
     const transaction = await sequelize.transaction();
 
     let newPublicId = null;
-    let registro = null;
+    let registro;
 
     try {
 

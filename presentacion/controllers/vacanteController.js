@@ -59,8 +59,7 @@ export const getAperturasVacantesController = async (req, res) => {
 
 export const crearVacanteController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {

@@ -35,8 +35,8 @@ export const actualizarVisita = async (
 
     // NUEVO: datos para la notificación (se llenan dentro del try)
     let nombreTutorDocente = "El tutor docente";
-    let esActualizacion = false;
-    let solicitudId = null;
+    let esActualizacion;
+    let solicitudId;
     const fechaRealizada = new Date();
 
 

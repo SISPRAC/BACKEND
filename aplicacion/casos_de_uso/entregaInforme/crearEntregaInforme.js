@@ -32,7 +32,6 @@ const obtenerHoyColombia = () =>
         timeZone: "America/Bogota"
     });
 
-
 export const crearEntregaInforme = async (
     entregaInformeRepository,
     practicaRequisitoDocumentoRepository,
@@ -46,7 +45,7 @@ export const crearEntregaInforme = async (
     const transaction = await sequelize.transaction();
 
     let publicId = null;
-    let entrega = null;
+    let entrega;
 
     try {
 

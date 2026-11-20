@@ -1,3 +1,4 @@
+
 import path from "path";
 
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
@@ -45,11 +46,12 @@ export const reemplazarDocumentoConvenioEmpresa = async (
     const transaction = await sequelize.transaction();
 
     let newPublicId = null;
-    let archivoAnteriorId = null;
-    let nuevoArchivoId = null;
-    let registro = null;
 
     const fechaSubida = new Date();
+
+    let archivoAnteriorId;
+    let nuevoArchivoId;
+    let registro;
 
     try {
 
@@ -144,7 +146,7 @@ export const reemplazarDocumentoConvenioEmpresa = async (
 
     }
 
-    // El cambio ya está confirmado: limpiamos el archivo anterior
+    // El cambio ya está confirmado: limpiamos el archivo anterior.
     if (archivoAnteriorId && archivoAnteriorId !== nuevoArchivoId) {
 
         try {
