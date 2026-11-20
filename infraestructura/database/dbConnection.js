@@ -1,4 +1,5 @@
-import { Sequelize } from "sequelize";
+import SequelizePackage from "sequelize";
+const { Sequelize } = SequelizePackage;
 import createUserModel from "../models/userModel.js";
 import createRolModel from "../models/rolModel.js";
 import createUserRolModel from "../models/userRolModel.js";

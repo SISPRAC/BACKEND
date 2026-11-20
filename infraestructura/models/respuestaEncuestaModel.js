@@ -1,5 +1,6 @@
 
-import { DataTypes } from "sequelize";
+import SequelizePackage from "sequelize";
+const { DataTypes } = SequelizePackage;
 
 const createRespuestaEncuestaModel = (sequelize) => {
 

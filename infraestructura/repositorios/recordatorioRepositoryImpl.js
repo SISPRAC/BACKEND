@@ -1,5 +1,7 @@
+import { Op } from "../database/sequelizeOperators.js";
 // infraestructura/repositorios/recordatorioRepositoryImpl.js
-import { Op } from "sequelize";
+import SequelizePackage from "sequelize";
+
 import { models } from "../database/dbConnection.js";
 
 const ROL_PRACTICANTE = "Practicante"; // ← verifica el nombre exacto en tu tabla Rol

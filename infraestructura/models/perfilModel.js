@@ -1,4 +1,5 @@
-import { DataTypes } from "sequelize";
+import SequelizePackage from "sequelize";
+const { DataTypes } = SequelizePackage;
 
 const createPerfilModel = (sequelize) => {
 const Perfil = sequelize.define("Perfil", {

@@ -1,4 +1,6 @@
-import { Op } from "sequelize";
+import { Op } from "../database/sequelizeOperators.js";
+import SequelizePackage from "sequelize";
+
 import { models } from "../database/dbConnection.js";
 
 export const practicaRequisitoDocumentoRepository = {

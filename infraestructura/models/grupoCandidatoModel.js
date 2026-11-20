@@ -1,4 +1,5 @@
-import { DataTypes } from "sequelize";
+import SequelizePackage from "sequelize";
+const { DataTypes } = SequelizePackage;
 
 const createGrupoCandidatoModel = (sequelize) => {
     const GrupoCandidato = sequelize.define("GrupoCandidato", {
