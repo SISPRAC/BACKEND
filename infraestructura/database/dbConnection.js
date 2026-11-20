@@ -34,7 +34,7 @@ import createSolicitudVisitaModel from "../models/solicitudVisitaModel.js";
 import createVisitaModel from "../models/visitaModel.js";
 import createTipoRequisitoDocumentoModel from "../models/tipoRequisitoDocumentoModel.js";
 import createVisitaArchivoModel from "../models/visitaArchivoModel.js";
-import createPracticaRequisitoDocumentoModel from "../models/practicaRequisitoDocumentoModel.js";
+import createPracticaRequisitoDocumentoModel from "../models/practicaRequisitoDocumentoModel.js"; 
 import createGrupoCandidatoModel from "../models/grupoCandidatoModel.js";
 import createHistorialAperturaVacanteModel
     from "../models/historialAperturaVacanteModel.js";
