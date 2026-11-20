@@ -41,7 +41,7 @@ import createHistorialAperturaVacanteModel
 import createDepartamentoModel from "../models/departamentoModel.js";
 import createMunicipioModel from "../models/municipiosModel.js";
 import createSolicitudVisitaPracticanteModel from "../models/SolicitudVisitaPracticanteModel.js";
-import createSolicitudVisitaFechaModel from "../models/SolicitudVisitaFechaModel.js";
+import createSolicitudVisitaFechaModel from "../models/solicitudVisitaFechaModel.js";
 import createPracticaRequisitoDocumentoSubidoModel from "../models/practicaRequisitoDocumentoSubidoModel.js";
 
 import createHabilidadBlandaModel from "../models/habilidadBlandaModel.js";
