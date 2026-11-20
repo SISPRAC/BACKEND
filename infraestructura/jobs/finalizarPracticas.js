@@ -1,7 +1,7 @@
 // infraestructura/cron/finalizarPracticas.js
 import cron from "node-cron";
 import { practicaRepository } from "../repositorios/practicaRepositoryImpl.js";
-import { practicaPracticanteRepository } from "../repositorios/practicaPracticanteRepositoryImpl.js";
+import { practicaPracticanteRepository } from "../repositorios/PracticaPracticanteRepositoryImpl.js";
 import { aperturaVacanteRepository } from "../repositorios/aperturaVacanteRepositoryImpl.js";
 import { notificacionRepository } from "../repositorios/notificacionRepositoryImpl.js";
 import { finalizarPracticasVencidas } from "../../aplicacion/casos_de_uso/practica/finalizarPracticasVencidas.js";
