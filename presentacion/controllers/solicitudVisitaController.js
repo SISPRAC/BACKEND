@@ -15,8 +15,6 @@ import { editarSolicitudVisita } from "../../aplicacion/casos_de_uso/solicitudVi
 import { cancelarSolicitudVisita } from "../../aplicacion/casos_de_uso/solicitudVisita/cancelarSolicitudVisita.js";
 import { obtenerSolicitudParaGestionar } from "../../aplicacion/casos_de_uso/solicitudVisita/obtenerSolicitudParaGestionar.js";
 
-import { crearNotificacion } from "../../aplicacion/casos_de_uso/notificacion/crearNotificacion.js";
-
 import { crearVisita } from "../../aplicacion/casos_de_uso/solicitudVisita/aceptarSolicitudVisita.js";
 import { rechazarSolicitudVisita } from "../../aplicacion/casos_de_uso/solicitudVisita/rechazarSolicitudVisita.js";
 

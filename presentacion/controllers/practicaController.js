@@ -2,7 +2,7 @@ import { actualizarPractica } from "../../aplicacion/casos_de_uso/practica/actua
 import { crearPractica } from "../../aplicacion/casos_de_uso/practica/crearPractica.js";
 import { eliminarPractica } from "../../aplicacion/casos_de_uso/practica/eliminarPractica.js";
 import { obtenerPracticas } from "../../aplicacion/casos_de_uso/practica/obtenerPracticas.js";
-import { obtenerPracticaPorId } from "../../aplicacion/casos_de_uso/practica/obtenerPracticasPorId.js";
+import { obtenerPracticaPorId } from "../../aplicacion/casos_de_uso/practica/obtenerPracticasPorID.js";
 import { obtenerPracticaPorPeriodo } from "../../aplicacion/casos_de_uso/practica/obtenerPracticasPorPeriodo.js";
 import { actualizarArlPractica } from "../../aplicacion/casos_de_uso/practica/actualizarArlPractica.js";
 

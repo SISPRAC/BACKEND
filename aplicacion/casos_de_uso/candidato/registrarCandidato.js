@@ -42,6 +42,7 @@ const parsearArray = (valor, nombre) => {
         try {
             resultado = JSON.parse(valor);
         } catch (error) {
+            console.log("error", error);
             throw new BadRequestError(
                 `El formato de ${nombre} no es válido`
             );

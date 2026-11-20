@@ -15,8 +15,7 @@ import { empresaRepository } from "../../infraestructura/repositorios/empresaRep
 
 export const crearAperturaVacanteController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {
@@ -126,8 +125,7 @@ export const getAperturaVacanteByIdController = async (
 
 export const actualizarAperturaVacanteController = async (
     req,
-    res,
-    next
+    res
 ) => {
 
     try {
@@ -148,7 +146,15 @@ export const actualizarAperturaVacanteController = async (
 
     } catch (error) {
 
-        next(error);
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
 
     }
 
