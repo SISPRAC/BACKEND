@@ -50,10 +50,23 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://frontend-sigma-blush-19.vercel.app"
+];
+
 app.use(cors({
-  origin: "http://localhost:5173", // Cambia esto al dominio de tu frontend
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Origen no permitido por CORS"));
+  },
   credentials: true,
 }));
+
 
 app.use(cookieparser());
 
@@ -95,13 +108,13 @@ app.use("/api/notificaciones", notificacionesRouter);
 app.use("/api/solicitudVisita", solicitudVisitaRouter);
 app.use("/api/visita", visitaRouter);
 app.use("/api/practicaRequisitoDocumentoSubido", practicaRequisitoDocumentoSubidoRouter);
-app.use("/api/reportes", reporteRouter );
+app.use("/api/reportes", reporteRouter);
 app.use("/api/habilidadesBlandas", habilidadBlandaRouter);
 app.use("/api/idiomas", idiomaRouter);
 app.use("/api/empresaRequisitoDocumento", empresaRequisitoDocumentoRouter);
 
 //await initDB(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS);
-await initDB(); 
+await initDB();
 iniciarVencimientoConvenios();
 iniciarFinalizacionPracticas();
 
