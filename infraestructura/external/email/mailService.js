@@ -1,3 +1,4 @@
+/* global fetch, AbortSignal */
 export const sendEmail = async ({ to, subject, html }) => {
     const destinatarios = (Array.isArray(to) ? to : [to])
         .filter(Boolean)
