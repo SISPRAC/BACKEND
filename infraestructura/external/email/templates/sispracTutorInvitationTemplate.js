@@ -72,9 +72,7 @@ export const sispracTutorEmpresarialInvitationTemplate = ({
                         puede ignorar este mensaje.
                     </p>
 
-                </td>
-
-                  <!-- EXPIRATION NOTICE -->
+                    <!-- EXPIRATION NOTICE -->
                     <table
                         width="100%"
                         cellpadding="0"
@@ -114,6 +112,8 @@ export const sispracTutorEmpresarialInvitationTemplate = ({
                             </td>
                         </tr>
                     </table>
+
+                </td>
             </tr> 
 
 
