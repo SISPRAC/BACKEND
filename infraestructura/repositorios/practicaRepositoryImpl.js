@@ -1,6 +1,5 @@
 import { Op } from "../database/sequelizeOperators.js";
 import { models, sequelize } from "../database/dbConnection.js";
-import SequelizePackage from "sequelize";
 
 // Fecha de hoy en Colombia (YYYY-MM-DD), comparable con DATEONLY
 const hoyColombia = () =>

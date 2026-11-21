@@ -1,6 +1,5 @@
 import { Op } from "../database/sequelizeOperators.js";
 // infraestructura/repositorios/recordatorioRepositoryImpl.js
-import SequelizePackage from "sequelize";
 
 import { models } from "../database/dbConnection.js";
 

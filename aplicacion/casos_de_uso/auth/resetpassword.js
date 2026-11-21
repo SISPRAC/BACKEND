@@ -28,7 +28,30 @@ export const resetPassword = async (
     // El usuario NO viene del cliente: sale del token guardado en BD
     const registro = await resetTokenRepository.findByTokenHash(hashToken(token));
 
-    if (!registro || registro.usado || registro.expira_en < new Date()) {
+    const fechaExpiracion = new Date(registro?.expira_en);
+
+    console.log("========== DEBUG RESET PASSWORD ==========");
+    console.log("Token recibido:", !!token);
+    console.log("Hash generado:", hashToken(token));
+    console.log("Registro encontrado:", registro?.toJSON());
+    console.log("Usado:", registro?.usado);
+    console.log("Expiración BD:", registro?.expira_en);
+    console.log("Fecha actual:", new Date());
+    console.log(
+        "Diferencia en minutos:",
+        registro
+            ? (new Date(registro.expira_en).getTime() - Date.now()) / 60000
+            : "No existe registro"
+    );
+    console.log("==========================================");
+
+    if (
+        !registro ||
+        registro.usado ||
+        !registro.expira_en ||
+        Number.isNaN(fechaExpiracion.getTime()) ||
+        fechaExpiracion.getTime() <= Date.now()
+    ) {
         throw new BadRequestError("El enlace es inválido o ha expirado");
     }
 

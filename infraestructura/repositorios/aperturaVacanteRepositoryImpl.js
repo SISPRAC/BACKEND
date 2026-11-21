@@ -1,6 +1,5 @@
 import { Op } from "../database/sequelizeOperators.js";
 import { models } from "../database/dbConnection.js";
-import SequelizePackage from "sequelize";
 
 export const aperturaVacanteRepository = {
 
