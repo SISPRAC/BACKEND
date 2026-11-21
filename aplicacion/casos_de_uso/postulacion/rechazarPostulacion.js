@@ -14,6 +14,13 @@ export const rechazarPostulacion = async (
     comentarioEmpresa = null
 ) => {
 
+    // Validar que se indique el motivo del rechazo.
+    if (!comentarioEmpresa || !comentarioEmpresa.trim()) {
+        throw new BadRequestError(
+            "Debes indicar el motivo del rechazo."
+        );
+    }
+
     const postulacion =
         await postulacionRepository.findById(
             postulacionId
@@ -36,7 +43,7 @@ export const rechazarPostulacion = async (
             postulacionId,
             {
                 estado: "RECHAZADO",
-                comentarioEmpresa,
+                comentarioEmpresa: comentarioEmpresa.trim(),
                 fecha_eleccion: new Date()
             }
         );

@@ -40,6 +40,18 @@ export const subirDocumentoConvenioEmpresa = async (
         throw new BadRequestError("El documento debe estar en formato PDF.");
     }
 
+    if (file.mimetype !== "application/pdf") {
+        throw new BadRequestError("El documento debe estar en formato PDF.");
+    }
+
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+    if (file.size > MAX_FILE_SIZE) {
+        throw new BadRequestError(
+            "El archivo es demasiado pesado. El tamaño máximo permitido es de 2 MB."
+        );
+    }
+
     const transaction = await sequelize.transaction();
 
     let newPublicId = null;
