@@ -1,8 +1,6 @@
 import { Op } from "../database/sequelizeOperators.js";
 import { models } from "../database/dbConnection.js";
 
-import SequelizePackage from "sequelize";
-
 export const practicaRequisitoDocumentoSubidoRepository = {
 
     async create(data, transaction) {
