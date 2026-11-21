@@ -73,7 +73,48 @@ export const sispracTutorEmpresarialInvitationTemplate = ({
                     </p>
 
                 </td>
-            </tr>
+            </tr> 
+
+             <!-- EXPIRATION NOTICE -->
+                    <table
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="
+                            background:#fef2f2;
+                            border:1px solid #fecaca;
+                            border-radius:8px;
+                        "
+                    >
+                        <tr>
+                            <td style="padding:18px;">
+
+                                <p style="
+                                    margin:0 0 8px;
+                                    color:#991b1b;
+                                    font-size:15px;
+                                    font-weight:bold;
+                                ">
+                                    Vigencia de la invitación
+                                </p>
+
+                                <p style="
+                                    margin:0;
+                                    color:#7f1d1d;
+                                    font-size:14px;
+                                    line-height:1.7;
+                                ">
+                                    Esta invitación tiene una vigencia de
+                                    <strong>3 días (72 horas)</strong> a partir
+                                    de su generación. Una vez transcurrido este
+                                    plazo, el enlace de registro expirará y
+                                    el token dejará de ser válido.
+                                </p>
+
+                            </td>
+                        </tr>
+                    </table>
 
             <!-- FOOTER -->
             <tr>
