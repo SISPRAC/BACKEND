@@ -135,10 +135,7 @@ export const sispracInvitationTemplate = ({
 
                     </p>
 
-                </td>
-            </tr>
-
-             <!-- EXPIRATION NOTICE -->
+                    <!-- EXPIRATION NOTICE -->
                     <table
                         width="100%"
                         cellpadding="0"
@@ -178,6 +175,11 @@ export const sispracInvitationTemplate = ({
                             </td>
                         </tr>
                     </table>
+
+                </td>
+            </tr>
+
+             
 
             <!-- FOOTER -->
             <tr>
