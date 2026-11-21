@@ -26,7 +26,7 @@ export const loginUser = async (
     const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
-        throw new BadRequestError("Credenciales inválidas");
+        throw new BadRequestError("las credenciales no son válidas");
     }
 
     return buildAuthSession(user, candidatoRepository, practicanteRepository);
