@@ -13,20 +13,9 @@ export const obtenerRequisitosDocumentosPracticante = async (
     const practicante =
         await practicanteRepository.findRolPracticante(practicanteId);
 
-
-         console.log(
-        "Practicante encontrado2:",
-        practicante.candidato?.Usuario
-    );
-
     if (!practicante) {
         return [];
     }
-
-    console.log(
-        "Practicante encontrado despues del if:",
-        practicante.candidato?.Usuario
-    );
 
     const rolesAsignados =
         practicante.candidato?.Usuario?.rolesAsignados || [];

@@ -38,7 +38,7 @@ export const editarSolicitudVisita = async (
             );
         }
 
-        if (new Date(fecha.fecha_inicio) >= new Date(fecha.fecha_fin)) {
+        if (new Date(fecha.fecha_inicio) > new Date(fecha.fecha_fin)) {
             throw new BadRequestError(
                 "La fecha de inicio debe ser anterior a la fecha de fin"
             );

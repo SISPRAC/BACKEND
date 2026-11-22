@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 
 import {
@@ -14,9 +15,7 @@ import { upload } from "../middleware/uploadMulter.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import { verifyRole } from "../middleware/rolMiddleware.js";
 
-
 const router = Router();
-
 
 // Obtener todos los convenios
 router.get(
@@ -25,14 +24,12 @@ router.get(
     getConveniosController
 );
 
-
 // Obtener todos los convenios de una empresa
 router.get(
     "/empresa/:empresa_id/todos",
     verifyToken,
     getConveniosByEmpresaController
 );
-
 
 // Obtener el convenio de una empresa
 router.get(
@@ -41,14 +38,12 @@ router.get(
     getConvenioByEmpresaController
 );
 
-
 // Obtener convenio por ID
 router.get(
     "/:id",
     verifyToken,
     getConvenioController
 );
-
 
 // Subir / crear / actualizar convenio
 router.post(
@@ -58,7 +53,6 @@ router.post(
     subirConvenioController
 );
 
-
 // Actualizar estado del convenio
 router.put(
     "/:id/estado",
@@ -66,6 +60,7 @@ router.put(
     actualizarEstadoConvenioController
 );
 
+// Aprobar convenio con documento firmado
 router.put(
     "/:id/aprobar",
     verifyToken,
@@ -73,6 +68,5 @@ router.put(
     upload.single("archivo"),
     aprobarConvenioController
 );
-
 
 export default router;
