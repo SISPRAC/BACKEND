@@ -92,6 +92,7 @@ export const grupoRepository = {
         });
     },
 
+
     async findCandidatosByGrupoId(id) {
         return await models.Grupo.findByPk(id, {
             include: [
@@ -102,7 +103,12 @@ export const grupoRepository = {
                         {
                             model: models.Periodo,
                             as: "Periodo",
-                            attributes: ["id", "nombre", "fecha_inicio", "fecha_fin"]
+                            attributes: [
+                                "id",
+                                "nombre",
+                                "fecha_inicio",
+                                "fecha_fin"
+                            ]
                         }
                     ]
                 },
@@ -119,7 +125,7 @@ export const grupoRepository = {
                     ]
                 },
 
-                // CANDIDATOS
+                // CANDIDATOS ASIGNADOS
                 {
                     model: models.GrupoCandidato,
                     as: "candidatosAsignados",
@@ -128,11 +134,13 @@ export const grupoRepository = {
                         {
                             model: models.Candidato,
                             as: "candidato",
+                            required: true,
                             attributes: ["id", "codigo"],
                             include: [
-                                // DATOS PERSONALES
+                                // DATOS PERSONALES DEL CANDIDATO
                                 {
                                     model: models.User,
+                                    required: true,
                                     attributes: [
                                         "id",
                                         "nombres",
@@ -143,15 +151,15 @@ export const grupoRepository = {
                                     ]
                                 },
 
-                                // PRACTICANTE
+                                // PRACTICANTE: OPCIONAL
                                 {
                                     model: models.Practicante,
                                     as: "practicante",
-                                    required: true,
+                                    required: false,
                                     attributes: ["id"]
                                 },
 
-                                // POSTULACIÓN
+                                // ÚLTIMA POSTULACIÓN
                                 {
                                     model: models.Postulacion,
                                     required: false,
@@ -187,9 +195,28 @@ export const grupoRepository = {
         });
     },
 
-    async findPracticaPracticantesByPracticaAndCandidatos(practicaId, candidatoIds) {
+
+    async findPracticaPracticantesByPracticaAndCandidatos(
+        practicaId,
+        candidatoIds
+    ) {
+        if (!practicaId || !candidatoIds?.length) {
+            return [];
+        }
+
         return await models.PracticaPracticante.findAll({
-            where: { practica_id: practicaId },
+            where: {
+                practica_id: practicaId
+            },
+            attributes: [
+                "id",
+                "practica_id",
+                "practicante_id",
+                "estado",
+                "certificado_archivo_id",
+                "certificado_subido_por",
+                "certificado_fecha_subida"
+            ],
             include: [
                 {
                     model: models.RetiroPracticante,
@@ -213,11 +240,18 @@ export const grupoRepository = {
                     as: "practicante",
                     required: true,
                     attributes: ["id", "candidato_id"],
-                    where: { candidato_id: candidatoIds }
+                    where: {
+                        candidato_id: {
+                            [Op.in]: candidatoIds
+                        }
+                    }
                 }
-            ]
+            ],
+            logging: console.log
         });
     },
+
+
 
     async findByPracticaId(practica_id) {
         return await models.Grupo.findAll({

@@ -107,9 +107,7 @@ export const aprobarConvenio = async (
     // OBTENER EMPRESA
     // ============================================================
 
-    const empresa = await empresaRepository.findById(
-        convenio.empresa_id
-    );
+   const empresa = await empresaRepository.findByIdConUsuario(convenio.empresa_id);
 
     if (!empresa) {
         throw new NotFoundError(

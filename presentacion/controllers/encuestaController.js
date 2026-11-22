@@ -40,6 +40,9 @@ import { respuestaEncuestaRepository }
 import { obtenerEncuestasEvaluacionPracticante }
     from "../../aplicacion/casos_de_uso/encuestas/obtenerEncuestasEvaluacionPracticante.js";
 
+import { obtenerEncuestasParaReportePorPeriodo }
+    from "../../aplicacion/casos_de_uso/encuestas/obtenerEncuestasParaReportePorPeriodo.js";
+
 import { obtenerEncuestasPracticante }
     from "../../aplicacion/casos_de_uso/encuestas/obtenerEncuestasPracticante.js";
 
@@ -649,6 +652,39 @@ export const obtenerRespuestasEncuestasPracticanteController = async (
                 error.statusCode
                     ? error.message
                     : "Error interno al consultar las encuestas del practicante",
+        });
+    }
+};
+
+// =============================
+// REPORTE: encuestas respondidas por período
+// Director de programa / Administrador
+// =============================
+export const obtenerEncuestasParaReportePorPeriodoController = async (
+    req,
+    res
+) => {
+    try {
+        const encuestas = await obtenerEncuestasParaReportePorPeriodo(
+            { respuestaEncuestaRepository },
+            req.params.periodo_id
+        );
+
+        return res.status(200).json(encuestas);
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error(
+            "Error al obtener las encuestas para el reporte:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
         });
     }
 };

@@ -12,7 +12,8 @@ import {
     obtenerEncuestasPracticanteController,
     responderEncuestaEvaluacionPracticanteController,
     responderEncuestaPracticanteController,
-    obtenerRespuestasEncuestasPracticanteController
+    obtenerRespuestasEncuestasPracticanteController,
+    obtenerEncuestasParaReportePorPeriodoController
 } from "../controllers/encuestaController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
@@ -123,6 +124,19 @@ router.post(
     verifyToken,
     verifyRole(["Practicante"]),
     responderEncuestaPracticanteController
+);
+
+// =============================
+// REPORTE: ENCUESTAS RESPONDIDAS POR PERÍODO
+// Director de Programa / Administrador
+// (va antes de "/:id")
+// =============================
+
+router.get(
+    "/reporte/periodo/:periodo_id",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    obtenerEncuestasParaReportePorPeriodoController
 );
 
 // =============================

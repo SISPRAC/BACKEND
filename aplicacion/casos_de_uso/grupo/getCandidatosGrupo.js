@@ -1,3 +1,4 @@
+
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 export const getCandidatosGrupo = async (
@@ -14,13 +15,32 @@ export const getCandidatosGrupo = async (
         );
     }
 
+    console.log(
+        "GRUPOS CANDIDATOS:",
+        grupo.candidatosAsignados?.map(gc => ({
+            grupo_candidato_id: gc.id,
+            grupo_id: gc.grupo_id,
+            candidato_id: gc.candidato_id,
+            candidato: gc.candidato?.toJSON() || null
+        }))
+    );
+
     const tutor = grupo.TutorDocente;
     const usuarioTutor = tutor?.Usuario;
 
-    // Practicantes (retiro + certificado) de los candidatos del grupo
-    const candidatoIds = (grupo.candidatosAsignados || []).map(
-        (gc) => gc.candidato_id
-    );
+    // ==========================================
+    // OBTENER LOS CANDIDATOS ASIGNADOS AL GRUPO
+    // ==========================================
+
+    const candidatoIds = (grupo.candidatosAsignados || [])
+        .map((gc) => gc.candidato_id);
+
+    console.log("PRACTICA ID:", grupo.practica_id);
+    console.log("CANDIDATOS DEL GRUPO:", candidatoIds);
+
+    // ==========================================
+    // OBTENER SEGUIMIENTO DE LOS PRACTICANTES
+    // ==========================================
 
     const practicaPracticantes = candidatoIds.length
         ? await grupoRepository.findPracticaPracticantesByPracticaAndCandidatos(
@@ -30,8 +50,22 @@ export const getCandidatosGrupo = async (
         : [];
 
     const practicaPracticantePorCandidato = new Map(
-        practicaPracticantes.map((pp) => [pp.practicante.candidato_id, pp])
+        practicaPracticantes
+            .filter((pp) => pp.practicante)
+            .map((pp) => [
+                pp.practicante.candidato_id,
+                pp
+            ])
     );
+
+    console.log(
+        "MAPA PRACTICANTES:",
+        [...practicaPracticantePorCandidato.entries()]
+    );
+
+    // ==========================================
+    // RESPUESTA
+    // ==========================================
 
     return {
         id: grupo.id,
@@ -52,7 +86,7 @@ export const getCandidatosGrupo = async (
 
         candidatos:
             grupo.candidatosAsignados?.map(
-                grupoCandidato => {
+                (grupoCandidato) => {
 
                     const candidato =
                         grupoCandidato.candidato;
@@ -86,21 +120,24 @@ export const getCandidatosGrupo = async (
 
                     if (practicaPracticante) {
 
-                        // Prevalece el estado individual
                         estado = practicaPracticante.estado;
 
                     } else if (
                         postulacion?.estado === "POSTULADO"
                     ) {
 
-                        // Tiene una postulación pendiente
                         estado = "POSTULADO";
                     }
 
                     return {
+                        // ID DEL CANDIDATO
                         id: candidato?.id,
+
+                        // ID DEL PRACTICANTE PARA LAS ACCIONES
                         practicante_id: candidato?.practicante?.id || null,
+
                         codigo: candidato?.codigo,
+
                         correo: usuario?.correo || null,
 
                         nombre:
@@ -111,7 +148,8 @@ export const getCandidatosGrupo = async (
 
                         estado,
 
-                        practica_practicante_id: practicaPracticante?.id || null,
+                        practica_practicante_id:
+                            practicaPracticante?.id || null,
 
                         retiro: practicaPracticante?.retiro
                             ? {
@@ -119,6 +157,7 @@ export const getCandidatosGrupo = async (
                                 archivo_id: practicaPracticante.retiro.archivo_id,
                                 motivo: practicaPracticante.retiro.motivo,
                                 fecha_retiro: practicaPracticante.retiro.fecha_retiro,
+
                                 archivo: practicaPracticante.retiro.archivoSoporte
                                     ? {
                                         nombre: practicaPracticante.retiro.archivoSoporte.nombre,
@@ -133,6 +172,7 @@ export const getCandidatosGrupo = async (
                                 id: practicaPracticante.certificadoArchivo.id,
                                 subido_por: practicaPracticante.certificado_subido_por,
                                 fecha_subida: practicaPracticante.certificado_fecha_subida,
+
                                 archivo: {
                                     nombre: practicaPracticante.certificadoArchivo.nombre,
                                     url: practicaPracticante.certificadoArchivo.url
