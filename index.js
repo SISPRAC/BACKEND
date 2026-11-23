@@ -44,6 +44,7 @@ import periodoRespaldoRouter from "./presentacion/routes/periodoRespaldo.routes.
 import path from "path";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
+import { iniciarRespaldoPeriodos } from "./infraestructura/jobs/respaldarPeriodosJob.js";
 
 
 
@@ -120,6 +121,7 @@ app.use("/api/periodoRespaldo", periodoRespaldoRouter);
 await initDB();
 iniciarVencimientoConvenios();
 iniciarFinalizacionPracticas();
+iniciarRespaldoPeriodos();
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port", process.env.PORT);

@@ -1,3 +1,5 @@
+/* global fetch */
+import { Readable } from "stream";
 import { supabase } from "../../config/supabase.js";
 
 const sanitizarNombreArchivo = (nombre) => {
@@ -82,4 +84,21 @@ export const deleteArchivo = async (
     if (error) {
         throw new Error(error.message);
     }
+};
+
+// Descarga un archivo ya subido (por su URL) como stream, para copiarlo a otro destino.
+export const descargarArchivoStream = async (url) => {
+
+    const respuesta = await fetch(url);
+
+    if (!respuesta.ok || !respuesta.body) {
+        throw new Error(`No se pudo descargar ${url} (HTTP ${respuesta.status})`);
+    }
+
+    return {
+        stream: Readable.fromWeb(respuesta.body),
+        mimeType:
+            respuesta.headers.get("content-type") ??
+            "application/octet-stream",
+    };
 };
