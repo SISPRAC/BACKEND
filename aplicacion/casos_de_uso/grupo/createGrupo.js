@@ -103,14 +103,12 @@ export const crearGrupo = async (
 
     if (candidatos?.length > 0) {
 
-        for (const candidato_id of candidatos) {
-
-            await grupoCandidatoRepository.create({
+        await grupoCandidatoRepository.createMany(
+            candidatos.map((candidato_id) => ({
                 grupo_id: newGrupo.id,
                 candidato_id
-            });
-
-        }
+            }))
+        );
     }
 
     // ============================================================

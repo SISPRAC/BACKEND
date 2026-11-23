@@ -154,14 +154,12 @@ export const editarGrupo = async (
 
     if (candidatos?.length > 0) {
 
-        for (const candidato_id of candidatos) {
-
-            await grupoCandidatoRepository.create({
+        await grupoCandidatoRepository.createMany(
+            candidatos.map((candidato_id) => ({
                 grupo_id: id,
                 candidato_id
-            });
-
-        }
+            }))
+        );
     }
 
     // ============================================================

@@ -29,6 +29,21 @@ export const candidatoRepository = {
         });
     },
 
+    // Trae varios candidatos (con su usuario) en UNA sola consulta
+    async findByIds(ids, transaction) {
+        return await models.Candidato.findAll({
+            where: { id: { [Op.in]: ids } },
+            include: [
+                {
+                    model: models.User,
+                    attributes: ["id", "nombres", "apellidos", "correo"],
+                    required: true
+                }
+            ],
+            transaction
+        });
+    },
+
     async findByUserId(userId, transaction) {
         return await models.Candidato.findOne({
             where: {

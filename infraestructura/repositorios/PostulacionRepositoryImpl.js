@@ -331,6 +331,27 @@ export const postulacionRepository = {
         });
     },
 
+    // Inserta varias postulaciones en UN solo INSERT (atómico: o entran todas o ninguna)
+    async createMany(rows, transaction) {
+        return await models.Postulacion.bulkCreate(rows, {
+            returning: true,
+            transaction
+        });
+    },
+
+    // Devuelve los candidato_id (de la lista) que ya tienen una postulación activa
+    async findActivasByCandidatos(candidatosIds) {
+        const filas = await models.Postulacion.findAll({
+            where: {
+                candidato_id: { [Op.in]: candidatosIds },
+                estado: { [Op.in]: ["POSTULADO", "ACEPTADO"] }
+            },
+            attributes: ["candidato_id"],
+            raw: true
+        });
+        return filas.map((f) => Number(f.candidato_id));
+    },
+
     async countByAperturaVacanteAceptado(aperturaVacanteId) {
         return await models.Postulacion.count({
             where: {

@@ -7,6 +7,7 @@ import {
     getCandidatosDisponiblesController,
     getCandidatosPerfilController,
     invitarCandidatoController,
+    invitarCandidatosMasivoController,
     obtenerCandidatosParaReportePorPeriodoController,
     verificarCandidatosPdfController
 } from "../controllers/candidatoController.js";
@@ -31,6 +32,13 @@ router.post(
     verifyToken,
     verifyRole(["Administrador", "Director de programa"]),
     invitarCandidatoController
+);
+
+router.post(
+    "/invitacion/masiva",
+    verifyToken,
+    verifyRole(["Administrador", "Director de programa"]),
+    invitarCandidatosMasivoController
 );
 
 router.post(
