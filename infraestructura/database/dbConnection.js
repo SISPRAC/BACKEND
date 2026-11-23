@@ -51,6 +51,7 @@ import createIdiomaModel from "../models/idiomaModel.js";
 import createCandidatoIdiomaModel from "../models/candidatoIdiomaModel.js";
 import createEmpresaRequisitoDocumentoModel from "../models/EmpresaRequisitoDocumentoModel.js"
 import createPasswordResetTokenModel from "../models/PasswordresettokenModel.js";
+import createPeriodoRespaldoModel from "../models/periodoRespaldoModel.js";
 
 import "dotenv/config";
 
@@ -96,6 +97,7 @@ export const initDB = async () => {
         models.Candidato = createCandidatoModel(sequelize);
         models.Notificacion = createNotificacionModel(sequelize);
         models.Periodo = createPeriodoModel(sequelize);
+        models.PeriodoRespaldo = createPeriodoRespaldoModel(sequelize);
         models.Grupo = createGrupoModel(sequelize);
         models.GrupoCandidato = createGrupoCandidatoModel(sequelize);
         models.Perfil = createPerfilModel(sequelize);
@@ -1012,6 +1014,17 @@ export const initDB = async () => {
             foreignKey: "periodo_id"
         });
 
+
+        // PERIODO -> RESPALDO EN DRIVE
+        models.Periodo.hasOne(models.PeriodoRespaldo, {
+            foreignKey: "periodo_id",
+            as: "respaldo"
+        });
+
+        models.PeriodoRespaldo.belongsTo(models.Periodo, {
+            foreignKey: "periodo_id",
+            as: "periodo"
+        });
 
         models.Practica.hasMany(models.PracticaRequisitoDocumento, {
             foreignKey: "practica_id",

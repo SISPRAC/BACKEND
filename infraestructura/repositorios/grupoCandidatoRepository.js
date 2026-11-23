@@ -6,6 +6,11 @@ export const grupoCandidatoRepository = {
         return await models.GrupoCandidato.create(data, { transaction });
     },
 
+    // Asigna varios candidatos con UN solo INSERT
+    async createMany(rows, transaction) {
+        return await models.GrupoCandidato.bulkCreate(rows, { transaction });
+    },
+
     async findById(id) {
         return await models.GrupoCandidato.findByPk(id);
     },

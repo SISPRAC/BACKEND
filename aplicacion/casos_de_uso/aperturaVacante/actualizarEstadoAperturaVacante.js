@@ -5,10 +5,12 @@ export const actualizarEstadoAperturaVacante = async (
         aperturaVacanteRepository,
         postulacionRepository
     },
-    aperturaVacanteId
+    aperturaVacanteId,
+    aperturaPrecargada = null
 ) => {
 
     const aperturaVacante =
+        aperturaPrecargada ??
         await aperturaVacanteRepository.findById(
             aperturaVacanteId
         );

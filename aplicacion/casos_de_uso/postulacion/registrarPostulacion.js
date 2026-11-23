@@ -53,75 +53,71 @@ export const registrarPostulaciones = async (
         );
     }
 
-    const postulacionesCreadas = [];
+    // Quitamos repetidos conservando el orden
+    const ids = [...new Set(candidatosIds.map(Number))];
 
-    // Guardaremos los candidatos para construir la notificación.
-    const candidatosPostulados = [];
+    // ── 1 consulta para todos los candidatos (antes: 1 por candidato) ──
+    const candidatos = await candidatoRepository.findByIds(ids);
+    const candidatoPorId = new Map(
+        candidatos.map((c) => [Number(c.id), c])
+    );
 
-    for (const candidatoId of candidatosIds) {
+    // ── 1 consulta para saber quiénes ya tienen postulación activa ──
+    const conPostulacionActiva = new Set(
+        await postulacionRepository.findActivasByCandidatos(ids)
+    );
 
-        const candidato =
-            await candidatoRepository.findById(
-                candidatoId
-            );
+    // Validaciones (mismos mensajes y mismo orden que antes)
+    for (const candidatoId of ids) {
 
-        if (!candidato) {
+        if (!candidatoPorId.has(candidatoId)) {
             throw new ConflictError(
                 `El candidato ${candidatoId} no existe`
             );
         }
 
-        // Validar postulación activa global.
-        const postulacionActiva =
-            await postulacionRepository
-                .findPostulacionActivaByCandidato(
-                    candidatoId
-                );
-
-        if (postulacionActiva) {
+        if (conPostulacionActiva.has(candidatoId)) {
             throw new ConflictError(
                 `El candidato ${candidatoId} ya tiene una postulación activa`
             );
         }
+    }
 
-        // Crear postulación.
-        const postulacion =
-            await postulacionRepository.create({
+    // ── 1 solo INSERT para todas las postulaciones ──
+    const postulacionesCreadas =
+        await postulacionRepository.createMany(
+            ids.map((candidatoId) => ({
                 candidato_id: candidatoId,
                 aperturaVacante_id: aperturaVacanteId,
                 estado: "POSTULADO"
-            });
+            }))
+        );
 
-        postulacionesCreadas.push(postulacion);
+    const candidatosPostulados = ids.map((id) => candidatoPorId.get(id));
 
-        // Guardar candidato con sus datos de usuario.
-        candidatosPostulados.push(candidato);
-    }
-
-    // Actualizar estado de la apertura.
+    // Actualizar estado de la apertura (reusa la apertura ya cargada).
     await actualizarEstadoAperturaVacante(
         {
             aperturaVacanteRepository,
             postulacionRepository
         },
-        aperturaVacanteId
+        aperturaVacanteId,
+        aperturaVacante
     );
 
-    // Notificar a la empresa.
-    try {
-
-        await notificarPostulacionesEmpresa({
-            aperturaVacante,
-            candidatos: candidatosPostulados,
-            notificacionRepository
-        });
-
-    } catch (error) {
+    // ── Notificar a la empresa SIN hacer esperar al usuario ──
+    // El correo (Brevo) puede tardar varios segundos; la postulación ya
+    // quedó guardada, así que se envía en segundo plano.
+    notificarPostulacionesEmpresa({
+        aperturaVacante,
+        candidatos: candidatosPostulados,
+        notificacionRepository
+    }).catch((error) => {
         console.error(
             "Error notificando nuevas postulaciones a la empresa:",
             error
         );
-    }
+    });
 
     return postulacionesCreadas;
 };

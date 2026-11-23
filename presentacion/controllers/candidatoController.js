@@ -4,6 +4,7 @@ import { getCandidatos } from "../../aplicacion/casos_de_uso/candidato/getCandid
 import { getCandidatosDisponibles } from "../../aplicacion/casos_de_uso/candidato/getCandidatosDisponibles.js";
 import { getCandidatosPerfil } from "../../aplicacion/casos_de_uso/candidato/getCandidatosPerfil.js";
 import { invitarCandidato } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarCandidato.js";
+import { invitarCandidatosMasivo } from "../../aplicacion/casos_de_uso/invitarUsuario/invitarCandidatosMasivo.js";
 
 import { candidatoRepository } from "../../infraestructura/repositorios/candidatoRepositoryImpl.js";
 import { userRepository } from "../../infraestructura/repositorios/userRepositoryImpl.js";
@@ -195,6 +196,25 @@ export const invitarCandidatoController = async (req, res) => {
             return res.status(error.statusCode).json({ message: error.message });
         }
         console.log("Error al enviar invitación al candidato:", error);
+        return res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+export const invitarCandidatosMasivoController = async (req, res) => {
+    try {
+        const result = await invitarCandidatosMasivo(
+            grupoRepository,
+            {
+                candidatos: req.body.candidatos,
+                grupo_id: req.body.grupo_id
+            }
+        );
+        return res.status(200).json(result);
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        console.log("Error al enviar invitaciones masivas:", error);
         return res.status(500).json({ message: "Error interno del servidor" });
     }
 };
