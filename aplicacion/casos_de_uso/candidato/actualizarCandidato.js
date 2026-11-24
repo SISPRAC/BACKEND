@@ -3,7 +3,8 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 export const updateCandidato = async (
@@ -175,7 +176,7 @@ export const updateCandidato = async (
             // 3. Subir nuevo archivo a Cloudinary
             const uploadResult = await uploadArchivo(
                 file.buffer,
-                `candidatos/${codigoCandidato}/documentos`,
+                rutas.candidato(codigoCandidato, "hoja_vida"),
                 `hoja_vida_${codigoCandidato}.pdf`,
                 file.mimetype
             );
@@ -185,7 +186,9 @@ export const updateCandidato = async (
                 await archivoRepository.create(
                     {
                         nombre: file.originalname,
-                        url: uploadResult.url
+                        url: uploadResult.url,
+                        public_id: uploadResult.public_id,
+                        resource_type: uploadResult.resource_type
                     },
                     transaction
                 );
@@ -201,8 +204,7 @@ export const updateCandidato = async (
             ) {
 
                 await deleteArchivo(
-                    archivoAnterior.public_id,
-                    "raw"
+                    archivoAnterior.public_id
                 );
 
                 await archivoRepository.delete(

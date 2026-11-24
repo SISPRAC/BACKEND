@@ -41,7 +41,7 @@ import idiomaRouter from "./presentacion/routes/idioma.routes.js";
 import empresaRequisitoDocumentoRouter from "./presentacion/routes/empresaRequisitoDocumento.routes.js";
 import periodoRespaldoRouter from "./presentacion/routes/periodoRespaldo.routes.js";
 
-import path from "path";
+import { UPLOADS_ROOT } from "./infraestructura/external/storageService.js";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
 import { iniciarRespaldoPeriodos } from "./infraestructura/jobs/respaldarPeriodosJob.js";
@@ -73,11 +73,17 @@ app.use(cors({
 
 app.use(cookieparser());
 
+// Archivos subidos (documentos, logos, etc.), guardados en disco local.
 app.use(
   "/uploads",
-  express.static(
-    path.join(process.cwd(), "uploads")
-  )
+  express.static(UPLOADS_ROOT, {
+    dotfiles: "deny",
+    index: false,
+    setHeaders: (res) => {
+      // Evita que el navegador "adivine" el tipo y ejecute algo inesperado
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    },
+  })
 );
 
 app.use("/api/auth", authRouter);

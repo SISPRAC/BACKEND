@@ -34,6 +34,21 @@ export const PracticanteRepository = {
         });
     },
 
+    // Practicante (con su candidato -> código) a partir del usuario.
+    async findByUsuarioId(usuarioId, transaction) {
+        return await models.Practicante.findOne({
+            include: [
+                {
+                    model: models.Candidato,
+                    as: "candidato",
+                    required: true,
+                    where: { usuario_id: usuarioId }
+                }
+            ],
+            transaction
+        });
+    },
+
     async findByCandidatoId(candidatoId, transaction) {
         return await models.Practicante.findOne({
             where: {

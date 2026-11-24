@@ -3,11 +3,24 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
+import { PracticanteRepository } from "../../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 
 import { notificarPracticaRequisitoDocumentoSubido } from "../notificarEmail/notificarPracticaRequisitoDocumentoSubido.js";
 
+
+// Carpeta del practicante dueño del documento: practicantes/{codigo}/requisitos
+const carpetaDelPracticante = async (usuario_id) => {
+    const practicante =
+        await PracticanteRepository.findByUsuarioId(usuario_id);
+
+    return rutas.practicante(
+        practicante?.candidato?.codigo ?? `usuario-${usuario_id}`,
+        "requisitos"
+    );
+};
 
 export const subirPracticaRequisitoDocumento = async (
     sequelize,
@@ -23,8 +36,7 @@ export const subirPracticaRequisitoDocumento = async (
         fecha_vencimiento,
         buffer,
         nombreArchivo,
-        mimeType,
-        carpeta
+        mimeType
     } = data;
 
 
@@ -119,17 +131,6 @@ export const subirPracticaRequisitoDocumento = async (
 
 
     // =========================================================
-    // VALIDAR CARPETA
-    // =========================================================
-
-    if (!carpeta) {
-        throw new BadRequestError(
-            "La carpeta de almacenamiento es obligatoria"
-        );
-    }
-
-
-    // =========================================================
     // INICIAR TRANSACCIÓN
     // =========================================================
 
@@ -146,7 +147,7 @@ export const subirPracticaRequisitoDocumento = async (
 
         archivoSubido = await uploadArchivo(
             buffer,
-            carpeta,
+            await carpetaDelPracticante(usuario_id),
             nombreArchivo,
             mimeType
         );

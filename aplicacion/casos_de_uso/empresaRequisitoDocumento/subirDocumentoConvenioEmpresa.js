@@ -5,7 +5,8 @@ import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -84,7 +85,7 @@ export const subirDocumentoConvenioEmpresa = async (
 
         const resultado = await uploadArchivo(
             file.buffer,
-            "SISPRAC/RequisitosEmpresa",
+            rutas.empresa(empresa_id, "requisitos"),
             nombreArchivo,
             file.mimetype
         );

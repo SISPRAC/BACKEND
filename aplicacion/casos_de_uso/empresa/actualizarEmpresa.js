@@ -1,5 +1,5 @@
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
-import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
+import { uploadArchivo, deleteArchivo, rutas } from "../../../infraestructura/external/storageService.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
@@ -111,6 +111,7 @@ export const actualizarEmpresa = async (
 
         // 7. Datos de Empresa
         const datosEmpresa = {};
+        let logoAnteriorPublicId = null;
 
         if (nit !== undefined)
             datosEmpresa.nit = nit;
@@ -136,7 +137,7 @@ export const actualizarEmpresa = async (
             const uploadResult =
                 await uploadArchivo(
                     file.buffer,
-                    `empresas/${nit || empresa.nit}/fotos`,
+                    rutas.empresa(empresaId, "logo"),
                     `logo.${extension}`,
                     file.mimetype
                 );
@@ -145,6 +146,8 @@ export const actualizarEmpresa = async (
 
             datosEmpresa.logo_public_id =
                 uploadResult.public_id;
+
+            logoAnteriorPublicId = empresa.logo_public_id;
         }
 
         // 9. Actualizar Usuario
@@ -183,6 +186,11 @@ export const actualizarEmpresa = async (
 
         // 11. Confirmar transacción
         await transaction.commit();
+
+        // 11.1 Borrar el logo anterior (ya no se usa)
+        if (logoAnteriorPublicId) {
+            await deleteArchivo(logoAnteriorPublicId).catch(() => {});
+        }
 
         // 12. Obtener información actualizada
         const usuarioActualizado =

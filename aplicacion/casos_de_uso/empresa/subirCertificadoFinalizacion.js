@@ -3,7 +3,8 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { notificarCertificadoFinalizacion } from "../notificarEmail/notificarCertificadoFinalizacion.js";
@@ -23,8 +24,7 @@ export const subirCertificadoFinalizacion = async (
         usuario_id,
         buffer,
         nombreArchivo,
-        mimeType,
-        carpeta
+        mimeType
     } = data;
 
     // =========================================================
@@ -122,7 +122,10 @@ export const subirCertificadoFinalizacion = async (
 
     const archivoSubido = await uploadArchivo(
         buffer,
-        carpeta,
+        rutas.practicante(
+            candidato.codigo ?? `id-${practicante_id}`,
+            "certificado_finalizacion"
+        ),
         nombreArchivo,
         mimeType
     );

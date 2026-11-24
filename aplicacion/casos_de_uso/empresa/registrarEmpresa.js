@@ -1,4 +1,4 @@
-import { uploadArchivo } from "../../../infraestructura/external/storageService.js";
+import { uploadArchivo, deleteArchivo, rutas } from "../../../infraestructura/external/storageService.js";
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../../shared/errors/ConflictError.js";
 
@@ -142,6 +142,8 @@ export const registerEmpresa = async (
 
     const transaction = await sequelize.transaction();
 
+    let logoPublicId = null;
+
     try {
 
         // 1. Validar duplicados
@@ -155,18 +157,6 @@ export const registerEmpresa = async (
                 "Ya existe un usuario con esos datos"
             );
         }
-
-        // 2. Subir logo
-        const uploadResult =
-            await uploadArchivo(
-                file.buffer,
-                `empresas/${nit}/fotos`,
-                `logo.${extension}`,
-                file.mimetype
-            );
-
-        const logoUrl = uploadResult.url;
-        const logoPublicId = uploadResult.public_id;
 
         // 3. Encriptar contraseña
         const hashedPassword =
@@ -205,12 +195,33 @@ export const registerEmpresa = async (
                 nit,
                 nombre,
                 direccion,
-                logo: logoUrl,
-                logo_public_id: logoPublicId,
                 es_publica,
                 descripcion_perfil,
                 usuario_id: user.id
             }, transaction);
+
+        // 6.1 Subir logo a empresas/{id}/logo y guardarlo en la empresa
+        const uploadResult =
+            await uploadArchivo(
+                file.buffer,
+                rutas.empresa(empresa.id, "logo"),
+                `logo.${extension}`,
+                file.mimetype
+            );
+
+        logoPublicId = uploadResult.public_id;
+
+        await empresaRepository.update(
+            empresa.id,
+            {
+                logo: uploadResult.url,
+                logo_public_id: uploadResult.public_id
+            },
+            transaction
+        );
+
+        empresa.logo = uploadResult.url;
+        empresa.logo_public_id = uploadResult.public_id;
 
         // 7. Confirmar
         await transaction.commit();
@@ -227,6 +238,11 @@ export const registerEmpresa = async (
         // Si el commit ya se ejecutó (o falló), evitar un segundo rollback
         if (!transaction.finished) {
             await transaction.rollback();
+        }
+
+        // No dejar el logo huérfano en disco
+        if (logoPublicId) {
+            await deleteArchivo(logoPublicId).catch(() => {});
         }
 
         throw error;
