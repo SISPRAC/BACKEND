@@ -11,11 +11,18 @@
 // El refresh token debe generarse con el scope https://www.googleapis.com/auth/drive
 // (con drive.file no se puede escribir en una carpeta raíz creada a mano).
 import { google } from "googleapis";
-import { ZipArchive } from "archiver";
+import * as archiverModule from "archiver";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import { randomUUID } from "crypto";
+
+// archiver v8 exporta la clase ZipArchive; v7 y anteriores exportan una función.
+// Así funciona con cualquiera de las dos.
+const crearZip = (opciones) =>
+    archiverModule.ZipArchive
+        ? new archiverModule.ZipArchive(opciones)
+        : archiverModule.default("zip", opciones);
 
 const MIME_CARPETA = "application/vnd.google-apps.folder";
 const CAMPOS_ARCHIVO = "id, name, mimeType, webViewLink";
@@ -170,7 +177,7 @@ export async function comprimirCarpeta({ carpetaId, nombreZip, destinoId }) {
         const rutaTemporal = path.join(os.tmpdir(), `respaldo_${randomUUID()}.zip`);
 
         try {
-            const archive = new ZipArchive({ zlib: { level: 9 } });
+            const archive = crearZip({ zlib: { level: 9 } });
             const salida = fs.createWriteStream(rutaTemporal);
             const cerrado = new Promise((resolve, reject) => {
                 salida.on("close", resolve);
