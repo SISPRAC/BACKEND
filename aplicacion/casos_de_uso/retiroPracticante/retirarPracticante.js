@@ -1,8 +1,10 @@
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
+import { PracticanteRepository as practicanteRepository } from "../../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -68,10 +70,16 @@ export const retirarPracticante = async (
 
         practicaPracticanteId = practicaPracticante.id;
 
-        // 2. Subir archivo a storage
+        // 2. Subir archivo a storage (carpeta del practicante)
+        const practicante =
+            await practicanteRepository.findById(practicante_id);
+
+        const codigoPracticante =
+            practicante?.candidato?.codigo ?? `id-${practicante_id}`;
+
         const uploadResult = await uploadArchivo(
             file.buffer,
-            `practicantes/${practicante_id}/retiros`,
+            rutas.practicante(codigoPracticante, "retiros"),
             `retiro_${practicante_id}_${Date.now()}`,
             file.mimetype
         );

@@ -4,7 +4,8 @@ import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -53,7 +54,7 @@ export const actualizarTipoRequisitoDocumento = async (
             const resultado =
                 await uploadArchivo(
                     file.buffer,
-                    "SISPRAC/RequisitosDocumentales",
+                    rutas.sistema("plantillas_requisitos"),
                     nombreArchivo,
                     file.mimetype
                 );

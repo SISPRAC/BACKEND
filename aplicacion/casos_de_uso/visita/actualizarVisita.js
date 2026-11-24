@@ -3,7 +3,8 @@ import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 // NUEVO
@@ -393,7 +394,7 @@ export const actualizarVisita = async (
             const archivoSubido =
                 await uploadArchivo(
                     foto.buffer,
-                    `visitas/${visita_id}/fotografias`,
+                    rutas.visita(visita_id, "fotografias"),
                     foto.originalname,
                     foto.mimetype
                 );
@@ -464,7 +465,7 @@ export const actualizarVisita = async (
             const archivoSubido =
                 await uploadArchivo(
                     acta.buffer,
-                    `visitas/${visita_id}/acta`,
+                    rutas.visita(visita_id, "acta"),
                     acta.originalname,
                     acta.mimetype
                 );

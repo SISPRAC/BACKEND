@@ -318,7 +318,6 @@ export const subirCertificadoFinalizacionController = async (
                 buffer: req.file?.buffer,
                 nombreArchivo: req.file?.originalname,
                 mimeType: req.file?.mimetype,
-                carpeta: "certificados_finalizacion"
             }
         );
 

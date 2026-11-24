@@ -1,7 +1,8 @@
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 export const actualizarArlPractica = async (
@@ -39,7 +40,7 @@ export const actualizarArlPractica = async (
          */
         const archivoSubido = await uploadArchivo(
             archivo.buffer,
-            `ARL/${practicaId}`,
+            rutas.practica(practicaId, "arl"),
             archivo.originalname,
             archivo.mimetype
         );

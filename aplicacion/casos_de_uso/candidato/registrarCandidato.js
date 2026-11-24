@@ -1,6 +1,7 @@
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -165,7 +166,7 @@ export const registerCandidato = async (
 
         const uploadResult = await uploadArchivo(
             file.buffer,
-            `candidatos/${codigo}/documentos`,
+            rutas.candidato(codigo, "hoja_vida"),
             `hoja_vida_${codigo}.pdf`,
             file.mimetype
         );
@@ -175,7 +176,9 @@ export const registerCandidato = async (
 
         const archivoHojaVida = await archivoRepository.create({
             nombre: file.originalname,
-            url: uploadResult.url
+            url: uploadResult.url,
+            public_id: uploadResult.public_id,
+            resource_type: uploadResult.resource_type
         }, transaction);
 
         // ==========================================

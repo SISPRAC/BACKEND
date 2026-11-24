@@ -5,7 +5,8 @@ import { registrarHistorialConvenio } from "../historialConvenio/registrarHistor
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { notificarDirectorConvenio } from "../notificarEmail/notificarDirectorConvenio.js";
@@ -34,8 +35,7 @@ export const subirConvenio = async (
             usuario_id,
             buffer,
             nombreArchivo,
-            mimeType,
-            carpeta
+            mimeType
         } = data;
 
         // =========================================================
@@ -187,7 +187,10 @@ export const subirConvenio = async (
                 const archivoSubido =
                     await uploadArchivo(
                         buffer,
-                        carpeta,
+                        rutas.empresa(
+                            convenioExistente.empresa_id,
+                            "convenios"
+                        ),
                         nombreArchivo,
                         mimeType
                     );
@@ -338,7 +341,7 @@ export const subirConvenio = async (
             const archivoSubido =
                 await uploadArchivo(
                     buffer,
-                    carpeta,
+                    rutas.empresa(empresa_id, "convenios"),
                     nombreArchivo,
                     mimeType
                 );

@@ -3,9 +3,22 @@ import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 import {
     uploadArchivo,
     deleteArchivo,
+    rutas,
 } from "../../../infraestructura/external/storageService.js";
+import { PracticanteRepository } from "../../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 
 import { notificarPracticaRequisitoDocumentoSubido } from "../notificarEmail/notificarPracticaRequisitoDocumentoSubido.js";
+
+// Carpeta del practicante dueño del documento: practicantes/{codigo}/requisitos
+const carpetaDelPracticante = async (usuario_id) => {
+    const practicante =
+        await PracticanteRepository.findByUsuarioId(usuario_id);
+
+    return rutas.practicante(
+        practicante?.candidato?.codigo ?? `usuario-${usuario_id}`,
+        "requisitos"
+    );
+};
 
 export const editarPracticaRequisitoDocumento = async (
     sequelize,
@@ -21,7 +34,6 @@ export const editarPracticaRequisitoDocumento = async (
         buffer,
         nombreArchivo,
         mimeType,
-        carpeta,
     } = data;
 
     if (!usuario_id) {
@@ -42,11 +54,6 @@ export const editarPracticaRequisitoDocumento = async (
         throw new BadRequestError("Debes adjuntar un archivo");
     }
 
-    if (!carpeta) {
-        throw new BadRequestError(
-            "La carpeta de almacenamiento es obligatoria"
-        );
-    }
 
     let fechaVencimientoValidada = null;
 
@@ -121,7 +128,7 @@ export const editarPracticaRequisitoDocumento = async (
         // Subir el archivo nuevo a Supabase.
         archivoSubido = await uploadArchivo(
             buffer,
-            carpeta,
+            await carpetaDelPracticante(usuario_id),
             nombreArchivo,
             mimeType
         );

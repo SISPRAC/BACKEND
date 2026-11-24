@@ -127,7 +127,6 @@ export const subirConvenioController = async (req, res) => {
                 nombreArchivo: req.file?.originalname,
                 mimeType: req.file?.mimetype,
 
-                carpeta: "convenios"
             }
         );
 

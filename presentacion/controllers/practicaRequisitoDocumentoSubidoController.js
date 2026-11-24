@@ -40,7 +40,6 @@ export const createPracticaRequisitoDocumentoSubido = async (req, res) => {
                     nombreArchivo: req.file?.originalname,
                     mimeType: req.file?.mimetype,
 
-                    carpeta: "documentos-requisitos"
                 },
                 notificacionRepository
             );
@@ -85,7 +84,6 @@ export const updatePracticaRequisitoDocumentoSubido = async (req, res) => {
                 nombreArchivo: req.file?.originalname,
                 mimeType: req.file?.mimetype,
 
-                carpeta: "documentos-requisitos",
             },
              notificacionRepository
         );

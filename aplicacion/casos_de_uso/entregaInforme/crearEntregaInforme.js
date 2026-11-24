@@ -5,7 +5,8 @@ import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import {
     uploadArchivo,
-    deleteArchivo
+    deleteArchivo,
+    rutas
 } from "../../../infraestructura/external/storageService.js";
 
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
@@ -194,7 +195,11 @@ export const crearEntregaInforme = async (
 
         const resultado = await uploadArchivo(
             file.buffer,
-            "SISPRAC/Informes/Entregas",
+            rutas.practicante(
+                practicaPracticante.practicante?.candidato?.codigo ??
+                    `id-${practicaPracticante.practicante_id}`,
+                "informes"
+            ),
             nombreArchivo,
             file.mimetype
         );
