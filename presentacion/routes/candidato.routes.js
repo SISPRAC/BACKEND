@@ -9,7 +9,9 @@ import {
     invitarCandidatoController,
     invitarCandidatosMasivoController,
     obtenerCandidatosParaReportePorPeriodoController,
-    verificarCandidatosPdfController
+    verificarCandidatosPdfController,
+    getMiPerfilProfesionalController,
+    updateMiPerfilProfesionalController
 } from "../controllers/candidatoController.js";
 
 import { verifyToken } from "../middleware/authMiddleware.js";
@@ -47,6 +49,12 @@ router.post(
     verifyRole(["Administrador", "Director de programa"]),
     verificarCandidatosPdfController
 );
+
+router.get("/mi-perfil-profesional", verifyToken,
+    verifyRole(["Candidato", "Practicante"]), getMiPerfilProfesionalController);
+
+router.put("/mi-perfil-profesional", verifyToken,
+    verifyRole(["Candidato", "Practicante"]), updateMiPerfilProfesionalController);
 
 router.put(
     "/:id",

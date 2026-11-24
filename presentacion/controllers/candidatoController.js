@@ -24,6 +24,25 @@ import { idiomaRepository } from "../../infraestructura/repositorios/idiomaRepos
 import { candidatoIdiomaRepository } from "../../infraestructura/repositorios/candidatoIdiomaRepository.js";
 import { verificarCandidatosPdf } from "../../aplicacion/casos_de_uso/candidato/verificarCandidatosPdf.js";
 
+import {
+    getPerfilProfesional,
+    actualizarPerfilProfesional
+} from "../../aplicacion/casos_de_uso/candidato/perfilProfesional.js";
+
+const getReposPerfilProfesional = () => ({
+    sequelize, candidatoRepository, perfilRepository, candidatoPerfilRepository,
+    habilidadBlandaRepository, candidatoHabilidadBlandaRepository,
+    idiomaRepository, candidatoIdiomaRepository
+});
+
+const manejarError = (res, error) => {
+    if (error.statusCode) {
+        return res.status(error.statusCode).json({ message: error.message });
+    }
+    console.error("Error perfil profesional:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+};
+
 export const registerCandidatoController = async (req, res) => {
 
     try {
@@ -261,4 +280,17 @@ export const verificarCandidatosPdfController = async (req, res) => {
 
         return res.status(500).json({ message: "Error interno del servidor" });
     }
+};
+
+export const getMiPerfilProfesionalController = async (req, res) => {
+    try {
+        res.status(200).json(await getPerfilProfesional(getReposPerfilProfesional(), req.user.id));
+    } catch (e) { manejarError(res, e); }
+};
+
+export const updateMiPerfilProfesionalController = async (req, res) => {
+    try {
+        res.status(200).json(
+            await actualizarPerfilProfesional(getReposPerfilProfesional(), req.user.id, req.body));
+    } catch (e) { manejarError(res, e); }
 };
