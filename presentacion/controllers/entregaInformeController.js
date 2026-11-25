@@ -106,16 +106,15 @@ export const findTrazabilidadEntregaInforme = async (req, res) => {
 
         const user_id = req.user.id;
 
-        const {
-            practicante_id,
-            tipo_requisito_documento_id
-        } = req.params;
+        // El practicante se toma del token (user_id), no de la URL:
+        // así nadie puede ver la trazabilidad de otro practicante.
+        const { tipo_requisito_documento_id } = req.params;
 
         const trazabilidad =
             await getTrazabilidadEntregaInforme(
                 entregaInformeRepository,
+                practicaRequisitoDocumentoRepository,
                 user_id,
-                practicante_id,
                 tipo_requisito_documento_id
             );
 

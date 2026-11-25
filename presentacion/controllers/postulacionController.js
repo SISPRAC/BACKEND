@@ -14,6 +14,7 @@ import { notificacionRepository } from "../../infraestructura/repositorios/notif
 import { PracticanteRepository } from "../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 import { practicaPracticanteRepository } from "../../infraestructura/repositorios/PracticaPracticanteRepositoryImpl.js";
 import { rolRepository } from "../../infraestructura/repositorios/rolRepositoryImpl.js"
+import { archivoRepository } from "../../infraestructura/repositorios/archivoRepositoryImpl.js";
 
 export const registrarPostulacionesController = async (req, res) => {
     try {
@@ -127,7 +128,8 @@ export const aceptarPostulacionController = async (
                 candidatoRepository,
                 userRepository,
                 rolRepository,
-                notificacionRepository
+                notificacionRepository,
+                archivoRepository
             },
             postulacionId
         );

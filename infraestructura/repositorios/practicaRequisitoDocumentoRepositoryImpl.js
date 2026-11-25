@@ -464,7 +464,8 @@ export const practicaRequisitoDocumentoRepository = {
 
                             include: [
                                 {
-                                    model: models.User
+                                    model: models.User,
+                                    attributes: ["id", "nombres", "apellidos"]
                                 }
                             ]
                         },
@@ -475,7 +476,8 @@ export const practicaRequisitoDocumentoRepository = {
 
                             include: [
                                 {
-                                    model: models.User
+                                    model: models.User,
+                                    attributes: ["id", "nombres", "apellidos"]
                                 }
                             ]
                         }

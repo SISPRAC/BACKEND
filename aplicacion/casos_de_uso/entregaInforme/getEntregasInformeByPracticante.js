@@ -1,4 +1,5 @@
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+import { agregarNombresTutores } from "./agregarNombresTutores.js";
 
 export const getEntregaInformeByPracticante = async (
     entregaInformeRepository,
@@ -25,5 +26,5 @@ export const getEntregaInformeByPracticante = async (
 
     }
 
-    return entregas;
+    return agregarNombresTutores(entregas);
 };
