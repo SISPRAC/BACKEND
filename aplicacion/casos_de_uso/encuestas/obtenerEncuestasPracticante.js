@@ -1,4 +1,3 @@
-
 import { BadRequestError } from "../../../shared/errors/BadRequestError.js";
 
 export const obtenerEncuestasPracticante = async (
@@ -25,9 +24,9 @@ export const obtenerEncuestasPracticante = async (
 
     const practicante_id = candidato.practicante.id;
 
-    // Obtener la práctica en curso del practicante
+    // Obtener la práctica del practicante (en curso o finalizada)
     const practicaPracticante =
-        await plantillaEncuestaRepository.findPracticaPracticanteEnCurso(
+        await plantillaEncuestaRepository.findPracticaPracticanteEnCursoOFinalizada(
             practicante_id
         );
 

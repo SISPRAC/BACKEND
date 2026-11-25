@@ -122,13 +122,15 @@ export const PracticanteRepository = {
             return null;
         }
 
-        // Buscar la práctica que tiene actualmente EN CURSO
+        // Buscar la práctica del practicante: EN CURSO o FINALIZADA.
+        // Si hay varias, se toma la más reciente.
         const practicaPracticante =
             await models.PracticaPracticante.findOne({
                 where: {
                     practicante_id: practicante.id,
-                    estado: "En curso"
+                    estado: ["En curso", "Finalizada"]
                 },
+                order: [["id", "DESC"]],
                 include: [
                     {
                         model: models.Practica,
@@ -263,9 +265,11 @@ export const PracticanteRepository = {
         });
     },
 
+    // Práctica del practicante en curso o finalizada (la más reciente)
     async findPracticaEnCursoPracticante(practicanteId) {
         return await models.PracticaPracticante.findOne({
-            where: { estado: "En curso" },
+            where: { estado: ["En curso", "Finalizada"] },
+            order: [["id", "DESC"]],
             include: [
                 {
                     model: models.Practicante,

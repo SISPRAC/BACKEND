@@ -211,6 +211,17 @@ export const plantillaEncuestaRepository = {
         });
     },
 
+    // Práctica en curso o finalizada (la más reciente). Solo para CONSULTAR.
+    async findPracticaPracticanteEnCursoOFinalizada(practicante_id) {
+        return await models.PracticaPracticante.findOne({
+            where: {
+                practicante_id,
+                estado: ["En curso", "Finalizada"],
+            },
+            order: [["id", "DESC"]],
+        });
+    },
+
     async findPracticanteByUsuario(user_id) {
         return await models.Candidato.findOne({
             where: {

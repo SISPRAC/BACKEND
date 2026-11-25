@@ -58,6 +58,34 @@ export const periodoRespaldoRepository = {
         return periodos;
     },
 
+    // Períodos ya subidos a Drive, terminados hace más de `diasAntiguedad` días,
+    // sin prácticas en curso y con archivos locales aún sin liberar.
+    async periodosPendientesDeLiberacion({ maxIntentos, diasAntiguedad }) {
+        const periodos = await models.Periodo.findAll({
+            where: { fecha_fin: { [Op.lt]: hoyColombia(diasAntiguedad) } },
+            include: [{
+                model: models.PeriodoRespaldo,
+                as: "respaldo",
+                required: true,
+                where: {
+                    estado_subida: "SUBIDO",
+                    local_liberado: false,
+                    intentos_liberacion: { [Op.lt]: maxIntentos },
+                },
+            }],
+            order: [["fecha_fin", "ASC"]],
+        });
+
+        const pendientes = [];
+        for (const periodo of periodos) {
+            const enCurso = await models.Practica.count({
+                where: { periodo_id: periodo.id, estado: "EN_CURSO" },
+            });
+            if (enCurso === 0) pendientes.push(periodo);
+        }
+        return pendientes;
+    },
+
     // ---------- ARCHIVOS A RESPALDAR ----------
 
     // Todos los archivos (tabla Archivos) ligados a un período.
@@ -247,6 +275,22 @@ export const periodoRespaldoRepository = {
             fecha_subida: new Date(),
             error_subida: recortar(error?.message ?? error),
             intentos_subida: registro.intentos_subida + 1,
+        });
+    },
+
+    // ---------- LIBERACIÓN DE ESPACIO LOCAL ----------
+    // Suma lo liberado en esta corrida. `completo` = ya no queda nada por liberar.
+    async registrarLiberacion(periodoId, { archivos, mb, completo, error }) {
+        const registro = await this.obtenerOCrear(periodoId);
+        return await registro.update({
+            archivos_liberados_local: registro.archivos_liberados_local + archivos,
+            mb_liberados_local: Number(registro.mb_liberados_local) + mb,
+            local_liberado: completo,
+            fecha_liberacion_local: archivos > 0 || completo ? new Date() : registro.fecha_liberacion_local,
+            error_liberacion: error ? recortar(error) : null,
+            intentos_liberacion: error
+                ? registro.intentos_liberacion + 1
+                : registro.intentos_liberacion,
         });
     },
 
