@@ -58,6 +58,7 @@ router.put("/mi-perfil-profesional", verifyToken,
 
 router.put(
     "/:id",
+    verifyToken,
     upload.single("cv"),
     updateCandidatoController
 );

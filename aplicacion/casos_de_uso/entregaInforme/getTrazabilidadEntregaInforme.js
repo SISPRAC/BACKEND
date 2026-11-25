@@ -1,4 +1,5 @@
 import { NotFoundError } from "../../../shared/errors/NotFoundError.js";
+import { agregarNombresTutores } from "./agregarNombresTutores.js";
 
 export const getTrazabilidadEntregaInforme = async (
     entregaInformeRepository,
@@ -53,5 +54,6 @@ export const getTrazabilidadEntregaInforme = async (
                 practica_requisito_documento_id
             );
 
-    return entregas;
+    // Cada versión incluye el nombre del tutor docente y del empresarial
+    return agregarNombresTutores(entregas);
 };

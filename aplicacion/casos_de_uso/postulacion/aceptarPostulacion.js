@@ -4,6 +4,7 @@ import { ConflictError } from "../../../shared/errors/ConflictError.js";
 import { sequelize } from "../../../infraestructura/database/dbConnection.js";
 
 import { notificarAceptacion } from "../../casos_de_uso/notificarEmail/notificarAceptacion.js";
+import { moverHojaVidaAPracticante } from "../candidato/moverHojaVidaAPracticante.js";
 
 export const aceptarPostulacion = async (
     {
@@ -14,7 +15,8 @@ export const aceptarPostulacion = async (
         candidatoRepository,
         userRepository,
         rolRepository,
-        notificacionRepository
+        notificacionRepository,
+        archivoRepository
     },
     postulacionId,
 ) => {
@@ -23,6 +25,7 @@ export const aceptarPostulacion = async (
 
     let resultado;
     let postulacion;
+    let candidatoAceptado = null;
 
     try {
 
@@ -74,6 +77,8 @@ export const aceptarPostulacion = async (
                 "No se encontró el candidato asociado a la postulación"
             );
         }
+
+        candidatoAceptado = candidato;
 
         const usuarioId = candidato.usuario_id;
 
@@ -211,6 +216,27 @@ export const aceptarPostulacion = async (
         }
 
         throw error;
+    }
+
+    // ==========================================
+    // MOVER HOJA DE VIDA A LA CARPETA DEL PRACTICANTE
+    // (después del commit: el disco no entra en la transacción;
+    //  si falla, la hoja de vida simplemente queda donde estaba)
+    // ==========================================
+
+    try {
+
+        await moverHojaVidaAPracticante({
+            candidato: candidatoAceptado,
+            archivoRepository
+        });
+
+    } catch (error) {
+
+        console.error(
+            "No se pudo mover la hoja de vida a la carpeta del practicante:",
+            error
+        );
     }
 
     // ==========================================

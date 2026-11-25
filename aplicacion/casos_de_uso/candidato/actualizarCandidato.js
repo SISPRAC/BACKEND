@@ -6,6 +6,7 @@ import {
     deleteArchivo,
     rutas
 } from "../../../infraestructura/external/storageService.js";
+import { PracticanteRepository } from "../../../infraestructura/repositorios/practicanteRepositoryImpl.js";
 
 export const updateCandidato = async (
     sequelize,
@@ -20,6 +21,10 @@ export const updateCandidato = async (
 ) => {
 
     const transaction = await sequelize.transaction();
+
+    // Para limpiar el disco según cómo termine la operación
+    let nuevoPublicId = null;
+    let archivoAnteriorParaBorrar = null;
 
     try {
 
@@ -89,23 +94,18 @@ export const updateCandidato = async (
             }
         }
 
-        // Validar código
+        // El código NO se puede modificar (las carpetas de archivos del
+        // candidato/practicante se nombran con él). Si el front lo envía
+        // igual al actual, se ignora; si es distinto, se rechaza.
         if (
-            codigo &&
-            codigo !== candidato.codigo
+            codigo !== undefined &&
+            codigo !== null &&
+            String(codigo).trim() !== "" &&
+            String(codigo).trim() !== String(candidato.codigo)
         ) {
-
-            const codigoExist =
-                await candidatoRepository.findByCodigo(codigo);
-
-            if (
-                codigoExist &&
-                codigoExist.id !== candidato.id
-            ) {
-                throw new ConflictError(
-                    "CODE_ALREADY_EXISTS"
-                );
-            }
+            throw new BadRequestError(
+                "CODE_CANNOT_BE_MODIFIED"
+            );
         }
 
         // Datos usuario
@@ -152,13 +152,15 @@ export const updateCandidato = async (
         // Datos candidato
         const candidatoData = {};
 
-        if (codigo !== undefined) {
-            candidatoData.codigo = codigo;
-        }
-
         if (file) {
 
-            // 1. Obtener el archivo anterior
+            if (file.mimetype !== "application/pdf") {
+                throw new BadRequestError(
+                    "La hoja de vida debe ser un archivo PDF"
+                );
+            }
+
+            // 1. Archivo anterior (se borra al final, después del commit)
             let archivoAnterior = null;
 
             if (candidato.hoja_vida_archivo_id) {
@@ -169,17 +171,29 @@ export const updateCandidato = async (
                     );
             }
 
-            // 2. Código actual del candidato
-            const codigoCandidato =
-                codigo || candidato.codigo;
+            // 2. Carpeta según el estado actual de la persona:
+            //    practicante -> practicantes/{codigo}/hoja_vida
+            //    candidato   -> candidatos/{codigo}/hoja_vida
+            const codigoCandidato = candidato.codigo;
 
-            // 3. Subir nuevo archivo a Cloudinary
+            const practicante =
+                await PracticanteRepository.findByCandidatoId(
+                    candidato.id
+                );
+
+            const carpetaHojaVida = practicante
+                ? rutas.practicante(codigoCandidato, "hoja_vida")
+                : rutas.candidato(codigoCandidato, "hoja_vida");
+
+            // 3. Subir nuevo archivo
             const uploadResult = await uploadArchivo(
                 file.buffer,
-                rutas.candidato(codigoCandidato, "hoja_vida"),
+                carpetaHojaVida,
                 `hoja_vida_${codigoCandidato}.pdf`,
                 file.mimetype
             );
+
+            nuevoPublicId = uploadResult.public_id;
 
             // 4. Crear nuevo registro en Archivos
             const nuevoArchivo =
@@ -197,21 +211,7 @@ export const updateCandidato = async (
             candidatoData.hoja_vida_archivo_id =
                 nuevoArchivo.id;
 
-            // 6. Eliminar archivo anterior
-            if (
-                archivoAnterior &&
-                archivoAnterior.public_id
-            ) {
-
-                await deleteArchivo(
-                    archivoAnterior.public_id
-                );
-
-                await archivoRepository.delete(
-                    archivoAnterior.id,
-                    transaction
-                );
-            }
+            archivoAnteriorParaBorrar = archivoAnterior;
         }
 
         if (Object.keys(candidatoData).length > 0) {
@@ -219,6 +219,15 @@ export const updateCandidato = async (
             await candidatoRepository.update(
                 candidato.id,
                 candidatoData,
+                transaction
+            );
+        }
+
+        // Ya no hay referencia al archivo anterior: borrar su registro
+        if (archivoAnteriorParaBorrar) {
+
+            await archivoRepository.delete(
+                archivoAnteriorParaBorrar.id,
                 transaction
             );
         }
@@ -257,11 +266,31 @@ export const updateCandidato = async (
 
         await transaction.commit();
 
+        // Commit hecho: ahora sí se borra del disco el PDF anterior
+        if (archivoAnteriorParaBorrar?.public_id) {
+            try {
+                await deleteArchivo(archivoAnteriorParaBorrar.public_id);
+            } catch (errorStorage) {
+                console.error(
+                    "No se pudo borrar la hoja de vida anterior del disco:",
+                    errorStorage
+                );
+            }
+        }
+
         return true;
 
     } catch (error) {
 
-        await transaction.rollback();
+        if (!transaction.finished) {
+            await transaction.rollback();
+        }
+
+        // Si se alcanzó a subir un PDF nuevo, no dejarlo huérfano
+        if (nuevoPublicId) {
+            await deleteArchivo(nuevoPublicId).catch(() => {});
+        }
+
         throw error;
 
     }

@@ -150,7 +150,10 @@ export const periodoRespaldoRepository = {
                     include: [{
                         model: models.Candidato,
                         as: "candidato",
-                        include: [{ model: models.User, attributes: ["nombres", "apellidos"] }],
+                        include: [
+                            { model: models.User, attributes: ["nombres", "apellidos"] },
+                            { model: models.Archivo, as: "hojaVida" },
+                        ],
                     }],
                 },
             ],
@@ -169,6 +172,7 @@ export const periodoRespaldoRepository = {
             carpetaPorAsignacion.set(a.id, carpeta);
             if (cand?.usuario_id) carpetaPorUsuario.set(cand.usuario_id, carpeta);
 
+            agregar(cand?.hojaVida, carpeta, "Hoja de vida", "HojaVida");
             agregar(a.certificadoArchivo, carpeta, "Certificados", "Certificado");
             agregar(a.retiro?.archivoSoporte, carpeta, "Retiros", "Retiro");
             for (const e of a.entregasInformes ?? []) {

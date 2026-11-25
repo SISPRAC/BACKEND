@@ -15,8 +15,9 @@
 //
 // Estructura en disco:
 //   uploads/
-//   ├── candidatos/{codigo}/hoja_vida/
+//   ├── candidatos/{codigo}/hoja_vida/     (solo mientras sigue siendo candidato)
 //   ├── practicantes/{codigo}/
+//   │   ├── hoja_vida/      la hoja de vida se mueve aquí al aceptar la postulación
 //   │   ├── requisitos/     documentos de requisitos que sube el practicante
 //   │   ├── informes/       entregas de informes
 //   │   ├── retiros/        soportes de retiro
@@ -220,6 +221,66 @@ export const deleteArchivo = async (publicId) => {
         }
         carpeta = path.dirname(carpeta);
     }
+};
+
+// Borra (de abajo hacia arriba) las carpetas que hayan quedado vacías, sin
+// tocar la raíz de uploads.
+const limpiarCarpetasVacias = async (carpetaAbsoluta) => {
+    let carpeta = carpetaAbsoluta;
+
+    while (carpeta !== UPLOADS_ROOT && carpeta.startsWith(UPLOADS_ROOT)) {
+        try {
+            await fs.promises.rmdir(carpeta); // solo borra si está vacía
+        } catch {
+            break;
+        }
+        carpeta = path.dirname(carpeta);
+    }
+};
+
+// Mueve un archivo ya guardado a otra carpeta conservando su nombre.
+// Devuelve la nueva { url, public_id } para actualizar la tabla Archivos.
+// No sobrescribe: si ya hay un archivo con ese nombre en el destino, falla.
+export const moverArchivo = async (rutaOrigen, carpetaDestino) => {
+
+    const carpetaSegura = sanitizarCarpeta(carpetaDestino);
+
+    if (!carpetaSegura) {
+        throw new Error("La carpeta de almacenamiento no es válida");
+    }
+
+    const origen = rutaAbsoluta(rutaOrigen);
+    const rutaNueva = `${carpetaSegura}/${path.basename(origen)}`;
+    const destino = rutaAbsoluta(rutaNueva);
+
+    if (origen !== destino) {
+
+        await fs.promises.mkdir(path.dirname(destino), { recursive: true });
+
+        // Evita pisar un archivo existente
+        try {
+            await fs.promises.access(destino);
+            throw new Error("Ya existe un archivo en la carpeta de destino");
+        } catch (error) {
+            if (error.code !== "ENOENT") throw error;
+        }
+
+        try {
+            await fs.promises.rename(origen, destino);
+        } catch (error) {
+            // Distintos discos/volúmenes: copiar y luego borrar
+            if (error.code !== "EXDEV") throw error;
+            await fs.promises.copyFile(origen, destino);
+            await fs.promises.unlink(origen);
+        }
+
+        await limpiarCarpetasVacias(path.dirname(origen));
+    }
+
+    return {
+        url: urlDesdeRuta(rutaNueva),
+        public_id: rutaNueva,
+    };
 };
 
 const MIME_POR_EXTENSION = {

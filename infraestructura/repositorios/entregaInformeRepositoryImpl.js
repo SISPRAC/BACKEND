@@ -133,7 +133,8 @@ export const entregaInformeRepository = {
 
                     include: [
                         {
-                            model: models.User
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
                         }
                     ]
 
@@ -145,7 +146,8 @@ export const entregaInformeRepository = {
 
                     include: [
                         {
-                            model: models.User
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
                         }
                     ]
 
@@ -198,7 +200,8 @@ export const entregaInformeRepository = {
 
                     include: [
                         {
-                            model: models.User
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
                         }
                     ]
 
@@ -210,7 +213,8 @@ export const entregaInformeRepository = {
 
                     include: [
                         {
-                            model: models.User
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
                         }
                     ]
 
@@ -253,12 +257,24 @@ export const entregaInformeRepository = {
 
                 {
                     model: models.TutorDocente,
-                    as: "tutorDocente"
+                    as: "tutorDocente",
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
+                        }
+                    ]
                 },
 
                 {
                     model: models.TutorEmpresa,
-                    as: "tutorEmpresarial"
+                    as: "tutorEmpresarial",
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
+                        }
+                    ]
                 }
 
             ],
@@ -410,11 +426,23 @@ export const entregaInformeRepository = {
                 },
                 {
                     model: models.TutorDocente,
-                    as: "tutorDocente"
+                    as: "tutorDocente",
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
+                        }
+                    ]
                 },
                 {
                     model: models.TutorEmpresa,
-                    as: "tutorEmpresarial"
+                    as: "tutorEmpresarial",
+                    include: [
+                        {
+                            model: models.User,
+                            attributes: ["id", "nombres", "apellidos"]
+                        }
+                    ]
                 }
             ],
 
