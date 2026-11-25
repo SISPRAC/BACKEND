@@ -31,6 +31,7 @@
 import fs from "fs";
 import path from "path";
 import { Readable } from "stream";
+import { createHash } from "crypto";
 
 /* global fetch */
 
@@ -264,4 +265,41 @@ export const descargarArchivoStream = async (url) => {
             respuesta.headers.get("content-type") ??
             "application/octet-stream",
     };
+};
+
+// ---------------------------------------------------------------------------
+// Liberación de espacio local (archivos ya respaldados en Drive)
+// ---------------------------------------------------------------------------
+
+// Tamaño y md5 del archivo local (md5 calculado en streaming, sin cargarlo en
+// memoria). Devuelve null si el archivo no existe en disco.
+export const infoArchivoLocal = async (rutaRelativa) => {
+    let absoluta;
+    try {
+        absoluta = rutaAbsoluta(rutaRelativa);
+        const stat = await fs.promises.stat(absoluta);
+        if (!stat.isFile()) return null;
+
+        const hash = createHash("md5");
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(absoluta)
+                .on("data", (chunk) => hash.update(chunk))
+                .on("end", resolve)
+                .on("error", reject);
+        });
+        return { size: stat.size, md5: hash.digest("hex") };
+    } catch (error) {
+        if (error.code === "ENOENT" || error.code === "ENOTDIR") return null;
+        throw error;
+    }
+};
+
+// ¿Existe el archivo en disco? (barato: solo un stat)
+export const existeArchivoLocal = async (rutaRelativa) => {
+    try {
+        const stat = await fs.promises.stat(rutaAbsoluta(rutaRelativa));
+        return stat.isFile();
+    } catch {
+        return false;
+    }
 };

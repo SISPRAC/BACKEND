@@ -15,7 +15,7 @@ export const obtenerPracticaPracticante = async (
 
     if (!datos.practicaPracticante) {
         throw new NotFoundError(
-            "El practicante no tiene una práctica en curso."
+            "El practicante no tiene una práctica en curso o finalizada."
         );
     }
 

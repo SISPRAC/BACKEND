@@ -173,8 +173,9 @@ export const practicaRequisitoDocumentoRepository = {
             await models.PracticaPracticante.findOne({
                 where: {
                     practicante_id: candidato.practicante.id,
-                    estado: "En curso"
-                }
+                    estado: ["En curso", "Finalizada"]
+                },
+                order: [["id", "DESC"]]
             });
 
 
@@ -376,8 +377,9 @@ export const practicaRequisitoDocumentoRepository = {
             await models.PracticaPracticante.findOne({
                 where: {
                     practicante_id: candidato.practicante.id,
-                    estado: "En curso"
-                }
+                    estado: ["En curso", "Finalizada"]
+                },
+                order: [["id", "DESC"]]
             });
 
         if (!practicaPracticante) {

@@ -42,6 +42,7 @@ import empresaRequisitoDocumentoRouter from "./presentacion/routes/empresaRequis
 import periodoRespaldoRouter from "./presentacion/routes/periodoRespaldo.routes.js";
 
 import { UPLOADS_ROOT } from "./infraestructura/external/storageService.js";
+import { servirArchivoArchivado } from "./presentacion/middleware/archivosArchivadosMiddleware.js";
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
 import { iniciarRespaldoPeriodos } from "./infraestructura/jobs/respaldarPeriodosJob.js";
@@ -72,6 +73,10 @@ app.use(cors({
 
 
 app.use(cookieparser());
+
+// Archivos ya movidos a Drive (sin copia local): se traen de Drive con la misma URL.
+// Debe ir ANTES de express.static; si el archivo está en disco no hace nada.
+app.use("/uploads", servirArchivoArchivado);
 
 // Archivos subidos (documentos, logos, etc.), guardados en disco local.
 app.use(

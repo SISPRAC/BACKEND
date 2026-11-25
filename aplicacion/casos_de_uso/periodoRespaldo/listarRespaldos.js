@@ -19,5 +19,13 @@ export const listarRespaldos = async (periodoRespaldoRepository) => {
             intentos: r.intentos_compresion,
             url: r.drive_zip_url,
         },
+        liberacion_local: {
+            liberado: r.local_liberado,
+            fecha: r.fecha_liberacion_local,
+            archivos: r.archivos_liberados_local,
+            mb: Number(r.mb_liberados_local),
+            intentos: r.intentos_liberacion,
+            error: r.error_liberacion,
+        },
     }));
 };

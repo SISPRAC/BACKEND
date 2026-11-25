@@ -53,6 +53,30 @@ const createPeriodoRespaldoModel = (sequelize) => {
             },
             drive_zip_id: { type: DataTypes.STRING(100), allowNull: true },
             drive_zip_url: { type: DataTypes.TEXT, allowNull: true },
+
+            // ---------- LIBERACIÓN DE ESPACIO LOCAL ----------
+            local_liberado: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
+            fecha_liberacion_local: { type: DataTypes.DATE, allowNull: true },
+            archivos_liberados_local: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
+            mb_liberados_local: {
+                type: DataTypes.DECIMAL(12, 2),
+                allowNull: false,
+                defaultValue: 0,
+            },
+            intentos_liberacion: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
+            error_liberacion: { type: DataTypes.TEXT, allowNull: true },
         },
         {
             tableName: "PeriodoRespaldos",

@@ -53,6 +53,10 @@ export const actualizarArchivo = async (
                     url: nuevoArchivo.url,
                     public_id: nuevoArchivo.public_id,
                     resource_type: nuevoArchivo.resource_type,
+                    // El archivo nuevo está en disco local, no en Drive
+                    archivado: false,
+                    drive_file_id: null,
+                    fecha_archivado: null,
                 }
             );
 

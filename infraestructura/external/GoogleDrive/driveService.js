@@ -25,7 +25,7 @@ const crearZip = (opciones) =>
         : archiverModule.default("zip", opciones);
 
 const MIME_CARPETA = "application/vnd.google-apps.folder";
-const CAMPOS_ARCHIVO = "id, name, mimeType, webViewLink";
+const CAMPOS_ARCHIVO = "id, name, mimeType, webViewLink, size, md5Checksum";
 
 let drive = null;
 
@@ -144,13 +144,18 @@ export async function subirArchivo({ stream, rutaLocal, nombre, carpetaId, mimeT
 
 // Lista todos los archivos (no carpetas) bajo una carpeta, recursivamente,
 // con su ruta relativa dentro de ella.
-const listarArchivosRecursivo = async (carpetaId, prefijo = "") => {
+export const listarArchivosRecursivo = async (carpetaId, prefijo = "") => {
     const resultado = [];
     for (const hijo of await listarHijos(carpetaId)) {
         if (hijo.mimeType === MIME_CARPETA) {
             resultado.push(...await listarArchivosRecursivo(hijo.id, `${prefijo}${hijo.name}/`));
         } else {
-            resultado.push({ id: hijo.id, ruta: `${prefijo}${hijo.name}` });
+            resultado.push({
+                id: hijo.id,
+                ruta: `${prefijo}${hijo.name}`,
+                size: hijo.size !== undefined ? Number(hijo.size) : null,
+                md5: hijo.md5Checksum ?? null,
+            });
         }
     }
     return resultado;
@@ -177,7 +182,7 @@ export async function comprimirCarpeta({ carpetaId, nombreZip, destinoId }) {
         const rutaTemporal = path.join(os.tmpdir(), `respaldo_${randomUUID()}.zip`);
 
         try {
-            const archive = crearZip({ zlib: { level: 9 } });
+            const archive = crearZip({ zlib: { level: 1 } });
             const salida = fs.createWriteStream(rutaTemporal);
             const cerrado = new Promise((resolve, reject) => {
                 salida.on("close", resolve);
@@ -238,5 +243,28 @@ export async function moverAPapelera(fileId) {
             requestBody: { trashed: true },
             supportsAllDrives: true,
         });
+    });
+}
+
+// Abre un archivo de Drive como stream (para servirlo sin guardarlo en disco).
+// Devuelve { stream, mimeType, size }.
+export async function descargarArchivo(fileId) {
+    return conManejoDeError(async () => {
+        const { data: meta } = await getDrive().files.get({
+            fileId,
+            fields: "id, mimeType, size, trashed",
+            supportsAllDrives: true,
+        });
+        if (meta.trashed) throw new Error("El archivo está en la papelera de Drive");
+
+        const { data: stream } = await getDrive().files.get(
+            { fileId, alt: "media", supportsAllDrives: true },
+            { responseType: "stream" }
+        );
+        return {
+            stream,
+            mimeType: meta.mimeType ?? "application/octet-stream",
+            size: meta.size !== undefined ? Number(meta.size) : null,
+        };
     });
 }
