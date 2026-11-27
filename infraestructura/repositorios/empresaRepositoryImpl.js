@@ -333,4 +333,12 @@ export const empresaRepository = {
         });
     },
 
+    // Todas las empresas (para listar también las que aún no tienen convenio)
+    async findAllParaConvenios() {
+        return await models.Empresa.findAll({
+            attributes: ["id", "nombre", "es_publica"],
+            order: [["nombre", "ASC"]],
+        });
+    },
+
 };

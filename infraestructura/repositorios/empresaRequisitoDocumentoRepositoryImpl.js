@@ -21,6 +21,15 @@ export const empresaRequisitoDocumentoRepository = {
 
     },
 
+    // Todos los documentos de convenio de todas las empresas (tabla de convenios)
+    async findAll() {
+
+        return await models.EmpresaRequisitoDocumento.findAll({
+            attributes: ["empresa_id", "tipo_requisito_documento_id", "archivo_id", "estado"]
+        });
+
+    },
+
     async findOne(empresa_id, tipo_requisito_documento_id, transaction) {
 
         return await models.EmpresaRequisitoDocumento.findOne({

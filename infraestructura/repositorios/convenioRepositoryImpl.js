@@ -14,7 +14,7 @@ export const convenioRepository = {
                 include: [
                     {
                         model: models.Empresa,
-                        attributes: ["nombre"]
+                        attributes: ["id", "nombre", "es_publica"]
                     }]
             });
     },

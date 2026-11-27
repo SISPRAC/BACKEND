@@ -38,7 +38,12 @@ export const getConveniosController = async (req, res) => {
 
     try {
 
-        const convenios = await getConvenios(convenioRepository);
+        const convenios = await getConvenios(
+            convenioRepository,
+            empresaRequisitoDocumentoRepository,
+            tipoRequisitoDocumentoRepository,
+            empresaRepository
+        );
 
         return res.status(200).json(convenios);
 
