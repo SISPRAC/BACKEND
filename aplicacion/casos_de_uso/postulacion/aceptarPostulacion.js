@@ -25,7 +25,7 @@ export const aceptarPostulacion = async (
 
     let resultado;
     let postulacion;
-    let candidatoAceptado = null;
+    let candidatoAceptado;
 
     try {
 
