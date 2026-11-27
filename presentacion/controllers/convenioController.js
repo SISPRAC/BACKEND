@@ -61,9 +61,6 @@ export const getConvenioController = async (req, res) => {
 
         const convenio = await getConvenio(
             convenioRepository,
-            empresaRequisitoDocumentoRepository,
-            tipoRequisitoDocumentoRepository,
-            empresaRepository,
             req.params.id
         );
 
