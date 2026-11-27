@@ -1,5 +1,6 @@
 import { getConvenios } from "../../aplicacion/casos_de_uso/convenio/getConvenios.js";
 import { getConvenio } from "../../aplicacion/casos_de_uso/convenio/getConvenio.js";
+
 import { getConvenioByEmpresa } from "../../aplicacion/casos_de_uso/convenio/getConvenioByEmpresa.js";
 import { getConveniosByEmpresa } from "../../aplicacion/casos_de_uso/convenio/getConveniosByEmpresa.js";
 import { subirConvenio } from "../../aplicacion/casos_de_uso/convenio/subirConvenio.js";
@@ -60,6 +61,9 @@ export const getConvenioController = async (req, res) => {
 
         const convenio = await getConvenio(
             convenioRepository,
+            empresaRequisitoDocumentoRepository,
+            tipoRequisitoDocumentoRepository,
+            empresaRepository,
             req.params.id
         );
 
