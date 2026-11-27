@@ -46,6 +46,7 @@ import { servirArchivoArchivado } from "./presentacion/middleware/archivosArchiv
 import { iniciarVencimientoConvenios } from "./infraestructura/jobs/vencerConveniosJob.js";
 import { iniciarFinalizacionPracticas } from "./infraestructura/jobs/finalizarPracticas.js";
 import { iniciarRespaldoPeriodos } from "./infraestructura/jobs/respaldarPeriodosJob.js";
+import { iniciarRespaldoBaseDatos } from "./infraestructura/jobs/respaldoBaseDatosJob.js";
 
 
 
@@ -56,9 +57,11 @@ app.use(express.json());
 app.set("trust proxy", 1);
 
 const allowedOrigins = [
+  process.env.FRONTEND_URL,
   "http://localhost:5173",
+  "http://localhost:8081",
   "https://frontend-sigma-blush-19.vercel.app"
-];
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -66,7 +69,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    return callback(new Error("Origen no permitido por CORS"));
+    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
   },
   credentials: true,
 }));
@@ -133,6 +136,7 @@ await initDB();
 iniciarVencimientoConvenios();
 iniciarFinalizacionPracticas();
 iniciarRespaldoPeriodos();
+iniciarRespaldoBaseDatos();
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port", process.env.PORT);
